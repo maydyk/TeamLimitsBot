@@ -35,7 +35,7 @@ from typing import Any, Dict, Optional
 logging.basicConfig(level=logging.INFO)
 
 # Setup localization directory and domain
-I18N_DOMAIN = 'TeamLimitsBot'
+I18N_DOMAIN = 'messages'
 BASE_DIR = Path(__file__).parent
 LOCALES_DIR = BASE_DIR / "locales"
 
