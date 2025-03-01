@@ -9,7 +9,7 @@
             "name": "Launch TeamLimitsBot",
             "type": "debugpy",
             "request": "launch",
-            "program": "TeamLimitsBot.py",
+            "program": "teamlimitsbot.py",
             "console": "integratedTerminal"
         }
     ]
