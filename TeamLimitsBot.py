@@ -6,6 +6,7 @@ Author: Denis Maydykovsky
 
 Usage: python3 TeamLimitsBot.py <YOUR BOT TOKEN>
 '''
+import os
 import sys
 import asyncio
 import logging
@@ -33,15 +34,6 @@ from typing import Any, Dict, Optional
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
-# Treat the first command line argumant as TOKEN.
-# Don't save TOKEN in the code!
-if len(sys.argv) > 1:
-    TOKEN = sys.argv[1]
-else:
-    print(_("error-no-token-arg"), file=sys.stderr)
-    logging.log(level=logging.ERROR, msg = _("error-no-token-arg"))
-    exit(1)
-
 # Setup localization directory and domain
 I18N_DOMAIN = 'TeamLimitsBot'
 BASE_DIR = Path(__file__).parent
@@ -53,6 +45,21 @@ localization = SimpleI18nMiddleware(i18n)
 # Alias for gettext method
 _ = i18n.gettext
 
+# Treat to the first command line argumant as TOKEN.
+if len(sys.argv) > 1:
+    # Don't save the TOKEN in the code!
+    TOKEN = sys.argv[1]
+else:
+    # Treat to an enviromenent variable 
+    # Don't save the TOKEN in launch.json
+    TOKEN = os.getenv("TEAMLIMITSBOT_TOKEN", None)
+
+if not TOKEN:
+    print(_("error-no-token-arg"), file=sys.stderr)
+    logging.log(level=logging.ERROR, msg = _("error-no-token-arg"))
+    sys.exit(1)
+
+# Main objects
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
