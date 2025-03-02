@@ -5,6 +5,9 @@ NOTE: Don't change module location!
 
 @Author: Denis Maydykovsky
 '''
+# See instructons how to prepare localization files
+# https://docs.aiogram.dev/en/stable/utils/i18n.html#step-1-extract-messages
+
 from aiogram.utils.i18n import I18n, gettext as _
 from aiogram.utils.i18n.middleware import SimpleI18nMiddleware
 from pathlib import Path
