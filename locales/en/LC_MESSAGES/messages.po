@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-28 23:13+0300\n"
+"POT-Creation-Date: 2025-03-03 01:57+0300\n"
 "PO-Revision-Date: 2025-02-28 22:10+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -16,31 +16,87 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.1\n"
+"Generated-By: Babel 2.10.3\n"
 
-#: TeamLimitsBot.py:32 TeamLimitsBot.py:33
-msgid "error-no-token-arg"
-msgstr "No argument was taken for bot's token."
+#: teamlimitsbot.py:65
+msgid "msg_start_welcome{bot_name}"
+msgstr ""
 
-#: TeamLimitsBot.py:74
-msgid "select_action"
+#: teamlimitsbot.py:75
+#, fuzzy
+msgid "msg_start_select_action"
 msgstr ""
 "Select an action:\n"
 "/create to initialize a new event or\n"
 "/manage to manage an existing event."
 
-#: TeamLimitsBot.py:87
-msgid "query_event_name"
-msgstr "Enter an event name"
-
-#: TeamLimitsBot.py:96
+#: teamlimitsbot.py:117
 #, fuzzy
-msgid "query_event_description"
-msgstr "Enter an event name"
+msgid "query_team_title"
+msgstr "Enter the team description"
 
-#: TeamLimitsBot.py:110
-msgid "new_event_created{name}{desc}"
+#: teamlimitsbot.py:123
+#, fuzzy
+msgid "query_team_description"
+msgstr "Enter the team description"
+
+#: teamlimitsbot.py:129
+msgid "query_team_minimal_members"
 msgstr ""
-"You have created a new event {name}!\n"
-"({desc})"
+
+#: teamlimitsbot.py:135
+msgid "query_team_maximal_members"
+msgstr ""
+
+#: teamlimitsbot.py:149
+msgid "change_team_title"
+msgstr ""
+
+#: teamlimitsbot.py:154
+#, fuzzy
+msgid "change_team_description"
+msgstr "Enter the team description"
+
+#: teamlimitsbot.py:159
+msgid "change_team_minimal_members"
+msgstr ""
+
+#: teamlimitsbot.py:164
+msgid "change_team_maximal_members"
+msgstr ""
+
+#~ msgid "error-no-token-arg"
+#~ msgstr "No argument was taken for bot's token."
+
+#~ msgid "msg_start_welcome"
+#~ msgstr ""
+
+#~ msgid "msg_start_welcome{botname}"
+#~ msgstr ""
+
+#~ msgid "new_event_created{name}{desc}"
+#~ msgstr ""
+#~ "You have created a new event {name}!\n"
+#~ "({desc})"
+
+#~ msgid "query_team_title"
+#~ msgstr "Enter the team name"
+
+#~ msgid "change_minimal_members"
+#~ msgstr ""
+
+#~ msgid "change_maximal_members"
+#~ msgstr ""
+
+#~ msgid "query_team_maximamal_members"
+#~ msgstr ""
+
+#~ msgid "skip_team_description"
+#~ msgstr ""
+
+#~ msgid "skip_team_minimal_members"
+#~ msgstr ""
+
+#~ msgid "skip_team_maximal_members"
+#~ msgstr ""
 

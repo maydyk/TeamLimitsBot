@@ -2,17 +2,15 @@
 '''
 TeamLimitsBot
 A Telegram bot to manage number of participans of some event.
-Author: Denis Maydykovsky 
+@Author: Denis Maydykovsky 
 
 Usage: python3 TeamLimitsBot.py <YOUR BOT TOKEN>
 '''
-import os
-import sys
 import asyncio
 import logging
 
 from aiogram import F, Bot, Dispatcher, Router
-from aiogram.filters import Command, CommandStart, StateFilter
+from aiogram.filters import Command, CommandStart, StateFilter, CommandObject, and_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -26,161 +24,167 @@ from aiogram.types import (
     InlineKeyboardButton,
     CallbackQuery,
 )
-from aiogram.utils.i18n import I18n, gettext as _
-from aiogram.utils.i18n.middleware import SimpleI18nMiddleware
-from pathlib import Path
+from aiogram_dialog import (Dialog, DialogManager, setup_dialogs, StartMode, Window,)
+from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.kbd import Calendar
+from aiogram_dialog.widgets.kbd import Next, SwitchTo
+from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.text import Const, Jinja
+from datetime import date
+from re import Match
 from typing import Any, Dict, Optional
+
+# Setup locales
+from international import _, _T, I18nFormat, setup_router
+
+# Extract token
+from gettoken import TOKEN
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-
-# Setup localization directory and domain
-I18N_DOMAIN = 'messages'
-BASE_DIR = Path(__file__).parent
-LOCALES_DIR = BASE_DIR / "locales"
-
-# Setup i18n middleware
-i18n = I18n(path=LOCALES_DIR, default_locale="en", domain=I18N_DOMAIN)    
-localization = SimpleI18nMiddleware(i18n)
-# Alias for gettext method
-_ = i18n.gettext
-
-# Treat to the first command line argumant as TOKEN.
-if len(sys.argv) > 1:
-    # Don't save the TOKEN in the code!
-    TOKEN = sys.argv[1]
-else:
-    # Treat to an enviromenent variable 
-    # Don't save the TOKEN in launch.json
-    TOKEN = os.getenv("TEAMLIMITSBOT_TOKEN", None)
-
-if not TOKEN:
-    print(_("error-no-token-arg"), file=sys.stderr)
-    logging.log(level=logging.ERROR, msg = _("error-no-token-arg"))
-    sys.exit(1)
 
 # Main objects
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 router = Router()
-localization.setup(router)
 
-DRIVERS_FILE = object
-PASSENGERS_FILE = object
+def escapeCharacters(text: str, escaped = "[]()+-.!") -> str:
+    for ch in escaped:
+        text = text.replace(ch, f"\\{ch}")
+    return text
 
-stats_message_id = None  # ID сообщения со статистикой
-stats_chat_id = None  # ID чата для статистики
-
-def get_count(file):
-    return 5
-
-# Кнопки
-# keyboard = aiogram.types.InlineKeyboardMarkup(inline_keyboard=[
-#     [aiogram.types.InlineKeyboardButton(text="🚗 Записаться водителем", callback_data="driver")],
-#     [aiogram.types.InlineKeyboardButton(text="🧑‍🤝‍🧑 Записаться пассажиром", callback_data="passenger")]
-# ])
-
+__md_parse_mode = "MarkdownV2"
 @router.message(CommandStart())
-async def start(message: Message) -> None:
+async def handle_start(message: Message) -> None:
     global stats_chat_id
     stats_chat_id = message.chat.id  # Запоминаем чат для статистики
 
+    # Show welcome message.
+    bn = (await bot.get_my_name()).name
+    welcome = escapeCharacters(_("msg_start_welcome{bot_name}").format(
+        bot_name= bn
+        ))
+    print("Bot name", bn, "\nWelcome:\n", welcome)
+
+    # Show initial commands.
     await message.answer(
-        _("select_action")
-        )#, reply_markup=keyboard)
+        text= welcome,
+        parse_mode=__md_parse_mode)
+    
+    await message.answer(text = _("msg_start_select_action"))
 
 
-class CreateEventForm(StatesGroup):
-    name = State()
+class CreateTeam(StatesGroup):
+    title = State()
     description = State()
+    minimalMembers = State()
+    maximalMembers = State()
+    deadline = State()
+    customCrews = State()
+    minimalCrews = State()
+    maximalCrews = State()
 
+    preview = State()
+
+FINISHED_KEY = "finished"
+
+CANCEL_EDIT = SwitchTo(
+    Const("Отменить редактирование"),
+    when=F["dialog_data"][FINISHED_KEY],
+    id="cnl_edt",
+    state=CreateTeam.preview,
+)
+
+async def next_or_end(event, widget, dialog_manager: DialogManager, *_):
+    if dialog_manager.dialog_data.get(FINISHED_KEY):
+        await dialog_manager.switch_to(CreateTeam.preview)
+    else:
+        await dialog_manager.next()
+
+
+async def create_team_getter(dialog_manager: DialogManager, **kwargs):
+    dialog_manager.dialog_data[FINISHED_KEY] = True
+    return {
+        "title": dialog_manager.find("title").get_value(),
+        "description": dialog_manager.find("description").get_value(),
+        "minimalMembers": dialog_manager.find("minimalMembers").get_value(),
+        "maximalMembers": dialog_manager.find("maximalMembers").get_value(),
+    }
+
+create_team_dialog = Dialog(
+    Window(
+        I18nFormat(_T("query_team_title")),
+        TextInput(id="title", on_success=next_or_end),
+        CANCEL_EDIT,
+        state=CreateTeam.title,
+    ),
+    Window(
+        I18nFormat(_T("query_team_description")),
+        TextInput(id="description", on_success=next_or_end),
+        CANCEL_EDIT,
+        state=CreateTeam.description,
+    ),
+    Window(
+        I18nFormat(_T("query_team_minimal_members")),
+        TextInput(id="minimalMembers", on_success=next_or_end),
+        CANCEL_EDIT,
+        state=CreateTeam.minimalMembers,
+    ),
+    Window(
+        I18nFormat(_T("query_team_maximal_members")),
+        TextInput(id="maximalMembers", on_success=next_or_end),
+        CANCEL_EDIT,
+        state=CreateTeam.maximalMembers,
+    ),
+    Window(
+        Jinja(
+            "<u>Summary</u>:\n\n"
+            "<b>Name></b>: {{name}}\n"
+            "<b>Description</b>: {{description}}\n"
+            "<b>Minimal members</b>: {{minimalMembers}}\n"
+            "<b>Maximal members</b>: {{maximalMembers}}\n"
+        ),
+        SwitchTo(
+            I18nFormat(_T("change_team_title")),
+            id="to_name",
+            state=CreateTeam.title,
+        ),
+        SwitchTo(
+            I18nFormat(_T("change_team_description")),
+            id="to_description",
+            state=CreateTeam.description,
+        ),
+        SwitchTo(
+            I18nFormat(_T("change_team_minimal_members")),
+            id="to_minimalMembers",
+            state=CreateTeam.minimalMembers,
+        ),
+        SwitchTo(
+            I18nFormat(_T("change_team_maximal_members")),
+            id="to_maximalMembers",
+            state=CreateTeam.maximalMembers,
+        ),
+        state=CreateTeam.preview,
+        getter=create_team_getter,
+        parse_mode="html",
+    )
+)
 
 @router.message(Command("create"))
-async def create(message: Message, state: FSMContext) -> None:
-    await state.set_state(CreateEventForm.name)
-    await message.answer(
-        _("query_event_name"),
-        reply_markup=ReplyKeyboardRemove(),
-    )
-
-skipId = object
-@router.message(CreateEventForm.name)
-async def process_name(message: Message, state: FSMContext) -> None:
-    await state.update_data(name=message.text)
-    await state.set_state(CreateEventForm.description)
-    await message.answer(
-        _("query_event_description"),
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard = [
-                [
-                    InlineKeyboardButton(text="Skip", callback_data="skip_description")
-                ]
-            ],
-            resize_keyboard=True
-        ),
-    )
-
-@router.callback_query(lambda callback_query: callback_query.data == "skip_description")
-async def handle_skip_description(callback_query: CallbackQuery, state: FSMContext) -> None:
-    data = await state.get_data()
-    await state.clear()
-    await show_summary(callback_query.message, data)
-
-
-@router.message(CreateEventForm.description)
-async def process_description(message: Message, state: FSMContext) -> None:
-    data = await state.update_data(description=message.text)
-    await state.clear()
-    await show_summary(message, data)
-
-async def show_summary(message: Message, data: Dict[str, Any]) -> None:
-    name = data["name"]
-    description = data.get("description", "")
-
-    text = _("new_event_created{name}{desc}").format(
-        name = name,
-        desc = description
-    )
-    await message.answer(text=text, reply_markup=ReplyKeyboardRemove())
-
-
-
-
-@router.message(Command("manage"))
-async def create(message: Message):
-    await message.answer("manage is not implemented yet.")
-
-
-async def update_stats():
-    global stats_message_id, stats_chat_id
-    while stats_chat_id is None:
-        await asyncio.sleep(1)  # Ждем, пока кто-то введет start
-
-    if stats_message_id is None:
-        msg = await bot.send_message(stats_chat_id, "Обновление статистики...")
-        stats_message_id = int(msg.message_id)
-        print(1, stats_message_id)
-
-    while True:
-        drivers = get_count(DRIVERS_FILE)
-        passengers = get_count(PASSENGERS_FILE)
-        text = f"Водителей {drivers}\nПассажиров {passengers}"
-
-        try:
-            await bot.edit_message_text(text, chat_id=stats_chat_id, message_id=stats_message_id)
-        except Exception:  # Если сообщение удалено, создаем новое
-            #msg = await bot.send_message(stats_chat_id, text)
-            #stats_message_id = msg.message_id
-            print(3, stats_message_id)
-
-        await asyncio.sleep(5)
+async def handle_create_team(message: Message, state: FSMContext, dialog_manager: DialogManager) -> None:
+    await dialog_manager.start(CreateTeam.title, mode=StartMode.RESET_STACK)
 
 async def main():
-    dp.include_router(router)
-    await bot.delete_webhook(drop_pending_updates=True)
 
-    # asyncio.create_task(update_stats())  # Запускаем обновление статистики ОДИН раз
+    setup_router(router)
+    setup_router(create_team_dialog)
+    
+    dp.include_router(router)
+    dp.include_router(create_team_dialog)
+    setup_dialogs(dp)
+
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

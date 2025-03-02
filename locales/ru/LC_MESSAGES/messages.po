@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-28 23:13+0300\n"
+"POT-Creation-Date: 2025-03-03 01:57+0300\n"
 "PO-Revision-Date: 2025-02-28 21:48+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -17,30 +17,82 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.1\n"
+"Generated-By: Babel 2.10.3\n"
 
-#: TeamLimitsBot.py:32 TeamLimitsBot.py:33
-msgid "error-no-token-arg"
-msgstr "No argument was taken for bot's token."
-
-#: TeamLimitsBot.py:74
-msgid "select_action"
+#: teamlimitsbot.py:65
+msgid "msg_start_welcome{bot_name}"
 msgstr ""
-"Выберете действие\n"
-"/create чтобы создать новое событие.\n"
-"/manage чтобы управлять ранее созданными событиями."
+"*В добрый час!*\n"
+"Бот *{bot_name}* поможет вам вести учёт числа желающих принять участие в "
+"совместном мероприятии если число мест ограничено. Например в автомобиле "
+"всего 4 места, в настольную игру могут сыгать от 3-х до 8-ми человек и "
+"т.п.\n"
+"Вы можете сгруппировать участников по группам, обычно это места в "
+"автомобилях, номерах гостиницы и т.п.\n"
+"Вы также можете установить крайний срок регистрации участников, например "
+"чтобы забронировать номера гостиницы или заказать транспорт на известное "
+"число участников.\n"
+"Планируемое мероприятие мы будем называть _Командой_, а группу участников"
+" мы будем называть _Экипажем_."
 
-#: TeamLimitsBot.py:87
-msgid "query_event_name"
-msgstr "Придумайте название вашего события."
-
-#: TeamLimitsBot.py:96
-msgid "query_event_description"
-msgstr "Укажите подробное описание (это не обязательно)."
-
-#: TeamLimitsBot.py:110
-msgid "new_event_created{name}{desc}"
+#: teamlimitsbot.py:75
+msgid "msg_start_select_action"
 msgstr ""
-"Создано событие {name}!\n"
-"({desc})"
+"Теперь выберете действие\n"
+"/create чтобы создать новую Команду.\n"
+
+#: teamlimitsbot.py:117
+#, fuzzy
+msgid "query_team_title"
+msgstr ""
+"Придумайте название вашей Команды. Это обязательно, иначе вы не сможете "
+"отличать одну Команду от другой."
+
+#: teamlimitsbot.py:123
+msgid "query_team_description"
+msgstr ""
+"Укажите подробное описание (это не обязательно) или нажмите кнопку внизу "
+"чтобы"
+
+#: teamlimitsbot.py:129
+msgid "query_team_minimal_members"
+msgstr ""
+"Укажите минимальное число членов вашей Кёоманды (кворум). Если "
+"минимального ограничения нет, то введите 0 или нажмите кнопку внизу."
+
+#: teamlimitsbot.py:135
+#, fuzzy
+msgid "query_team_maximal_members"
+msgstr "Укажите максимальное число участников Команды."
+
+#: teamlimitsbot.py:149
+msgid "change_team_title"
+msgstr "Изменить название"
+
+#: teamlimitsbot.py:154
+#, fuzzy
+msgid "change_team_description"
+msgstr "Изменить описание"
+
+#: teamlimitsbot.py:159
+#, fuzzy
+msgid "change_team_minimal_members"
+msgstr "Изменить минимальное число участников"
+
+#: teamlimitsbot.py:164
+#, fuzzy
+msgid "change_team_maximal_members"
+msgstr "Изменить максмальное число участников"
+
+#~ msgid "query_team_maximamal_members"
+#~ msgstr "Укажите максимальное число участников Комнады."
+
+#~ msgid "skip_team_description"
+#~ msgstr "пропустить"
+
+#~ msgid "skip_team_minimal_members"
+#~ msgstr "Минимальное число участников не ограничено."
+
+#~ msgid "skip_team_maximal_members"
+#~ msgstr ""
 
