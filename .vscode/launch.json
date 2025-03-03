@@ -11,6 +11,7 @@
             "request": "launch",
             "program": "teamlimitsbot.py",
             "console": "integratedTerminal",
+            "justMyCode": false,
             "args": [
                 "-t",
                 "${env:TEAMLIMITSBOT_TOKEN}"

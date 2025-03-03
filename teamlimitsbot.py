@@ -10,7 +10,7 @@ import asyncio
 import logging
 
 from aiogram import F, Bot, Dispatcher, Router
-from aiogram.filters import Command, CommandStart, StateFilter, CommandObject, and_f
+from aiogram.filters import Command, StateFilter, CommandObject, and_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -24,7 +24,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     CallbackQuery,
 )
-from aiogram_dialog import (Dialog, DialogManager, setup_dialogs, StartMode, Window,)
+from aiogram_dialog import Data, Dialog, DialogManager, setup_dialogs, StartMode, Window
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.kbd import Calendar
 from aiogram_dialog.widgets.kbd import Next, SwitchTo
@@ -34,46 +34,24 @@ from datetime import date
 from re import Match
 from typing import Any, Dict, Optional
 
-# Setup locales
-from international import _, _T, I18nFormat, setup_router
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+
+# Setup localozation
+from international import _, N_, NConst, NJinja, localize_router
 
 # Extract token
 from gettoken import TOKEN
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
+# Welcome screen
+import welcome
+
 
 # Main objects
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 router = Router()
-
-def escapeCharacters(text: str, escaped = "[]()+-.!") -> str:
-    for ch in escaped:
-        text = text.replace(ch, f"\\{ch}")
-    return text
-
-__md_parse_mode = "MarkdownV2"
-@router.message(CommandStart())
-async def handle_start(message: Message) -> None:
-    global stats_chat_id
-    stats_chat_id = message.chat.id  # Запоминаем чат для статистики
-
-    # Show welcome message.
-    bn = (await bot.get_my_name()).name
-    welcome = escapeCharacters(_("msg_start_welcome{bot_name}").format(
-        bot_name= bn
-        ))
-    print("Bot name", bn, "\nWelcome:\n", welcome)
-
-    # Show initial commands.
-    await message.answer(
-        text= welcome,
-        parse_mode=__md_parse_mode)
-    
-    await message.answer(text = _("msg_start_select_action"))
-
 
 class CreateTeam(StatesGroup):
     title = State()
@@ -114,25 +92,25 @@ async def create_team_getter(dialog_manager: DialogManager, **kwargs):
 
 create_team_dialog = Dialog(
     Window(
-        I18nFormat(_T("query_team_title")),
+        NConst(N_("query_team_title")),
         TextInput(id="title", on_success=next_or_end),
         CANCEL_EDIT,
         state=CreateTeam.title,
     ),
     Window(
-        I18nFormat(_T("query_team_description")),
+        NConst(N_("query_team_description")),
         TextInput(id="description", on_success=next_or_end),
         CANCEL_EDIT,
         state=CreateTeam.description,
     ),
     Window(
-        I18nFormat(_T("query_team_minimal_members")),
+        NConst(N_("query_team_minimal_members")),
         TextInput(id="minimalMembers", on_success=next_or_end),
         CANCEL_EDIT,
         state=CreateTeam.minimalMembers,
     ),
     Window(
-        I18nFormat(_T("query_team_maximal_members")),
+        NConst(N_("query_team_maximal_members")),
         TextInput(id="maximalMembers", on_success=next_or_end),
         CANCEL_EDIT,
         state=CreateTeam.maximalMembers,
@@ -140,28 +118,28 @@ create_team_dialog = Dialog(
     Window(
         Jinja(
             "<u>Summary</u>:\n\n"
-            "<b>Name></b>: {{name}}\n"
+            "<b>Name></b>: {{title}}\n"
             "<b>Description</b>: {{description}}\n"
             "<b>Minimal members</b>: {{minimalMembers}}\n"
             "<b>Maximal members</b>: {{maximalMembers}}\n"
         ),
         SwitchTo(
-            I18nFormat(_T("change_team_title")),
+            NConst(N_("change_team_title")),
             id="to_name",
             state=CreateTeam.title,
         ),
         SwitchTo(
-            I18nFormat(_T("change_team_description")),
+            NConst(N_("change_team_description")),
             id="to_description",
             state=CreateTeam.description,
         ),
         SwitchTo(
-            I18nFormat(_T("change_team_minimal_members")),
+            NConst(N_("change_team_minimal_members")),
             id="to_minimalMembers",
             state=CreateTeam.minimalMembers,
         ),
         SwitchTo(
-            I18nFormat(_T("change_team_maximal_members")),
+            NConst(N_("change_team_maximal_members")),
             id="to_maximalMembers",
             state=CreateTeam.maximalMembers,
         ),
@@ -177,11 +155,15 @@ async def handle_create_team(message: Message, state: FSMContext, dialog_manager
 
 async def main():
 
-    setup_router(router)
-    setup_router(create_team_dialog)
+    localize_router(dp)
+    localize_router(router)
+    localize_router(create_team_dialog)
     
     dp.include_router(router)
     dp.include_router(create_team_dialog)
+
+    welcome.register_dispatcher(dp)
+    
     setup_dialogs(dp)
 
     await bot.delete_webhook(drop_pending_updates=True)
