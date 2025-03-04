@@ -25,20 +25,20 @@ from aiogram.types import (
     CallbackQuery,
 )
 from aiogram_dialog import Data, Dialog, DialogManager, setup_dialogs, StartMode, Window
-from aiogram_dialog.widgets.kbd import Button
-from aiogram_dialog.widgets.kbd import Calendar
-from aiogram_dialog.widgets.kbd import Next, SwitchTo
-from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.kbd import Button, Calendar, Next, Row, SwitchTo, Row
+from aiogram_dialog.widgets.input import TextInput, ManagedTextInput
+from aiogram_dialog.widgets.text import Jinja
 from datetime import date
 from re import Match
 from typing import Any, Dict, Optional
+
+from details import or_empty, write_dialog_value
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
 # Setup localozation
-from international import _, N_, NConst, NJinja, localize_router
+from international import _, N_, NConst, NFormat, NJinja, localize_router
 
 # Extract token
 from gettoken import TOKEN
@@ -58,92 +58,143 @@ class CreateTeam(StatesGroup):
     description = State()
     minimalMembers = State()
     maximalMembers = State()
-    deadline = State()
-    customCrews = State()
     minimalCrews = State()
     maximalCrews = State()
+    options = State()
+    deadline = State() # calendar
 
-    preview = State()
+    summary = State()
 
 FINISHED_KEY = "finished"
 
-CANCEL_EDIT = SwitchTo(
-    Const("Отменить редактирование"),
-    when=F["dialog_data"][FINISHED_KEY],
-    id="cnl_edt",
-    state=CreateTeam.preview,
-)
-
-async def next_or_end(event, widget, dialog_manager: DialogManager, *_):
-    if dialog_manager.dialog_data.get(FINISHED_KEY):
-        await dialog_manager.switch_to(CreateTeam.preview)
-    else:
-        await dialog_manager.next()
-
 
 async def create_team_getter(dialog_manager: DialogManager, **kwargs):
-    dialog_manager.dialog_data[FINISHED_KEY] = True
-    return {
-        "title": dialog_manager.find("title").get_value(),
-        "description": dialog_manager.find("description").get_value(),
-        "minimalMembers": dialog_manager.find("minimalMembers").get_value(),
-        "maximalMembers": dialog_manager.find("maximalMembers").get_value(),
-    }
+    return dialog_manager.dialog_data
+    # minmbr = dialog_manager.find("minimalMembers").get_value()
+    # print("Minimal members:", minmbr)
+    # return {
+    #     "title": dialog_manager.find("title").get_value(),
+    #     "description": dialog_manager.find("description").get_value(),
+    #     "minimalMembers": dialog_manager.find("minimalMembers").get_value(),
+    #     "maximalMembers": dialog_manager.find("maximalMembers").get_value(),
+    # }
+
+
+def zeropositive(text: str) -> int:
+    value = int(text)
+    if value < 0:
+        raise ValueError(f"Negative number {text}")
+    return value
+
+
+async def minimal_members_error(
+        message: Message,
+        dialog_: Any,
+        manager: DialogManager,
+        error_: ValueError
+):
+    await message.answer(_("team_minimal_members_error{value}").format(
+        value = message.text
+    ))
+
+
+async def maximal_members_success(
+        message: Message,
+        dialog_: Any,
+        manager: DialogManager,
+        data: Any) -> None:
+    minimalMembers = manager.dialog_data["minimalMembers"]
+    maximalMembers = manager.find("maximalMembers").get_value()
+
+    if minimalMembers:
+        if minimalMembers <= maximalMembers:
+            manager.dialog_data["maximalMembers"] = maximalMembers
+            await manager.next()
+        else:
+            await message.answer(
+                _("team_maximal_members_invalid{minimalMembers}{maximalMembers}")
+                .format(
+                    minimalMembers=minimalMembers,
+                    maximalMembers=maximalMembers
+                ))
+    else:
+        manager.dialog_data["maximalMembers"] = maximalMembers
+        await manager.next()
+
+    
+async def maximal_members_error(
+        message: Message,
+        dialog_: Any,
+        manager: DialogManager,
+        error_: ValueError
+):
+    await message.answer(_("team_maximal_members_error{value}").format(
+        value = message.text
+    ))
+
+async def set_max_to_min(
+        callback: CallbackQuery,
+        button: Button,
+        manager: DialogManager) -> None:
+    minimalMembers = manager.dialog_data["minimalMembers"]
+    manager.dialog_data["maximalMembers"] = minimalMembers
+       
 
 create_team_dialog = Dialog(
     Window(
         NConst(N_("query_team_title")),
-        TextInput(id="title", on_success=next_or_end),
-        CANCEL_EDIT,
+        TextInput(id="title", on_success=Next(on_click=write_dialog_value("title"))),
         state=CreateTeam.title,
     ),
     Window(
         NConst(N_("query_team_description")),
-        TextInput(id="description", on_success=next_or_end),
-        CANCEL_EDIT,
+        TextInput(id="description", on_success=Next(on_click=write_dialog_value("description"))),
+        Next(NConst(N_("skip_team_description")), on_click=write_dialog_value("description")),
         state=CreateTeam.description,
     ),
     Window(
         NConst(N_("query_team_minimal_members")),
-        TextInput(id="minimalMembers", on_success=next_or_end),
-        CANCEL_EDIT,
+        TextInput(
+            id="minimalMembers",
+            type_factory=zeropositive,
+            on_success=Next(on_click=write_dialog_value("minimalMembers")),
+            on_error=minimal_members_error),
+        Next(NConst(N_("skip_team_minimal_members")), on_click=write_dialog_value("minimalMembers")),
         state=CreateTeam.minimalMembers,
     ),
     Window(
-        NConst(N_("query_team_maximal_members")),
-        TextInput(id="maximalMembers", on_success=next_or_end),
-        CANCEL_EDIT,
+        NFormat(N_("query_team_maximal_members{minimalMembers}")),
+        TextInput(
+            id="maximalMembers",
+            type_factory=zeropositive,
+            on_success=maximal_members_success,
+            on_error=maximal_members_error,
+        ),
+        Row(
+            Next(
+                NFormat(N_("set_team_max_as_min{minimalMembers}")),
+                id="set_team_max_as_min",
+                on_click=set_max_to_min,
+                when=F["minimalMembers"],
+            ),
+            Next(
+                NConst(N_("skip_team_maximal_members")),
+                id="skip_team_maximal_members",
+                on_click=write_dialog_value("maximalMembers"),
+            ),
+        ),
         state=CreateTeam.maximalMembers,
+        getter=create_team_getter,
     ),
     Window(
         Jinja(
             "<u>Summary</u>:\n\n"
-            "<b>Name></b>: {{title}}\n"
+            "<b>Name</b>: {{title}}\n"
             "<b>Description</b>: {{description}}\n"
             "<b>Minimal members</b>: {{minimalMembers}}\n"
             "<b>Maximal members</b>: {{maximalMembers}}\n"
         ),
-        SwitchTo(
-            NConst(N_("change_team_title")),
-            id="to_name",
-            state=CreateTeam.title,
-        ),
-        SwitchTo(
-            NConst(N_("change_team_description")),
-            id="to_description",
-            state=CreateTeam.description,
-        ),
-        SwitchTo(
-            NConst(N_("change_team_minimal_members")),
-            id="to_minimalMembers",
-            state=CreateTeam.minimalMembers,
-        ),
-        SwitchTo(
-            NConst(N_("change_team_maximal_members")),
-            id="to_maximalMembers",
-            state=CreateTeam.maximalMembers,
-        ),
-        state=CreateTeam.preview,
+        state=CreateTeam.summary,
         getter=create_team_getter,
         parse_mode="html",
     )

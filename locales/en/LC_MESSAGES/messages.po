@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-03 19:05+0300\n"
+"POT-Creation-Date: 2025-03-04 22:59+0300\n"
 "PO-Revision-Date: 2025-02-28 22:10+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -16,54 +16,66 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.1\n"
+"Generated-By: Babel 2.10.3\n"
 
-#: teamlimitsbot.py:65
+#: teamlimitsbot.py:99
+msgid "team_minimal_members_error{value}"
+msgstr ""
+
+#: teamlimitsbot.py:120
+msgid "team_maximal_members_invalid{minimalMembers}{maximalMembers}"
+msgstr ""
+
+#: teamlimitsbot.py:136
+msgid "team_maximal_members_error{value}"
+msgstr ""
+
+#: teamlimitsbot.py:150
+#, fuzzy
+msgid "query_team_title"
+msgstr "Enter the team description"
+
+#: teamlimitsbot.py:155
+#, fuzzy
+msgid "query_team_description"
+msgstr "Enter the team description"
+
+#: teamlimitsbot.py:157
+#, fuzzy
+msgid "skip_team_description"
+msgstr "Enter the team description"
+
+#: teamlimitsbot.py:161
+msgid "query_team_minimal_members"
+msgstr ""
+
+#: teamlimitsbot.py:167
+msgid "skip_team_minimal_members"
+msgstr ""
+
+#: teamlimitsbot.py:171
+msgid "query_team_maximal_members{minimalMembers}"
+msgstr ""
+
+#: teamlimitsbot.py:178
+msgid "set_team_max_as_min{minimalMembers}"
+msgstr ""
+
+#: teamlimitsbot.py:179
+msgid "skip_team_maximal_members"
+msgstr ""
+
+#: welcome.py:23
 msgid "msg_start_welcome{bot_name}"
 msgstr "Welcome to Bot <b>{{bot_name}}</b>"
 
-#: teamlimitsbot.py:75
+#: welcome.py:37
 #, fuzzy
 msgid "msg_start_select_action"
 msgstr ""
 "Select an action:\n"
 "/create to initialize a new event or\n"
 "/manage to manage an existing event."
-
-#: teamlimitsbot.py:117
-#, fuzzy
-msgid "query_team_title"
-msgstr "Enter the team description"
-
-#: teamlimitsbot.py:123
-#, fuzzy
-msgid "query_team_description"
-msgstr "Enter the team description"
-
-#: teamlimitsbot.py:129
-msgid "query_team_minimal_members"
-msgstr ""
-
-#: teamlimitsbot.py:135
-msgid "query_team_maximal_members"
-msgstr ""
-
-#: teamlimitsbot.py:149
-msgid "change_team_title"
-msgstr ""
-
-#: teamlimitsbot.py:154
-#, fuzzy
-msgid "change_team_description"
-msgstr "Enter the team description"
-
-#: teamlimitsbot.py:159
-msgid "change_team_minimal_members"
-msgstr ""
-
-#: teamlimitsbot.py:164
-msgid "change_team_maximal_members"
-msgstr ""
 
 #~ msgid "error-no-token-arg"
 #~ msgstr "No argument was taken for bot's token."
@@ -98,5 +110,29 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "skip_team_maximal_members"
+#~ msgstr ""
+
+#~ msgid "change_team_title"
+#~ msgstr ""
+
+#~ msgid "change_team_description"
+#~ msgstr "Enter the team description"
+
+#~ msgid "change_team_minimal_members"
+#~ msgstr ""
+
+#~ msgid "change_team_maximal_members"
+#~ msgstr ""
+
+#~ msgid "query_team_maximal_members"
+#~ msgstr ""
+
+#~ msgid "team_minimal_members_error"
+#~ msgstr ""
+
+#~ msgid "query_team_maximal_members{min_members}"
+#~ msgstr ""
+
+#~ msgid "set_team_max_as_min{min_members}"
 #~ msgstr ""
 

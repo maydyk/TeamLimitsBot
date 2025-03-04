@@ -22,7 +22,8 @@ pybabel compile -f -d locales -D messages
 
 from aiogram import Bot, Router
 from aiogram_dialog.api.protocols import DialogManager
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.text import Const, Format, Jinja
+from aiogram_dialog.widgets.text.format import _FormatDataStub
 from aiogram_dialog.widgets.text.jinja import JINJA_ENV_FIELD , default_env
 from aiogram_dialog.widgets.common import WhenCondition
 from aiogram.utils.i18n import I18n
@@ -68,4 +69,13 @@ class NJinja(Jinja):
             return await template.render_async(data)
         else:
             return template.render(data)
+        
+class NFormat(Format):
+    async def _render_text(
+            self, data: dict, manager: DialogManager,
+    ) -> str:
+        if manager.is_preview():
+            return _(self.text).format_map(_FormatDataStub(data=data))
+        return _(self.text).format_map(data)
+
 
