@@ -1,5 +1,5 @@
 """
-modeule 'international'
+module 'international'
 Load and setup localization files for aiogram.
 NOTE: Don't change module location!
 
@@ -11,13 +11,15 @@ pybabel extract --input-dirs=. -o locales/messages.pot
 pybabel update -d locales -D messages -i locales/messages.pot
 
 3: Manually edit files ./locales/**/LC_MESSAGES/messages.po
+Useful unicode symbols can be found there:
+https://apps.timwhitlock.info/emoji/tables/unicode
 
 4: compile mo files:
 pybabel compile -f -d locales -D messages
 
 @Author: Denis Maydykovsky
 """
-# See instructons how to prepare localization files
+# See instructions how to prepare localization files
 # https://docs.aiogram.dev/en/stable/utils/i18n.html#step-1-extract-messages
 
 from aiogram import Bot, Router
@@ -25,38 +27,42 @@ from aiogram_dialog.api.protocols import DialogManager
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 from aiogram_dialog.widgets.text.format import _FormatDataStub
 from aiogram_dialog.widgets.text.jinja import JINJA_ENV_FIELD , default_env
-from aiogram_dialog.widgets.common import WhenCondition
 from aiogram.utils.i18n import I18n
 from aiogram.utils.i18n.middleware import FSMI18nMiddleware
-from jinja2 import BaseLoader, Environment
+from jinja2 import Environment
 from pathlib import Path
 
 # Setup localization directory
-BASE_DIR = Path(__file__).parent
-LOCALES_DIR = BASE_DIR / "locales"
+_BASE_DIR = Path(__file__).parent
+_LOCALES_DIR = _BASE_DIR / "locales"
 
 # Setup i18n middleware
-__i18n = I18n(path=LOCALES_DIR)
-__localization = FSMI18nMiddleware(__i18n)
+_i18n = I18n(path=_LOCALES_DIR)
+_localization = FSMI18nMiddleware(_i18n)
 
 def localize_router(router: Router):
-    __localization.setup(router)
+    _localization.setup(router)
 
 # Alias for gettext method
-_ = __i18n.gettext
+_ = _i18n.gettext
 
-# Alias for dialogs. This is the one of default bybabel prefixes. 
+# Alias for dialogs. This is the one of default pybabel prefixes.
+# We use this empty prefix to generate strings by pybabel.
 def N_(text: str) -> str: return text
 
 class NConst(Const):
-    '''
+    """
     Use this class instead Const to localize strings.
-    Use prefix N_(...)
-    '''
+    Use the prefix N_(...)
+    """
     async def _render_text(self, data: dict, manager: DialogManager) -> str:
         return _(self.text)
     
 class NJinja(Jinja):
+    """
+    Use this class instead Jinja to localize strings.
+    Use the prefix N_(...)
+    """
     async def _render_text(self, data: dict, manager: DialogManager) -> str:
         if JINJA_ENV_FIELD in manager.middleware_data:
             env = manager.middleware_data[JINJA_ENV_FIELD]
@@ -71,6 +77,10 @@ class NJinja(Jinja):
             return template.render(data)
         
 class NFormat(Format):
+    """
+    Use this class instead Format to localize strings.
+    Use the prefix N_(...)
+    """
     async def _render_text(
             self, data: dict, manager: DialogManager,
     ) -> str:
