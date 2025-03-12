@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-04 22:59+0300\n"
+"POT-Creation-Date: 2025-03-12 22:51+0300\n"
 "PO-Revision-Date: 2025-02-28 21:48+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,78 +19,245 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: teamlimitsbot.py:99
+#: create_team_wizard.py:117
 #, fuzzy
-msgid "team_minimal_members_error{value}"
+msgid "create_team_minimal_members_error{value}"
 msgstr ""
 "Укажите положительное число для минимального числа участников (или 0) "
 "вместо {value}."
 
-#: teamlimitsbot.py:120
+#: create_team_wizard.py:136
 #, fuzzy
-msgid "team_maximal_members_invalid{minimalMembers}{maximalMembers}"
-msgstr "Максимальное чило участников {maximalMembers} должно быть больше "
-"или равно минимальному числу участников {minimalMembers}."
+msgid "create_team_maximal_members_invalid{minimalMembers}{maximalMembers}"
+msgstr ""
+"Минимальное число участников {minimalMembers} должно быть меньше или "
+"равно минимальному числу участников {maximalMembers}."
 
-#: teamlimitsbot.py:136
+#: create_team_wizard.py:148
 #, fuzzy
-msgid "team_maximal_members_error{value}"
+msgid "create_team_maximal_members_error{value}"
 msgstr ""
 "Укажите положительное число для максимального числа участников (или 0) "
 "вместо {value}."
 
-#: teamlimitsbot.py:150
+#: create_team_wizard.py:181
 #, fuzzy
-msgid "query_team_title"
+msgid "create_team_minimal_crews_error{value}"
+msgstr ""
+"Укажите положительное число для минимального числа Экипажей (или 0) "
+"вместо {value}."
+
+#: create_team_wizard.py:199
+#, fuzzy
+msgid "create_team_maximal_crews_invalid{minimalCrews}{maximalCrews}"
+msgstr ""
+"Минимальное число Экипажей {minimalCrews} должно быть меньше или равно "
+"минимальному числу Экипажей {maximalCrews}."
+
+#: create_team_wizard.py:211
+#, fuzzy
+msgid "create_team_maximal_crews_error{value}"
+msgstr ""
+"Укажите положительное число для максимального числа участников (или 0) "
+"вместо {value}."
+
+#: create_team_wizard.py:228
+msgid "create_team_query_title"
 msgstr ""
 "Придумайте название вашей Команды. Это обязательно, иначе вы не сможете "
 "отличать одну Команду от другой."
 
-#: teamlimitsbot.py:155
-msgid "query_team_description"
+#: create_team_wizard.py:231
+#, fuzzy
+msgid "create_team_ask_description_checked"
+msgstr "✅ добавить подробное описание?"
+
+#: create_team_wizard.py:232
+#, fuzzy
+msgid "create_team_ask_description_unchecked"
+msgstr "✖ добавить подробное описание?"
+
+#: create_team_wizard.py:242
+#, fuzzy
+msgid "create_team_query_description"
 msgstr ""
 "Укажите подробное описание Команды (это не обязательно) или нажмите "
 "кнопку внизу 👇 чтобы"
 
-#: teamlimitsbot.py:157
+#: create_team_wizard.py:244
 #, fuzzy
-msgid "skip_team_description"
+msgid "create_team_skip_description"
 msgstr "пропустить"
 
-#: teamlimitsbot.py:161
-msgid "query_team_minimal_members"
+#: create_team_wizard.py:251
+#, fuzzy
+msgid "create_team_query_minimal_members"
 msgstr ""
 "Укажите минимальное число членов Команды (кворум). Это пригодится если "
 "Команда будет иметь строго определённое число участников. Пока Команда "
 "будет меньше этого числа будет отображаться предупреждение. Если "
-"минимального ограничения нет, то введите 0 или нажмите кнопку внизу 👇"
+"минимального ограничения нет, то введите 0 или нажмите кнопку пропустить"
+"  👇"
 
-#: teamlimitsbot.py:167
+#: create_team_wizard.py:259
 #, fuzzy
-msgid "skip_team_minimal_members"
+msgid "create_team_skip_minimal_members"
 msgstr "Пропустить"
 
-#: teamlimitsbot.py:171
+#: create_team_wizard.py:268
 #, fuzzy
-msgid "query_team_maximal_members{minimalMembers}"
+msgid "create_team_query_maximal_members{minimalMembers}"
 msgstr ""
-"Укажите максимальное число участников Команды. Набор участников будет "
-"приостановлен по достижении этого числа. Другие желающие попадут в список"
-" ожидания. Если это число равно минимальному числу участников "
-"{minimalMembers}, то Команда будет требовать строго определённого числа "
-"участников (например для игры в Преферанс). Если вы планируете "
-"использовать Экипажи, то можно указать 0 или пропустить. Тогда предельное"
-" число участников будет определяться Экипажами."
+"Укажите максимальное число участников Команды (больше или равное "
+"{minimalMembers}). Набор участников будет приостановлен по достижении "
+"этого числа. Другие желающие попадут в список ожидания. Если вы "
+"планируете использовать Экипажи, то можно указать 0 или пропустить. Тогда"
+" предельное число участников будет определяться Экипажами."
 
-#: teamlimitsbot.py:178
+#: create_team_wizard.py:277
 #, fuzzy
-msgid "set_team_max_as_min{minimalMembers}"
-msgstr "Как миним. {minimalMembers}"
+msgid "create_team_fix_maximal_members{minimalMembers}"
+msgstr "Фикс. {minimalMembers}"
 
-#: teamlimitsbot.py:179
+#: create_team_wizard.py:282
 #, fuzzy
-msgid "skip_team_maximal_members"
+msgid "create_team_skip_maximal_members"
 msgstr "Пропустить"
+
+#: create_team_wizard.py:291
+msgid "create_team_crews_welcome"
+msgstr ""
+"Экипажи это группы участников, в которые они смогут добавиться "
+"самостоятельно. Обычно это автомобили или номера гостиницы. Сейчас вы "
+"можете задействовать Экипажи и Если число Экипажей не ограничено, нажмите"
+" кнопку пропустить 👇"
+
+#: create_team_wizard.py:293
+#, fuzzy
+msgid "create_team_enable_crews"
+msgstr "✅ Задействовать Экипажи"
+
+#: create_team_wizard.py:294
+#, fuzzy
+msgid "create_team_disable_crews"
+msgstr "✖ Задействовать Экипажи"
+
+#: create_team_wizard.py:300
+#, fuzzy
+msgid "create_team_setup_crews_limits"
+msgstr "Настроить ограничения Экипажей."
+
+#: create_team_wizard.py:305
+#, fuzzy
+msgid "create_team_skip_crews_limits"
+msgstr "Пропустить."
+
+#: create_team_wizard.py:315
+#, fuzzy
+msgid "create_team_query_minimal_crews"
+msgstr ""
+"Укажите минимальное число Экипажей. Пока Экипажей будет меньше этого "
+"числа будет отображаться предупреждение. Если минимального ограничения "
+"нет, то введите 0 или нажмите кнопку пропустить 👇"
+
+#: create_team_wizard.py:323
+#, fuzzy
+msgid "create_team_skip_minimal_crews"
+msgstr "Пропустить."
+
+#: create_team_wizard.py:332
+#, fuzzy
+msgid "create_team_query_maximal_crews{minimalCrews}"
+msgstr ""
+"Укажите максимальное число Экипажей. Добавление Экипажей будет "
+"приостановлено по достижении этого числа. Другие Экипажи попадут в список"
+" ожидания. Если вы не хотите ограничивать число Экипажей, укажите 0 или "
+"нажмите кнопку внизу. 👇"
+
+#: create_team_wizard.py:341
+#, fuzzy
+msgid "create_team_set_crews_fixed{minimalCrews}"
+msgstr "Фикс. {minimalCrews}"
+
+#: create_team_wizard.py:346
+#, fuzzy
+msgid "create_team_skip_maximal_crews"
+msgstr "Пропустить"
+
+#: create_team_wizard.py:356
+#, fuzzy
+msgid "create_team_deadline_welcome"
+msgstr ""
+"Для Команды можно установить Крайний Срок по истечении которого набор "
+"новых участников будет закончен. Это может пригодиться, если вы "
+"бронируете  гостиницу на фактическое число Участников."
+
+#: create_team_wizard.py:357
+#, fuzzy
+msgid "create_team_deadline_show{deadline}"
+msgstr "Крайний срок {deadline}"
+
+#: create_team_wizard.py:365
+#, fuzzy
+msgid "create_team_enable_deadline_checked"
+msgstr "✅ Установить Крайний Срок."
+
+#: create_team_wizard.py:366
+#, fuzzy
+msgid "create_team_enable_deadline_unchecked"
+msgstr "✖ Установить Крайний Срок."
+
+#: create_team_wizard.py:370
+#, fuzzy
+msgid "create_team_deadline_next"
+msgstr "Пропустить."
+
+#: create_team_wizard.py:377
+#, fuzzy
+msgid "create_team_options_welcome{deadline}"
+msgstr ""
+"Дополнительные параметры. Используйте их с осторожностью.\n"
+"<b>Приостановить набор участников</b> позволяет временно заблокировать "
+"добавление новых Участников\n"
+"<b>Отключить список ожидающих</b> не позволяет добавлять в команду новых "
+"Участников, если достигнуты пределы Команды\n"
+"<b>Очистить после Крайнего Срока</b> после достижения Крайнего Срока "
+"{{deadline}} список ожидающих будет автоматически очищен."
+
+#: create_team_wizard.py:379
+#, fuzzy
+msgid "create_team_suspend_recruitment_checked"
+msgstr "✅ Приостановить набор участников"
+
+#: create_team_wizard.py:380
+#, fuzzy
+msgid "create_team_suspend_recruitment_unchecked"
+msgstr "✖ Приостановить набор участников"
+
+#: create_team_wizard.py:385
+#, fuzzy
+msgid "create_team_suspend_waiting_queue_checked"
+msgstr "✅ Отключить список ожидающих."
+
+#: create_team_wizard.py:386
+#, fuzzy
+msgid "create_team_suspend_waiting_queue_unchecked"
+msgstr "✖ Отключить список ожидающих."
+
+#: create_team_wizard.py:391
+#, fuzzy
+msgid "create_team_suspend_deadline_queue_checked"
+msgstr "✅ Очистить после Крайнего Срока."
+
+#: create_team_wizard.py:392
+#, fuzzy
+msgid "create_team_suspend_deadline_queue_unchecked"
+msgstr "✖ Очистить после Крайнего Срока."
+
+#: create_team_wizard.py:397
+#, fuzzy
+msgid "create_team_options_next"
+msgstr "Пропустить."
 
 #: welcome.py:23
 msgid "msg_start_welcome{bot_name}"
@@ -99,7 +266,7 @@ msgstr ""
 "\n"
 "Бот <b>{{bot_name}}</b> поможет вам вести учёт числа желающих принять "
 "участие в совместном мероприятии если число мест ограничено. Например в "
-"автомобиле всего 4 места, в настольную игру могут сыгать от 3-х до 8-ми "
+"автомобиле всего 4 места, в настольную игру могут сыграть от 3-х до 8-ми "
 "человек и т.п.\n"
 "Вы можете сгруппировать участников по группам, обычно это места в "
 "автомобилях, номерах гостиницы и т.п.\n"
@@ -116,27 +283,36 @@ msgstr ""
 "Теперь выберете действие\n"
 "/create чтобы создать новую Команду.\n"
 
-#~ msgid "query_team_maximamal_members"
-#~ msgstr "Укажите максимальное число участников Комнады."
+#~ msgid "create_team_enable_recruitment"
+#~ msgstr "✅ Приостановить набор участников"
 
-#~ msgid "skip_team_description"
-#~ msgstr "пропустить"
+#~ msgid "create_team_enable_waiting_queue"
+#~ msgstr "✅ Отключить список ожидающих."
 
-#~ msgid "skip_team_minimal_members"
-#~ msgstr "Минимальное число участников не ограничено."
+#~ msgid "create_team_enable_deadline"
+#~ msgstr "✅ Установить Крайний Срок."
 
-#~ msgid "skip_team_maximal_members"
-#~ msgstr ""
+#~ msgid "create_team_disable_deadline"
+#~ msgstr "✖ Установить Крайний Срок."
 
-#~ msgid "change_team_title"
-#~ msgstr "Изменить название"
+#~ msgid "create_team_disable_recruitment_description"
+#~ msgstr "Вы можете временно приостановить набор участников"
 
-#~ msgid "change_team_description"
-#~ msgstr "Изменить описание"
+#~ msgid "create_team_disable_waiting_list_description"
+#~ msgstr "Вы можете отключить составление списка ожидающих."
 
-#~ msgid "change_team_minimal_members"
-#~ msgstr "Изменить минимальное число участников"
+#~ msgid "create_team_enable_deadline_description"
+#~ msgstr "Вы можете установить Крайний Срок для набора участников."
 
-#~ msgid "change_team_maximal_members"
-#~ msgstr "Изменить максмальное число участников"
+#~ msgid "create_team_disable_deadline_queue_description"
+#~ msgstr "Список ожидающих может быть очищен по достижении Крайнего Срока."
+
+#~ msgid "create_team_enable_deadline_deadline"
+#~ msgstr "✖ Очистить список ожидающих."
+
+#~ msgid "create_team_set_members_fixed{maximalMembers}"
+#~ msgstr "Фикс. {maximalMembers}"
+
+#~ msgid "create_team_advanced_options"
+#~ msgstr "Дополнительные параметры"
 

@@ -1,5 +1,13 @@
 {
     "files.exclude": {
         "**/.venv": true
-    }
+    },
+    "cSpell.language": "en,ru",
+    "cSpell.words": [
+        "aiogram",
+        "Maydykovsky",
+        "pybabel",
+        "teamlimitsbot",
+        "Whenable"
+    ]
 }

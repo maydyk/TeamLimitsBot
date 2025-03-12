@@ -1,10 +1,10 @@
-'''
+"""
 module gettoken
 Extract telegram TOKEN from command line or environment.
 NOTE: Don't save the TOKEN in the code!
 
 @Author: Denis Maydykovsky
-'''
+"""
 
 import argparse
 import os

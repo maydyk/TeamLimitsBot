@@ -57,7 +57,7 @@ async def handle_start(message: Message, dialog_manager: DialogManager) -> None:
 
 def register_dispatcher(dp: Dispatcher) -> None:
     """
-    Register components of module.
+    Register components of the module.
     """
     localize_router(welcome_dialog)
     localize_router(start_actions_dialog)

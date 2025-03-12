@@ -6,12 +6,12 @@
     "configurations": [
 
         {
-            "name": "Launch TeamLimitsBot",
+            "name": "Debug TeamLimitsBot",
             "type": "debugpy",
             "request": "launch",
             "program": "teamlimitsbot.py",
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": true,
             "args": [
                 "-t",
                 "${env:TEAMLIMITSBOT_TOKEN}"
