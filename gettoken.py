@@ -1,6 +1,6 @@
 '''
 module gettoken
-Extract telegram TOKEN from command line or environement.
+Extract telegram TOKEN from command line or environment.
 NOTE: Don't save the TOKEN in the code!
 
 @Author: Denis Maydykovsky
@@ -10,29 +10,29 @@ import argparse
 import os
 
 # Parse command line
-__parser = argparse.ArgumentParser(
+_parser = argparse.ArgumentParser(
     prog="teamlimitsbot",
     usage="python teamlimitsbot [-t TOKEN]"
 )
 
-# Treat to the first command line argumant as TOKEN.
-__parser.add_argument(
+# Treat to the first command line argument as TOKEN.
+_parser.add_argument(
     "-t", "--token",
     nargs='?',
     type=str, 
-    # Treat to an enviromenent variable 
+    # Treat to an environment variable 
     default=os.getenv("TEAMLIMITSBOT_TOKEN", None)
     )
-__args = vars(__parser.parse_args())
-__t = __args["token"]
+_args = vars(_parser.parse_args())
+_t = _args["token"]
 
 # Assign TOKEN variable
-if __t:
-    TOKEN = __t
+if _t:
+    TOKEN = _t
 
 # Self testing
 if __name__ == "__main__":
-    print("Getting TOKEN=", __t)
+    print("Getting TOKEN=", _t)
 
 
     
