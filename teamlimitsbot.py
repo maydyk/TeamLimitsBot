@@ -26,7 +26,7 @@ from gettoken import TOKEN
 import welcome
 
 # Create team wizard
-import create_team_wizard
+import create_team
 
 
 async def main():
@@ -42,7 +42,7 @@ async def main():
     dp.include_router(router)
 
     welcome.register_dispatcher(dp)
-    create_team_wizard.register_dispatcher(dp)
+    create_team.register_dispatcher(dp)
     
     setup_dialogs(dp)
 

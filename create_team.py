@@ -36,7 +36,7 @@ from international import _, localize_router, N_, NConst, NFormat, NJinja
 from typing import Any, Final, List, Tuple
 
 
-class CreateTeamWizard(StatesGroup):
+class CreateTeam(StatesGroup):
     title = State()
     description = State()
     minimalMembers = State()
@@ -126,7 +126,7 @@ async def on_query_title(
     if manager.dialog_data.get(_ID_ASC_DESCRIPTION):
         await manager.next()
     else:
-        await manager.switch_to(CreateTeamWizard.minimalMembers)
+        await manager.switch_to(CreateTeam.minimalMembers)
 
     
 async def minimal_members_error(
@@ -258,7 +258,7 @@ manage_team_control = Row(
     SwitchTo(
         NConst(N_("create_team_home")),
         id = _ID_TEAM_HOME,
-        state=CreateTeamWizard.summary,
+        state=CreateTeam.summary,
         when=when_home,
         ),
     Next(NConst(N_("create_team_next")), when=when_next),
@@ -277,7 +277,7 @@ create_team_wizard = Dialog(
             on_state_changed=write_checkbox_state,
         ),
         manage_team_control,
-        state=CreateTeamWizard.title,
+        state=CreateTeam.title,
         getter=dialog_data_getter,
     ),
     
@@ -293,7 +293,7 @@ create_team_wizard = Dialog(
             on_click=write_dialog_data(_ID_DESCRIPTION, ""),
             ),
         manage_team_control,
-        state=CreateTeamWizard.description,
+        state=CreateTeam.description,
     ),
     
     # Query for team minimal members with [reset] button.
@@ -312,7 +312,7 @@ create_team_wizard = Dialog(
             on_click=write_dialog_data(_ID_MINIMAL_MEMBERS, 0),
         ),
         manage_team_control,
-        state=CreateTeamWizard.minimalMembers,
+        state=CreateTeam.minimalMembers,
     ),
 
     # Query for team maximalMembers.
@@ -339,7 +339,7 @@ create_team_wizard = Dialog(
                 )
             ),
         manage_team_control,
-        state=CreateTeamWizard.maximalMembers,
+        state=CreateTeam.maximalMembers,
         getter=dialog_data_getter,
     ),
 
@@ -361,11 +361,11 @@ create_team_wizard = Dialog(
         SwitchTo(
             NConst(N_("create_team_reset_crews_limits")),
             id=_ID_RESET_CREWS_LIMIT,
-            state=CreateTeamWizard.deadline,
+            state=CreateTeam.deadline,
             on_click=reset_crews_limit
         ),
         manage_team_control,
-        state=CreateTeamWizard.enableCrews,
+        state=CreateTeam.enableCrews,
         getter=dialog_data_getter,
     ),
 
@@ -384,7 +384,7 @@ create_team_wizard = Dialog(
             on_click=write_dialog_data(_ID_MINIMAL_CREWS, 0),
         ),
         manage_team_control,
-        state=CreateTeamWizard.maximalCrews,
+        state=CreateTeam.maximalCrews,
         getter=dialog_data_getter,
     ),
 
@@ -411,7 +411,7 @@ create_team_wizard = Dialog(
             )
         ),
         manage_team_control,
-        state=CreateTeamWizard.minimalCrews,
+        state=CreateTeam.minimalCrews,
         getter=dialog_data_getter,
     ),
 
@@ -434,7 +434,7 @@ create_team_wizard = Dialog(
         ),
         Next(NConst(N_("create_team_deadline_next")), id=_ID_DEADLINE_NEXT),
         manage_team_control,
-        state=CreateTeamWizard.deadline,
+        state=CreateTeam.deadline,
         getter=dialog_data_getter,
     ),
 
@@ -462,7 +462,7 @@ create_team_wizard = Dialog(
         ),
         Next(NConst(N_("create_team_options_next")), id=_ID_OPTIONS_NEXT),
         manage_team_control,
-        state=CreateTeamWizard.options,
+        state=CreateTeam.options,
         getter=dialog_data_getter,
         parse_mode="html",
     ),
@@ -477,14 +477,14 @@ create_team_wizard = Dialog(
             Cancel(NConst(N_("create_team_accept")), id=_ID_ACCEPT_TEAM, on_click=accept_team),
         ),
         manage_team_control,
-        state=CreateTeamWizard.summary,
+        state=CreateTeam.summary,
         getter=dialog_data_getter,
         parse_mode="html",
     ),
 )
 
 async def handle_create_team(message: Message, state: FSMContext, dialog_manager: DialogManager) -> None:
-    await dialog_manager.start(CreateTeamWizard.title, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(CreateTeam.title, mode=StartMode.RESET_STACK)
 
 def register_dispatcher(dp:Dispatcher) -> None:
     """
