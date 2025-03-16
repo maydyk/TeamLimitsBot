@@ -5,11 +5,13 @@ Many useful functions
 """
 
 
-from aiogram.types import CallbackQuery 
+from aiogram.types import CallbackQuery, Message
+from aiogram.filters import Command
 from aiogram_dialog import DialogManager, ChatEvent
 from aiogram_dialog.widgets.kbd import Button, Calendar, ManagedCheckbox
 from aiogram_dialog.widgets.kbd.button import OnClick
 from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
+from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.common import Whenable, WhenCondition
 
 from datetime import date
@@ -136,3 +138,13 @@ class Preview(NFormat):
         else:
             return ""
 
+
+async def filter_cancel(message: Message, dialog_manager: DialogManager, **kwargs) -> bool:
+    cmd = Command("cancel")
+    ch = await cmd(message=message, bot=message.bot)
+    if ch:
+        manager = dialog_manager
+        await manager.done()
+        return False
+    else:
+        return True

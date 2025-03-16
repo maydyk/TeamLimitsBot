@@ -36,8 +36,15 @@ from pathlib import Path
 _BASE_DIR = Path(__file__).parent
 _LOCALES_DIR = _BASE_DIR / "locales"
 
+class CustomI18n(I18n):
+    pass
+    # def __getattribute__(self, name):
+    #     if name == "default_locale":
+    #         print("Getting default locale")
+    #     return I18n.__getattribute__(self, name)
+
 # Setup i18n middleware
-_i18n = I18n(path=_LOCALES_DIR)
+_i18n = CustomI18n(path=_LOCALES_DIR)
 _localization = FSMI18nMiddleware(_i18n)
 
 def localize_router(router: Router):

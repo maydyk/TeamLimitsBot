@@ -17,7 +17,7 @@ from aiogram_dialog import setup_dialogs
 logging.basicConfig(level=logging.INFO)
 
 # Setup localization
-import international
+from international import _, localize_router
 
 # Extract token
 from gettoken import TOKEN
@@ -37,8 +37,8 @@ async def main():
     dp = Dispatcher(storage=storage)
     router = Router()
 
-    international.localize_router(dp)
-    international.localize_router(router)
+    localize_router(dp)
+    localize_router(router)
     dp.include_router(router)
 
     welcome.register_dispatcher(dp)

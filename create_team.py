@@ -22,6 +22,7 @@ from aiogram_dialog.widgets.kbd import Back, Button, Calendar, Cancel, Checkbox,
 
 from details import (
     dialog_data_getter,
+    filter_cancel,
     when_dialog_data,
     write_dialog_data,
     write_calendar_date,
@@ -279,7 +280,11 @@ create_team_dialog = Dialog(
     Window(
         NConst(N_("create_team_query_title")),
         _preview(key=_ID_TITLE),
-        TextInput(id=_ID_TITLE, on_success=on_query_title),
+        TextInput(
+            id=_ID_TITLE,
+            on_success=on_query_title,
+            filter=filter_cancel,
+        ),
         Checkbox(
             NConst(N_("create_team_ask_description_checked")),
             NConst(N_("create_team_ask_description_unchecked")),
@@ -297,12 +302,14 @@ create_team_dialog = Dialog(
         _preview(key=_ID_DESCRIPTION),
         TextInput(
             id=_ID_DESCRIPTION,
-            on_success=Next(on_click=write_dialog_value(_ID_DESCRIPTION))),
+            on_success=Next(on_click=write_dialog_value(_ID_DESCRIPTION)),
+            filter=filter_cancel,
+        ),
         Next(
             NConst(N_("create_team_reset_description")),
             id=_ID_RESET_DESCRIPTION,
             on_click=write_dialog_data(_ID_DESCRIPTION, ""),
-            ),
+        ),
         manage_team_control,
         state=CreateTeam.description,
         getter=dialog_data_getter,
@@ -318,6 +325,7 @@ create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=Next(on_click=write_dialog_value(_ID_MINIMAL_MEMBERS)),
             on_error=minimal_members_error,
+            filter=filter_cancel,
         ),
         Next(
             NConst(N_("create_team_reset_minimal_members")),
@@ -339,6 +347,7 @@ create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=maximal_members_success,
             on_error=maximal_members_error,
+            filter=filter_cancel,
         ),
         Row(
             Next(
@@ -392,7 +401,8 @@ create_team_dialog = Dialog(
             id=_ID_MINIMAL_CREWS,
             type_factory=zero_positive,
             on_success=Next(on_click=write_dialog_value(_ID_MINIMAL_CREWS)),
-            on_error=minimal_crews_error
+            on_error=minimal_crews_error,
+            filter=filter_cancel,
         ),
         Next(
             NConst(N_("create_team_reset_minimal_crews")),
@@ -413,6 +423,7 @@ create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=maximal_crews_success,
             on_error=maximal_crews_error,
+            filter=filter_cancel
         ),
         Row(
             Next(
@@ -509,8 +520,13 @@ create_team_dialog = Dialog(
     ),
 )
 
+@create_team_dialog.message(Command("cancel"))
+async def handle_cancel(message: Message, dialog_manager: DialogManager, **kwargs) -> None:
+    await filter_cancel(message=message, dialog_manager=dialog_manager, **kwargs)
+
 async def handle_create_team(message: Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     await dialog_manager.start(CreateTeam.title, mode=StartMode.RESET_STACK)
+
 
 def register_dispatcher(dp:Dispatcher) -> None:
     """

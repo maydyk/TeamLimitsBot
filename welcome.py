@@ -7,12 +7,12 @@ Handle start command and define start dialogs
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message
+from aiogram.types import BotCommand, Message
 from aiogram_dialog import Dialog, DialogManager, Window
 from typing import Any
 
 from details import dialog_start_getter
-from international import N_, localize_router, NConst, NJinja
+from international import _, N_, localize_router, NConst, NJinja
 
 # Shows the first welcome message.
 class Welcome(StatesGroup):
@@ -27,7 +27,7 @@ welcome_dialog = Dialog(
     getter=dialog_start_getter
 )
 
-# Shows the second welome message with initial commands
+# Shows the second welcome message with initial commands
 class StartActions(StatesGroup):
     select_actions = State()
 
@@ -40,8 +40,17 @@ start_actions_dialog = Dialog(
 )
 
 async def handle_start(message: Message, dialog_manager: DialogManager) -> None:
-    # Prepare dialog data
     bot = dialog_manager.event.bot
+
+    # Setup commands
+    await bot.set_my_commands(
+        commands=[
+            BotCommand(command="cancel", description=_("menu_cancel_anywhere")),
+            BotCommand(command="create", description=_("menu_create_team")),
+        ],
+    )
+
+    # Prepare dialog data
     name = (await bot.get_my_name()).name
     data = {"bot_name": name}
 
