@@ -64,7 +64,7 @@ _ID_SETUP_CREWS_LIMIT: Final[str] = "setupCrewsLimit"
 _ID_RESET_CREWS_LIMIT: Final[str] = "resetCrewsLimit"
 _ID_MINIMAL_CREWS: Final[str] = "minimalCrews"
 _ID_RESET_MINIMAL_CREWS: Final[str] = "resetMinimalCrews"
-_ID_MAXIMAL_CREWS: Final[str] = "minimalCrews"
+_ID_MAXIMAL_CREWS: Final[str] = "maximalCrews"
 _ID_FIXED_MAXIMAL_CREWS: Final[str] = "fixMaximalCrews"
 _ID_RESET_MAXIMAL_CREWS: Final[str] = "skipMaximalCrews"
 _ID_ENABLE_DEADLINE: Final[str] = "enableDeadline"
@@ -323,7 +323,7 @@ create_team_wizard = Dialog(
             id=_ID_MAXIMAL_MEMBERS,
             type_factory=zero_positive,
             on_success=maximal_members_success,
-            on_error=minimal_members_error,
+            on_error=maximal_members_error,
         ),
         Row(
             Next(
@@ -418,13 +418,10 @@ create_team_wizard = Dialog(
     # Deadline
     Window(
         NConst(N_("create_team_deadline_welcome")),
-        NFormat(N_("create_team_deadline_show{deadline}"),
-                when=when_dialog_data(_ID_DEADLINE)
-                ),
         Calendar(
             id=_ID_DEADLINE,
-            on_click=write_calendar_date,
-            when=when_dialog_data("enableDeadline"),
+            on_click=write_calendar_date(True),
+            when=when_dialog_data(_ID_ENABLE_DEADLINE),
         ),
         Checkbox(
             NConst(N_("create_team_enable_deadline_checked")),
@@ -432,7 +429,11 @@ create_team_wizard = Dialog(
             id=_ID_ENABLE_DEADLINE,
             on_state_changed=write_checkbox_state,
         ),
-        Next(NConst(N_("create_team_deadline_next")), id=_ID_DEADLINE_NEXT),
+        Next(
+            NConst(N_("create_team_deadline_next")),
+            id=_ID_DEADLINE_NEXT,
+            when=when_dialog_data(_ID_ENABLE_DEADLINE, False),
+            ),
         manage_team_control,
         state=CreateTeam.deadline,
         getter=dialog_data_getter,

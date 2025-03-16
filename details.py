@@ -9,6 +9,7 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager, ChatEvent
 from aiogram_dialog.widgets.kbd import Button, Calendar, ManagedCheckbox
 from aiogram_dialog.widgets.kbd.button import OnClick
+from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
 from aiogram_dialog.widgets.common import Whenable, WhenCondition
 
 from datetime import date
@@ -91,16 +92,21 @@ async def write_checkbox_state(
     manager.dialog_data[checkbox.widget.widget_id] = checkbox.is_checked()
 
 
-async def write_calendar_date(
-        callback: CallbackQuery,
-        source: Calendar,
-        manager: DialogManager,
-        selected_date: date,
-    ) -> None:
+def write_calendar_date(next: bool) -> OnDateSelected: 
     """
     Write calendar date to `dialog_data`
     """
-    manager.dialog_data[source.widget_id] = selected_date
+    async def callback(
+            callback: CallbackQuery,
+            source: Calendar,
+            manager: DialogManager,
+            selected_date: date,
+        ) -> None:
+        manager.dialog_data[source.widget_id] = selected_date
+        if next:
+            await manager.next()
+
+    return callback
 
     
 def zero_positive(text: str) -> int:
