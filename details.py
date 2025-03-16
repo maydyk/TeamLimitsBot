@@ -14,6 +14,8 @@ from aiogram_dialog.widgets.common import Whenable, WhenCondition
 
 from datetime import date
 
+from international import NFormat
+
 from typing import Any
 
 async def print_dialog_event(data: Any, manager: DialogManager):
@@ -116,3 +118,21 @@ def zero_positive(text: str) -> int:
     if value < 0:
         raise ValueError(f"Negative number {text}")
     return value
+
+class Preview(NFormat):
+    """
+    Update...
+    """    
+    def __init__(self, text: str, key_source: str, key_target: str = "preview", when:WhenCondition = None):
+        super().__init__(text, when)
+        self.key_source = key_source
+        self.key_target = key_target
+
+    async def _render_text(self, data:dict, manager: DialogManager) -> str:
+        # Assign 
+        if self.key_source in data:
+            data[self.key_target] = data[self.key_source]
+            return await super()._render_text(data, manager)
+        else:
+            return ""
+

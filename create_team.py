@@ -16,7 +16,7 @@ from aiogram.types import (
 )
 
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
-from aiogram_dialog.widgets.common import Whenable
+from aiogram_dialog.widgets.common import Whenable, WhenCondition
 from aiogram_dialog.widgets.input import TextInput, ManagedTextInput
 from aiogram_dialog.widgets.kbd import Back, Button, Calendar, Cancel, Checkbox, Next, Row, SwitchTo
 
@@ -28,6 +28,7 @@ from details import (
     write_checkbox_state,
     write_dialog_value,
     zero_positive,
+    Preview,
 )
 
 # Setup localization
@@ -51,7 +52,7 @@ class CreateTeam(StatesGroup):
 
 # Constants widget IDs
 _ID_TITLE: Final[str] = "title"
-_ID_ASC_DESCRIPTION: Final[str] = "askDescription"
+_ID_ASK_DESCRIPTION: Final[str] = "askDescription"
 _ID_DESCRIPTION: Final[str] = "description"
 _ID_RESET_DESCRIPTION: Final[str] = "resetDescription"
 _ID_MINIMAL_MEMBERS: Final[str] = "minimalMembers"
@@ -123,7 +124,7 @@ async def on_query_title(
     
     manager.dialog_data[_ID_TITLE] = data
 
-    if manager.dialog_data.get(_ID_ASC_DESCRIPTION):
+    if manager.dialog_data.get(_ID_ASK_DESCRIPTION):
         await manager.next()
     else:
         await manager.switch_to(CreateTeam.minimalMembers)
@@ -253,6 +254,7 @@ async def accept_team(
         ) -> None:
     pass
 
+
 manage_team_control = Row(
     Back(NConst(N_("create_team_back")), when=when_back),
     SwitchTo(
@@ -265,15 +267,23 @@ manage_team_control = Row(
     when=F["dialog_data"][_ID_MANAGE_TEAM],
     )
 
-create_team_wizard = Dialog(
+def _preview(key: str) -> Preview:
+    return Preview(
+        text=N_("create_team_preview{preview}"),
+        key_source=key,
+        when=F["dialog_data"][_ID_MANAGE_TEAM]
+    )
+
+create_team_dialog = Dialog(
     # Query for team name and provide [v] checkbox to include description.
     Window(
         NConst(N_("create_team_query_title")),
+        _preview(key=_ID_TITLE),
         TextInput(id=_ID_TITLE, on_success=on_query_title),
         Checkbox(
             NConst(N_("create_team_ask_description_checked")),
             NConst(N_("create_team_ask_description_unchecked")),
-            id=_ID_ASC_DESCRIPTION,
+            id=_ID_ASK_DESCRIPTION,
             on_state_changed=write_checkbox_state,
         ),
         manage_team_control,
@@ -284,6 +294,7 @@ create_team_wizard = Dialog(
     # Query team description with [reset] button.
     Window(
         NConst(N_("create_team_query_description")),
+        _preview(key=_ID_DESCRIPTION),
         TextInput(
             id=_ID_DESCRIPTION,
             on_success=Next(on_click=write_dialog_value(_ID_DESCRIPTION))),
@@ -294,12 +305,14 @@ create_team_wizard = Dialog(
             ),
         manage_team_control,
         state=CreateTeam.description,
+        getter=dialog_data_getter,
     ),
     
     # Query for team minimal members with [reset] button.
     # Zero or skip for minimalMembers
     Window(
         NConst(N_("create_team_query_minimal_members")),
+        _preview(key=_ID_MINIMAL_MEMBERS),
         TextInput(
             id=_ID_MINIMAL_MEMBERS,
             type_factory=zero_positive,
@@ -313,12 +326,14 @@ create_team_wizard = Dialog(
         ),
         manage_team_control,
         state=CreateTeam.minimalMembers,
+        getter=dialog_data_getter,
     ),
 
     # Query for team maximalMembers.
     # maximalMembers can be great or equal than minimalMembers
     Window(
         NFormat(N_("create_team_query_maximal_members{minimalMembers}")),
+        _preview(key=_ID_MAXIMAL_MEMBERS),
         TextInput(
             id=_ID_MAXIMAL_MEMBERS,
             type_factory=zero_positive,
@@ -372,6 +387,7 @@ create_team_wizard = Dialog(
     # Query for minimal crews
     Window(
         NConst(N_("create_team_query_minimal_crews")),
+        _preview(key=_ID_MINIMAL_CREWS),
         TextInput(
             id=_ID_MINIMAL_CREWS,
             type_factory=zero_positive,
@@ -391,6 +407,7 @@ create_team_wizard = Dialog(
     # Query for maximal crews
     Window(
         NConst(N_("create_team_query_maximal_crews{minimalCrews}")),
+        _preview(key=_ID_MAXIMAL_CREWS),
         TextInput(
             id=_ID_MAXIMAL_CREWS,
             type_factory=zero_positive,
@@ -418,6 +435,7 @@ create_team_wizard = Dialog(
     # Deadline
     Window(
         NConst(N_("create_team_deadline_welcome")),
+        _preview(key=_ID_DEADLINE),
         Calendar(
             id=_ID_DEADLINE,
             on_click=write_calendar_date(True),
@@ -474,10 +492,17 @@ create_team_wizard = Dialog(
     Window(
         NJinja(N_("create_team_summary")),
         Row(
-            Button(NConst(N_("create_team_manage")), id=_ID_MANAGE_TEAM, on_click=manage_team),
-            Cancel(NConst(N_("create_team_accept")), id=_ID_ACCEPT_TEAM, on_click=accept_team),
+            manage_team_control,
+            Button(
+                NConst(N_("create_team_manage")),
+                id=_ID_MANAGE_TEAM,
+                on_click=manage_team,
+                when=~F["dialog_data"][_ID_MANAGE_TEAM]),
+            Cancel(
+                NConst(N_("create_team_accept")),
+                id=_ID_ACCEPT_TEAM,
+                on_click=accept_team),
         ),
-        manage_team_control,
         state=CreateTeam.summary,
         getter=dialog_data_getter,
         parse_mode="html",
@@ -491,8 +516,8 @@ def register_dispatcher(dp:Dispatcher) -> None:
     """
     Register components of the module.
     """
-    localize_router(create_team_wizard)
-    dp.include_router(create_team_wizard)
+    localize_router(create_team_dialog)
+    dp.include_router(create_team_dialog)
     dp.message.register(handle_create_team, Command("create"))
     
 
