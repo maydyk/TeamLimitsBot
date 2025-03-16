@@ -8,6 +8,7 @@ Many useful functions
 from aiogram.types import CallbackQuery 
 from aiogram_dialog import DialogManager, ChatEvent
 from aiogram_dialog.widgets.kbd import Button, Calendar, ManagedCheckbox
+from aiogram_dialog.widgets.kbd.button import OnClick
 from aiogram_dialog.widgets.common import Whenable, WhenCondition
 
 from datetime import date
@@ -28,11 +29,12 @@ async def dialog_start_getter(dialog_manager: DialogManager, **kwargs) -> dict:
     """
     return dialog_manager.start_data
 
+
 async def dialog_data_getter(dialog_manager: DialogManager, **kwargs):
     return dialog_manager.dialog_data
 
 
-def write_dialog_value(id: str, conversion = None):
+def write_dialog_value(id: str, conversion = None) -> OnClick:
     """
     Create and return a Button `on_click` handler who
     Writes value of widget with `id` to DialogManager's dialog_data
@@ -50,6 +52,18 @@ def write_dialog_value(id: str, conversion = None):
     
     return on_click
 
+
+def write_dialog_data(id: str, data: Any|None) -> OnClick:
+    async def on_click(
+            callback: CallbackQuery,
+            button: Button,
+            manager: DialogManager,
+    ) -> None:
+        manager.dialog_data[id] = data
+
+    return on_click
+
+
 def when_dialog_data(key: str, condition: bool = True) -> WhenCondition:
     """
     Show widget if value in dialog data with specified `key` is True.
@@ -58,10 +72,12 @@ def when_dialog_data(key: str, condition: bool = True) -> WhenCondition:
             data: dict,
             widget: Whenable,
             manager: DialogManager,
-        ) -> WhenCondition:
+        ) -> bool:
         value = manager.dialog_data.get(key, False)
         return bool(value) == bool(condition)
+
     return callback
+
 
 async def write_checkbox_state(
         event: ChatEvent,
@@ -94,16 +110,3 @@ def zero_positive(text: str) -> int:
     if value < 0:
         raise ValueError(f"Negative number {text}")
     return value
-
-
-def or_empty(s: str|None) -> str:
-    """
-    Return empty string if input is None
-    """
-    return "" if s is None else s
-
-def or_zero(v: int|None) -> int:
-    """
-    Return zero if value is None
-    """
-    return 0 if v is None else v
