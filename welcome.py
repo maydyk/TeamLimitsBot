@@ -47,6 +47,7 @@ async def handle_start(message: Message, dialog_manager: DialogManager) -> None:
         commands=[
             BotCommand(command="cancel", description=_("menu_cancel_anywhere")),
             BotCommand(command="create", description=_("menu_create_team")),
+            BotCommand(command="manage", description=_("menu_manage_team"))
         ],
     )
 
@@ -63,6 +64,7 @@ async def handle_start(message: Message, dialog_manager: DialogManager) -> None:
 
     await dialog_manager.start(StartActions.select_actions)
     await dialog_manager.done("Finita!")
+    
 
 def register_dispatcher(dp: Dispatcher) -> None:
     """

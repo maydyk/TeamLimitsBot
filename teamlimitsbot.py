@@ -20,13 +20,16 @@ logging.basicConfig(level=logging.INFO)
 from international import _, localize_router
 
 # Extract token
-from gettoken import TOKEN
+from config import TOKEN, DATABASE
 
 # Welcome screen
 import welcome
 
 # Create team wizard
 import create_team
+
+# Our data
+from database import Repository
 
 
 async def main():
@@ -46,12 +49,14 @@ async def main():
     
     setup_dialogs(dp)
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
-
+    # Close the repository even exception
+    async with Repository.build(DATABASE):
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
     

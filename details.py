@@ -5,20 +5,25 @@ Many useful functions
 """
 
 
+from abc import abstractmethod
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Command
-from aiogram_dialog import DialogManager, ChatEvent
-from aiogram_dialog.widgets.kbd import Button, Calendar, ManagedCheckbox
+from aiogram.fsm.state import State
+from aiogram_dialog import DialogManager, ChatEvent, StartMode
+from aiogram_dialog.api.entities import ShowMode, Data
+from aiogram_dialog.widgets.common import Whenable, WhenCondition
+from aiogram_dialog.widgets.kbd import Button, Calendar, Checkbox, ManagedCheckbox, Start
 from aiogram_dialog.widgets.kbd.button import OnClick
 from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
 from aiogram_dialog.widgets.input import ManagedTextInput
-from aiogram_dialog.widgets.common import Whenable, WhenCondition
+from aiogram_dialog.widgets.text import Text
 
 from datetime import date
-
 from international import NFormat
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Protocol, Union, Unpack
 
-from typing import Any
+import re
+
 
 async def print_dialog_event(data: Any, manager: DialogManager):
     """
@@ -27,6 +32,14 @@ async def print_dialog_event(data: Any, manager: DialogManager):
     if __debug__:
         print(data)
 
+
+async def dialog_copy_start_data(start_data: Dict|None, dialog_manager: DialogManager) ->  None:
+    """
+    Copy dialog start start data to dialog data
+    """
+    if isinstance(start_data, Dict):
+        dialog_manager.dialog_data.update(start_data)
+    
 
 async def dialog_start_getter(dialog_manager: DialogManager, **kwargs) -> dict:
     """
@@ -95,6 +108,13 @@ async def write_checkbox_state(
     """
     manager.dialog_data[checkbox.widget.widget_id] = checkbox.is_checked()
 
+async def dialog_delete_message(
+        callback: CallbackQuery,
+        button: Button,
+        dialog_manager: DialogManager,
+        ) -> None:
+    await callback.message.delete()
+    
 
 def write_calendar_date(next: bool) -> OnDateSelected: 
     """
@@ -148,3 +168,92 @@ async def filter_cancel(message: Message, dialog_manager: DialogManager, **kwarg
         return False
     else:
         return True
+    
+
+# See Method 3 from https://stackoverflow.com/q/6760685/3023211
+class Singleton(type):
+    """
+    A metaclass for singletons
+    """
+    __instances = {}
+
+    def __call__(cls, *args, **kwds):
+        if cls not in cls.__instances:
+            cls.__instances[cls] = super(Singleton, cls).__call__(*args, **kwds)
+        return cls.__instances[cls]
+
+def even_hex(number: int) -> str:
+    """
+    Format number as even hex without prefix
+    """
+
+    # Remove prefix 0x
+    text = hex(number)[2:].upper()
+    # Pad by zero
+    l = len(text)
+    return text.rjust(l + (l % 2), '0')
+
+def camel_to_snake(text: str) -> str:
+    """
+    Convert CamelCase string to snake_case string.
+    """
+    
+    # See https://sky.pro/wiki/python/preobrazovanie-camel-case-v-snake-case-v-python-funktsiya/
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", text)
+
+
+DynamicDataProvider = Callable[[CallbackQuery, Button, DialogManager], Awaitable[dict],]
+
+
+# TODO: Combine DynamicDataMaker with Data
+# DynamicData = Union[dict, list, int, str, float, None, DynamicDataProvider]
+DynamicData = Union[Data, DynamicDataProvider]
+
+class DStart(Start):
+    def __init__(
+            self,
+            text: Text,
+            id: str,
+            state: State,
+            data: DynamicData = None,
+            on_click: Optional[OnClick] = None,
+            show_mode: Optional[ShowMode] = None,
+            mode: StartMode = StartMode.NORMAL,
+            when: WhenCondition = None):
+        super().__init__(text, id, state, data, on_click, show_mode, mode, when)
+        self.dynamic_data = data
+
+    async def _on_click(self, callback: CallbackQuery, button: Button,
+                        manager: DialogManager):
+        # Replace start data before super call
+        if isinstance(self.dynamic_data, Callable):
+            self.start_data = await self.dynamic_data(callback, button, manager)
+
+        return await super()._on_click(callback, button, manager)
+    
+
+async def dialog_dynamic_data(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    return dialog_manager.dialog_data
+
+
+async def initialize_checkboxes(manager: DialogManager, *ids: List[str]) -> None:
+    """
+    Lookup manager.dialog_data for specified ids and set corresponding
+    checkbox to an appropriate state. 
+    """
+    data = manager.dialog_data
+    for id in ids:
+        widget = manager.find(id)
+        assert(isinstance(widget, ManagedCheckbox))
+        if id in data:
+            await widget.set_checked(data[id])
+
+
+# Self testing
+if __name__ == "__main":
+    # Testing even_hex
+    assert(even_hex(0x5f7) == "05F7")
+    assert(even_hex(0xA679) == "A679")
+
+    # Testing camel_to_snake
+    assert(camel_to_snake("ClassObjectX").lower() == "class_object_x")

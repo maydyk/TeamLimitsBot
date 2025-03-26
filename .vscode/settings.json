@@ -6,7 +6,10 @@
     "cSpell.words": [
         "aiogram",
         "Maydykovsky",
+        "ondelete",
+        "onupdate",
         "pybabel",
+        "sessionmaker",
         "teamlimitsbot",
         "Whenable"
     ]
