@@ -1,8 +1,8 @@
-"""Null for deadline default.
+"""CheckConstraints 1
 
-Revision ID: 3851874db465
-Revises: c7f455bc951b
-Create Date: 2025-03-22 16:09:17.037108
+Revision ID: 6b6c059a3c37
+Revises: 01293294c51c
+Create Date: 2025-03-27 22:22:22.848833
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '3851874db465'
-down_revision: Union[str, None] = 'c7f455bc951b'
+revision: str = '6b6c059a3c37'
+down_revision: Union[str, None] = '01293294c51c'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

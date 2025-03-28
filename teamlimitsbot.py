@@ -25,11 +25,14 @@ from config import TOKEN, DATABASE
 # Welcome screen
 import welcome
 
-# Create team wizard
-import create_team
+# Create (and manage) team wizard
+import manage_team
+
+# Client for members and crews
+import member_team
 
 # Our data
-from database import Repository
+from repository import Repository
 
 
 async def main():
@@ -45,7 +48,8 @@ async def main():
     dp.include_router(router)
 
     welcome.register_dispatcher(dp)
-    create_team.register_dispatcher(dp)
+    manage_team.register_dispatcher(dp)
+    member_team.register_dispatcher(dp)
     
     setup_dialogs(dp)
 

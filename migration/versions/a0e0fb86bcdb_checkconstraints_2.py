@@ -1,8 +1,8 @@
-"""Constraints was added.
+"""CheckConstraints 2
 
-Revision ID: c7f455bc951b
-Revises: a02440b1ef24
-Create Date: 2025-03-22 14:19:25.514378
+Revision ID: a0e0fb86bcdb
+Revises: 6b6c059a3c37
+Create Date: 2025-03-27 22:22:55.996949
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c7f455bc951b'
-down_revision: Union[str, None] = 'a02440b1ef24'
+revision: str = 'a0e0fb86bcdb'
+down_revision: Union[str, None] = '6b6c059a3c37'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

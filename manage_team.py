@@ -1,7 +1,7 @@
 """
-module create_team_wizard
+module manage_team
 
-Contains a dialog wizard to create a new team.
+Contains a dialog wizard to create or manage a new team.
 
 @Author: Denis Maydykovsky
 """
@@ -34,14 +34,13 @@ from aiogram_dialog.widgets.kbd import (
 
 from details import (
     even_hex,
+    even_hex_pattern,
+    even_hex_parse,
     dialog_data_getter,
-    dialog_delete_message,
-    dialog_dynamic_data,
     dialog_copy_start_data,
     initialize_checkboxes,
     filter_cancel,
     dialog_start_getter,
-    when_dialog_data,
     write_dialog_data,
     write_calendar_date,
     write_checkbox_state,
@@ -53,11 +52,10 @@ from details import (
 
 # Setup localization
 from international import _, localize_router, N_, NConst, NFormat, NJinja
-import re
 from typing import Any, Dict, Final, List, Tuple
 
-from entities import Team
-from database import Repository
+from repository import Repository, make_person
+from models import TeamModel, fields
 
 _CONFIRM_DELETE_TEAM_YES: Final[str] = "confirmDeleteTeamYes"
 
@@ -97,32 +95,31 @@ class CreateTeam(StatesGroup):
 
 
 # Constants widget IDs
-_ID: Final[str] = Team.ID
+_ID: Final[str] = fields(TeamModel).id
 _TEAM_ID: Final[str] = "teamId"
-_TITLE: Final[str] = Team.TITLE
+_TITLE: Final[str] = fields(TeamModel).title
 _ASK_DESCRIPTION: Final[str] = "askDescription"
-_DESCRIPTION: Final[str] = Team.DESCRIPTION
+_DESCRIPTION: Final[str] = fields(TeamModel).description
 _RESET_DESCRIPTION: Final[str] = "resetDescription"
-_MINIMAL_MEMBERS: Final[str] = Team.MINIMAL_MEMBERS
+_MINIMAL_MEMBERS: Final[str] = fields(TeamModel).minimalMembers
 _RESET_MINIMAL_MEMBERS: Final[str] = "resetMinimalMembers"
-_MAXIMAL_MEMBERS: Final[str] = Team.MAXIMAL_MEMBERS
+_MAXIMAL_MEMBERS: Final[str] = fields(TeamModel).maximalMembers
 _FIXED_MAXIMAL_MEMBERS: Final[str] = "fixedMaximalMembers"
 _RESET_MAXIMAL_MEMBERS: Final[str] = "resetMaximalMembers"
-_ENABLE_CREWS: Final[str] = Team.ENABLE_CREWS
-_RESTRICT_CREWS: Final[str] = Team.RESTRICT_CREWS
+_ENABLE_CREWS: Final[str] = fields(TeamModel).enableCrews
 _SETUP_CREWS_LIMIT: Final[str] = "setupCrewsLimit"
 _RESET_CREWS_LIMIT: Final[str] = "resetCrewsLimit"
-_MINIMAL_CREWS: Final[str] = Team.MINIMAL_CREWS
+_MINIMAL_CREWS: Final[str] = fields(TeamModel).minimalCrews
 _RESET_MINIMAL_CREWS: Final[str] = "resetMinimalCrews"
-_MAXIMAL_CREWS: Final[str] = Team.MAXIMAL_CREWS
+_MAXIMAL_CREWS: Final[str] = fields(TeamModel).maximalCrews
 _FIXED_MAXIMAL_CREWS: Final[str] = "fixMaximalCrews"
 _RESET_MAXIMAL_CREWS: Final[str] = "skipMaximalCrews"
-_ENABLE_DEADLINE: Final[str] = Team.ENABLE_DEADLINE
-_DEADLINE: Final[str] = Team.DEADLINE
+_ENABLE_DEADLINE: Final[str] = "enableDeadline"
+_DEADLINE: Final[str] = fields(TeamModel).deadline
 _DEADLINE_NEXT: Final[str] = "deadline_next"
-_SUSPEND_RECRUITMENT: Final[str] = Team.SUSPEND_RECRUITMENT
-_SUSPEND_PENDING_QUEUE: Final[str] = Team.SUSPEND_PENDING_QUEUE
-_SUSPEND_DEADLINE_QUEUE: Final[str] = Team.SUSPEND_DEADLINE_QUEUE
+_SUSPEND_RECRUITMENT: Final[str] = fields(TeamModel).suspendRecruitment
+_SUSPEND_PENDING_QUEUE: Final[str] = fields(TeamModel).suspendPendingQueue
+_SUSPEND_DEADLINE_QUEUE: Final[str] = fields(TeamModel).suspendDeadlineQueue
 _OPTIONS_NEXT: Final[str] = "optionsNext"
 _MANAGE_TEAM: Final[str] = "manageTeam"
 _CANCEL_TEAM: Final[str] = "cancelTeam"
@@ -191,11 +188,16 @@ async def start_create_team(start_data: Dict|None, dialog_manager: DialogManager
     # Get data from start
     await dialog_copy_start_data(start_data, dialog_manager)
 
+    # Setup intermediate values
+    if start_data:
+        dialog_manager.dialog_data[_ASK_DESCRIPTION] = bool(start_data.get(_DESCRIPTION))
+        dialog_manager.dialog_data[_ENABLE_DEADLINE] = bool(start_data.get(_DEADLINE))
+
     # Initialize checkboxes state
     await initialize_checkboxes(
         dialog_manager,
+        _ASK_DESCRIPTION,
         _ENABLE_CREWS,
-        _RESTRICT_CREWS,
         _ENABLE_DEADLINE,
         _SUSPEND_RECRUITMENT,
         _SUSPEND_PENDING_QUEUE,
@@ -349,7 +351,7 @@ async def delete_team_data(
     Extract from DialogManager.dialog_data values to
     use in delete confirmation dialog
     """
-    keys = (_ID, _TEAM_ID, _TITLE,)
+    keys = (_ID, _TEAM_ID, _TITLE,_DESCRIPTION)
     return dict(zip(keys, itemgetter(*keys)(manager.dialog_data)))
 
 
@@ -363,20 +365,22 @@ async def insert_team(
     assert(not _ID in team_values)
 
     try:
-        userId = callback.from_user.id
-        teamId = await Repository().insertTeam(userId=userId, **team_values)
+        person = make_person(callback.from_user)
+        team = TeamModel(**team_values)
+        teamId = await Repository().insertTeam(person=person, team=team)
 
         await manager.done()
         await callback.message.answer(_("create_team_inserted{teamId}{title}").format(
             teamId=even_hex(teamId),
-            title=team_values.get(Team.TITLE, ""),
+            title=team.title,
             )
         )
         
-    except:
+    except Exception as e:
+        print(e)
         breakpoint()
         await callback.message.answer(_("create_team_insert_failed{title}").format(
-            title=team_values.get(Team.TITLE, ""),
+            title=team_values.get(_TITLE, ""),
             )
         )
         pass
@@ -392,19 +396,20 @@ async def update_team(
     assert(_ID in team_values)
 
     try:
-        teamId = await Repository().updateTeam(**team_values)
+        team = TeamModel(**team_values)
+        teamId = await Repository().updateTeam(team=team)
 
         await manager.done()
         await callback.message.answer(_("create_team_updated{teamId}{title}").format(
             teamId=even_hex(teamId),
-            title=team_values[Team.TITLE],
+            title=team_values[_TITLE],
             )
         )
     except Exception as e:
         print(e)
         breakpoint()
         await callback.message.answer(_("create_team_update_failed{title}").format(
-            title=team_values.get(Team.TITLE, ""),
+            title=team_values.get(_TITLE, ""),
             )
         )
         pass
@@ -527,7 +532,7 @@ create_team_dialog = Dialog(
                 NFormat(N_("create_team_fix_maximal_members{minimalMembers}")),
                 id=_FIXED_MAXIMAL_MEMBERS,
                 on_click=fixed_maximal_members,
-                when=when_dialog_data(_MINIMAL_MEMBERS)
+                when=F[_MINIMAL_MEMBERS]
             ),
             Next(
                 NConst(N_("create_team_skip_maximal_members")),
@@ -549,17 +554,10 @@ create_team_dialog = Dialog(
             id=_ENABLE_CREWS,
             on_state_changed=write_checkbox_state,
         ),
-        Checkbox(
-            NConst(N_("create_team_restrict_crews")),
-            NConst(N_("create_team_broaden_crews")),
-            id=_RESTRICT_CREWS,
-            on_state_changed=write_checkbox_state,
-            when=when_dialog_data(_ENABLE_CREWS),
-        ),
         Next(
             NConst(N_("create_team_setup_crews_limits")),
             id=_SETUP_CREWS_LIMIT,
-            when=when_dialog_data(_RESTRICT_CREWS, False),
+            when=F[_ENABLE_CREWS],
         ),
         SwitchTo(
             NConst(N_("create_team_reset_crews_limits")),
@@ -609,7 +607,7 @@ create_team_dialog = Dialog(
                 NFormat(N_("create_team_fixed_maximal_crews{minimalCrews}")),
                 id=_FIXED_MAXIMAL_CREWS,
                 on_click=fixed_maximal_crews,
-                when=when_dialog_data(_MINIMAL_CREWS),
+                when=F[_MINIMAL_CREWS],
             ),
             Next(
                 NConst(N_("create_team_reset_maximal_crews")),
@@ -629,7 +627,7 @@ create_team_dialog = Dialog(
         Calendar(
             id=_DEADLINE,
             on_click=write_calendar_date(True),
-            when=when_dialog_data(_ENABLE_DEADLINE),
+            when=F[_ENABLE_DEADLINE],
         ),
         Checkbox(
             NConst(N_("create_team_enable_deadline_checked")),
@@ -640,7 +638,7 @@ create_team_dialog = Dialog(
         Next(
             NConst(N_("create_team_deadline_next")),
             id=_DEADLINE_NEXT,
-            when=when_dialog_data(_ENABLE_DEADLINE, False),
+            when=~F[_ENABLE_DEADLINE],
             ),
         manage_team_control,
         state=CreateTeam.deadline,
@@ -667,7 +665,7 @@ create_team_dialog = Dialog(
             NConst(N_("create_team_suspend_deadline_queue_unchecked")),
             id=_SUSPEND_DEADLINE_QUEUE,
             on_state_changed=write_checkbox_state,
-            when=when_dialog_data("enableDeadline"),
+            when=F[_ENABLE_DEADLINE],
         ),
         Next(NConst(N_("create_team_options_next")), id=_OPTIONS_NEXT),
         manage_team_control,
@@ -699,7 +697,7 @@ create_team_dialog = Dialog(
                 id=_DELETE_TEAM,
                 state=ConfirmDeleteTeam.confirm,
                 data=delete_team_data,
-                when=F[_ID].is_not(None),
+                when=F[_ID],
             ),
             Button(
                 NConst(N_("create_team_insert")),
@@ -748,11 +746,11 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
     """
     Show list of managed teams
     """
-    teams = await Repository().queryAdminTeams(message.from_user.id)
+    teams = await Repository().queryAdminTeams(make_person(message.from_user))
 
     # Build text
     msg = _("msg_manage_list_head")
-    for id, (title, description) in teams.items():
+    for id, title, description, in teams:
         teamId = even_hex(id)
         msg += _("msg_manage_list_item{teamId}{title}{description}").format(
             teamId = teamId,
@@ -764,30 +762,30 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
 
 
 # /m04, /m2F4H etc
-manage_pattern = re.compile(r"^m((?:[0-9A-Fa-f]{2})+)$")
+manage_pattern = even_hex_pattern("m")
 
 @create_team_router.message(Command(manage_pattern))
 async def handle_manage_team(message: Message, dialog_manager: DialogManager, **kwargs) -> None:
     """
     Start to manage team from command
     """
-    command_match = manage_pattern.search(message.text.lstrip('/'))
-    if command_match:
-        team_text = command_match.group(1)
-        if team_text:
-            teamId = int(team_text, 16)
-            teamStr = even_hex(teamId)
-            team_values = await Repository().queryTeam(teamId, message.from_user.id)
-            if team_values:
-                # Add the text representation of team ID
-                team_values[_TEAM_ID] = teamStr
+    teamId = even_hex_parse(manage_pattern, message.text.lstrip('/'))
+    if teamId is not None:
+        teamStr = even_hex(teamId)
+        teamModel = await Repository().queryTeam(teamId, make_person(message.from_user))
+        if teamModel:
+            # Add the text representation of team ID
+            team_values = dict(
+                teamModel.model_dump(),
+                **{_TEAM_ID : teamStr }
+            )
 
-                await dialog_manager.start(CreateTeam.summary, data = team_values, mode = StartMode.RESET_STACK)
-            else:
-                # Team is not exists
-                await message.answer(_("msg_team_not_found{teamId}").format(
-                    teamId = teamStr
-                ))    
+            await dialog_manager.start(CreateTeam.summary, data = team_values, mode = StartMode.RESET_STACK)
+        else:
+            # Team is not exists
+            await message.answer(_("msg_team_not_found{teamId}").format(
+                teamId = teamStr
+            ))    
 
 
 
@@ -795,7 +793,7 @@ async def handle_member_team(message: Message, dialog_manager: DialogManager, **
     pass
 
 
-def register_dispatcher(dp:Dispatcher) -> None:
+def register_dispatcher(dp: Dispatcher) -> None:
     """
     Register components of the module.
     """

@@ -5,7 +5,6 @@ Many useful functions
 """
 
 
-from abc import abstractmethod
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Command
 from aiogram.fsm.state import State
@@ -23,7 +22,6 @@ from international import NFormat
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Protocol, Union, Unpack
 
 import re
-
 
 async def print_dialog_event(data: Any, manager: DialogManager):
     """
@@ -182,6 +180,7 @@ class Singleton(type):
             cls.__instances[cls] = super(Singleton, cls).__call__(*args, **kwds)
         return cls.__instances[cls]
 
+
 def even_hex(number: int) -> str:
     """
     Format number as even hex without prefix
@@ -193,13 +192,22 @@ def even_hex(number: int) -> str:
     l = len(text)
     return text.rjust(l + (l % 2), '0')
 
-def camel_to_snake(text: str) -> str:
+
+def even_hex_pattern(prefix: str) -> re.Pattern:
     """
-    Convert CamelCase string to snake_case string.
+    Build a regular expression to parse even hex string with prefix
     """
+    return re.compile(f"^{prefix}((?:[0-9A-Fa-f]{{2}})+)$")
+
+
+def even_hex_parse(pattern: re.Pattern, text: str) -> str|None:
+    match = pattern.search(text)
+    if match:
+        value = match.group(1)
+        if value:
+            return int(value, 16)
     
-    # See https://sky.pro/wiki/python/preobrazovanie-camel-case-v-snake-case-v-python-funktsiya/
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", text)
+    return None
 
 
 DynamicDataProvider = Callable[[CallbackQuery, Button, DialogManager], Awaitable[dict],]
@@ -251,9 +259,8 @@ async def initialize_checkboxes(manager: DialogManager, *ids: List[str]) -> None
 
 # Self testing
 if __name__ == "__main":
+
     # Testing even_hex
     assert(even_hex(0x5f7) == "05F7")
     assert(even_hex(0xA679) == "A679")
 
-    # Testing camel_to_snake
-    assert(camel_to_snake("ClassObjectX").lower() == "class_object_x")

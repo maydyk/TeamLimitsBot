@@ -1,11 +1,15 @@
 """
 Define database entities
 
-1) Update database schema .venv/bin/alembic revision --autogenerate -m "Revision name"
-2) Apply changes: .venv/bin/alembic upgrade head
+1) Update database schema:
+.venv/bin/alembic revision --autogenerate -m "Revision name"
+2) Apply changes:
+.venv/bin/alembic upgrade head
 
 @Author: Denis Maydykovsky
 """
+
+import re
 
 from datetime import datetime
 from operator import itemgetter
@@ -21,18 +25,23 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column, class_mapper
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from typing import Any, Dict, Final
+from typing import Any, Dict, Final, Optional
 
-from details import camel_to_snake, even_hex
+def camel_to_snake(text: str) -> str:
+    """
+    Convert CamelCase string to snake_case string.
+    """
+    
+    # See https://sky.pro/wiki/python/preobrazovanie-camel-case-v-snake-case-v-python-funktsiya/
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", text)
+
 
 class Entity(AsyncAttrs, DeclarativeBase):
     """
     Common entity
     """
-    CREATED_AT: Final[str] = "createdAt"
-    UPDATED_AT: Final[str] = "updatedAt"
 
     # Don't create table for this class
     __abstract__ = True
@@ -40,18 +49,26 @@ class Entity(AsyncAttrs, DeclarativeBase):
     # Common columns
     createdAt: Mapped[datetime] = mapped_column(
         DateTime,
-        name=CREATED_AT,
         nullable=False,
         server_default=func.now(),
     )
 
     updatedAt: Mapped[datetime] = mapped_column(
         DateTime,
-        name=UPDATED_AT,
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+    def to_dict(self) -> dict:
+        """
+        Get dictionary for given entity.
+        """
+        # Get the mapper
+        columns = class_mapper(self.__class__).columns
+        # Make dictionary from column names and their values
+        return {column.key: getattr(self, column.key) for column in columns}
+
 
     # Build table name from class name
     @declared_attr.directive
@@ -59,182 +76,99 @@ class Entity(AsyncAttrs, DeclarativeBase):
         return f"{camel_to_snake(cls.__name__).upper()}S"
 
 
+
 class Team(Entity):
-    ID: Final[str] = "id"
-    TITLE: Final[str] = "title"
-    DESCRIPTION: Final[str] = "description"
-    MINIMAL_MEMBERS: Final[str] = "minimalMembers"
-    MAXIMAL_MEMBERS: Final[str] = "maximalMembers"
-    ENABLE_CREWS: Final[str] = "enableCrews"
-    RESTRICT_CREWS: Final[str] = "restrictCrews"
-    MINIMAL_CREWS: Final[str] = "minimalCrews"
-    MAXIMAL_CREWS: Final[str] = "maximalCrews"
-    ENABLE_DEADLINE: Final[str] = "enableDeadline"
-    DEADLINE: Final[str] = "deadline"
-    SUSPEND_RECRUITMENT: Final[str] = "suspendRecruitment"
-    SUSPEND_PENDING_QUEUE: Final[str] = "suspendPendingQueue"
-    SUSPEND_DEADLINE_QUEUE: Final[str] = "suspendDeadlineQueue"
     
-    id: Mapped[int] = mapped_column(Integer, name=ID, primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(String, name=TITLE, unique=True, nullable=False)
-    description: Mapped[str] = mapped_column(String, name=DESCRIPTION, nullable=False, server_default="")
-    minimalMembers: Mapped[int] = mapped_column(Integer, name=MINIMAL_MEMBERS, nullable=False, server_default="0")
-    maximalMembers: Mapped[int] = mapped_column(Integer, name=MAXIMAL_MEMBERS, nullable=False, server_default="0")
-    enableCrews: Mapped[bool] = mapped_column(Boolean, name=ENABLE_CREWS, nullable=False, server_default="0")
-    restrictCrews: Mapped[bool] = mapped_column(Boolean, name=RESTRICT_CREWS, nullable=False, server_default="0")
-    minimalCrews: Mapped[int] = mapped_column(Integer, name=MINIMAL_CREWS, nullable=False, server_default="0")
-    maximalCrews: Mapped[int] = mapped_column(Integer, name=MAXIMAL_CREWS, nullable=False, server_default="0")
-    enableDeadline: Mapped[int] = mapped_column(Boolean, name=ENABLE_DEADLINE, nullable=False,server_default="0")
-    deadline: Mapped[datetime] = mapped_column(DateTime, name=DEADLINE, nullable=True, server_default=None)
-    suspendRecruitment: Mapped[bool] = mapped_column(Boolean, name=SUSPEND_RECRUITMENT, nullable=False, server_default="0")
-    suspendPendingQueue: Mapped[bool] = mapped_column(Boolean, name=SUSPEND_PENDING_QUEUE, nullable=False, server_default="0")
-    suspendDeadlineQueue: Mapped[bool] = mapped_column(Boolean, name=SUSPEND_DEADLINE_QUEUE, nullable=False, server_default="0")
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(unique=True, nullable=False)
+    description: Mapped[str]
+    minimalMembers: Mapped[int] = mapped_column()
+    maximalMembers: Mapped[int] = mapped_column()
+    enableCrews: Mapped[bool]
+    minimalCrews: Mapped[int] = mapped_column()
+    maximalCrews: Mapped[int] = mapped_column()
+    deadline: Mapped[Optional[datetime]]
+    suspendRecruitment: Mapped[bool]
+    suspendPendingQueue: Mapped[bool]
+    suspendDeadlineQueue: Mapped[bool]
 
     __table_args__ = (
-        CheckConstraint(f"{TITLE} != ''"),
-        CheckConstraint(f"{MINIMAL_MEMBERS} <= {MAXIMAL_MEMBERS}"),
-        CheckConstraint(f"{MINIMAL_CREWS} <= {MAXIMAL_CREWS}"),
-        )
-
-    @staticmethod
-    def id_key() -> str:
-        """
-        Build the reference to 'id' to use as foreign key
-        """
-        return f"{Team.__tablename__}.{Team.ID}"
-    
-    def as_dict(self) -> Dict[str, Any]:
-        """
-        Represent Team values as dictionary
-        """
-        return {
-            Team.ID                    : self.id,
-            Team.TITLE                 : self.title,
-            Team.DESCRIPTION           : self.description,
-            Team.MINIMAL_MEMBERS       : self.minimalMembers,
-            Team.MAXIMAL_MEMBERS       : self.maximalMembers,
-            Team.ENABLE_CREWS          : self.enableCrews,
-            Team.RESTRICT_CREWS        : self.restrictCrews,
-            Team.MINIMAL_CREWS         : self.minimalCrews,
-            Team.MAXIMAL_CREWS         : self.maximalCrews,
-            Team.ENABLE_DEADLINE       : self.enableDeadline,
-            Team.DEADLINE              : self.deadline,
-            Team.SUSPEND_RECRUITMENT   : self.suspendRecruitment,
-            Team.SUSPEND_PENDING_QUEUE : self.suspendPendingQueue,
-            Team.SUSPEND_DEADLINE_QUEUE: self.suspendDeadlineQueue, 
-        }
-    
-    @staticmethod
-    def clean_dict(**values) -> Dict[str, Any]:
-        """
-        Remove from values non-Team values.
-        """
-        keys = (
-            Team.ID,
-            Team.TITLE,
-            Team.DESCRIPTION,
-            Team.MINIMAL_MEMBERS,
-            Team.MAXIMAL_MEMBERS,
-            Team.ENABLE_CREWS,
-            Team.RESTRICT_CREWS,
-            Team.MINIMAL_CREWS,
-            Team.MAXIMAL_CREWS,
-            Team.ENABLE_DEADLINE,
-            Team.DEADLINE,
-            Team.SUSPEND_RECRUITMENT,
-            Team.SUSPEND_PENDING_QUEUE,
-            Team.SUSPEND_DEADLINE_QUEUE,
-        )
-        return dict(zip(keys, itemgetter(*keys)(values)))
+        CheckConstraint(title != '', name="title_is_not_empty"),
+        CheckConstraint(minimalMembers <= maximalMembers, name="min_max_members"),
+        CheckConstraint(minimalCrews <= maximalCrews, name="min_max_crews"),
+    )
 
 
 class Crew(Entity):
-    ID: Final[str] = "id"
-    TEAM_ID: Final[str] = "teamId"
-    TITLE: Final[str] = "title"
-    MINIMAL_MATES: Final[str] = "minimalMates"
-    MAXIMAL_MATES: Final[str] = "maximalMates"
-    SPECIAL: Final[str] = "special"
 
     DEFAULT_CREW_SPECIAL: Final[int] = 1
 
-    id: Mapped[int] = mapped_column(Integer, name=ID, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     teamId: Mapped[int] = mapped_column(
-        ForeignKey(Team.id_key(), ondelete="CASCADE"),
-        name=TEAM_ID,
+        ForeignKey(Team.id, ondelete="CASCADE"),
         nullable=False,
     )
-    title: Mapped[str] = mapped_column(String, name=TITLE)
-    minimalMates: Mapped[int] = mapped_column(Integer, name=MINIMAL_MATES, nullable=False, server_default="0")
-    maximalMates: Mapped[int] = mapped_column(Integer, name=MAXIMAL_MATES, nullable=False, server_default="0")
-    special: Mapped[int] = mapped_column(Integer, name=SPECIAL, nullable=False, server_default="0")
+    title: Mapped[str] = mapped_column()
+    minimalMates: Mapped[int] = mapped_column()
+    maximalMates: Mapped[int] = mapped_column()
+    special: Mapped[int] = mapped_column()
 
     # Crew title must be unique in the crew. 
     __table_args__ = (
-        UniqueConstraint(TEAM_ID, TITLE, SPECIAL), 
-        CheckConstraint(f"{SPECIAL} > 0 OR {TITLE} != ''"))
+        UniqueConstraint(teamId, title, special), 
+        CheckConstraint((special != 0) or (title != ''), name="special_title"),
+        CheckConstraint(minimalMates <= maximalMates, name="min_max_mates"),
+    )
+    
 
-    @staticmethod
-    def id_key() -> str:
-        """
-        Build the reference to ;id
-        """
-        return f"{Crew.__tablename__}.{Crew.ID}"
+# Telegram doesn't allow retrieve user name etc by ID. We have to store all user info every time.
+class Person(Entity):
+    # Don't create table for this class
+    __abstract__ = True
+
+    # NOTE: Alembic cannot use the names of abstract base classes 
+    USER_ID: Final[str] = "userId"
+    USER_NAME: Final[str] = "userName"
+
+    userId: Mapped[int] = mapped_column(Integer, name=USER_ID)
+    userName: Mapped[str] = mapped_column(String, name=USER_NAME)
+    firstName: Mapped[str] = mapped_column(String)
+    lastName: Mapped[str] = mapped_column(String)
 
 
-class Member(Entity):
-    USER_ID: Final[int] = "userId"
-    NUMBER: Final[int] = "number"
-    TEAM_ID: Final[int] = "teamId"
-    CREW_ID: Final[int] = "crewId"
-    POSITION: Final[int] = "position"
+class Member(Person):
 
-    userId: Mapped[int] = mapped_column(Integer, name=USER_ID, nullable=False)
-    number: Mapped[int] = mapped_column(Integer, name=NUMBER, nullable=False, server_default="0")
-    teamId: Mapped[int] = mapped_column(
-        ForeignKey(Team.id_key(), ondelete="CASCADE"),
-        name=TEAM_ID,
-        nullable=False,
-        )
-    crewId: Mapped[int|None] = mapped_column(
-        ForeignKey(Crew.id_key(), ondelete="SET NULL"),
-        name=CREW_ID,
-        nullable=True,
-        server_default=None,
-        )
-    position: Mapped[int] = mapped_column(Integer, name=POSITION, nullable=False)
+    number: Mapped[int] = mapped_column()
+    teamId: Mapped[int] = mapped_column(ForeignKey(Team.id, ondelete="CASCADE"))
+    crewId: Mapped[Optional[int]] = mapped_column(ForeignKey(Crew.id, ondelete="SET NULL"))
+    position: Mapped[int] = mapped_column()
 
     __table_args__ = (
-        PrimaryKeyConstraint(USER_ID, NUMBER, TEAM_ID),
-        UniqueConstraint(USER_ID, NUMBER, TEAM_ID, POSITION),
+        PrimaryKeyConstraint(Person.USER_ID, number, teamId),
+        UniqueConstraint(Person.USER_NAME, number, teamId, position),
     )
 
 
-class Admin(Entity):
-    USER_ID: Final[int] = "userId"
-    TEAM_ID: Final[int] = "teamId"
+class Outcast(Person):
+    teamId: Mapped[int] = mapped_column(ForeignKey(Team.id, ondelete="CASCADE"))
 
-    userId: Mapped[int] = mapped_column(Integer, name=USER_ID, nullable=False)
-    teamId: Mapped[int] = mapped_column(
-        ForeignKey(Team.id_key(), ondelete="CASCADE"),
-            name=TEAM_ID,
-            nullable=False,
-        )
-
-    __table_args__ = (PrimaryKeyConstraint(USER_ID, TEAM_ID), )
+    __table_args__ = (PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, teamId), )
 
 
-class Leader(Entity):
-    USER_ID: Final[int] = "userId"
-    CREW_ID: Final[int] = "crewId"
+class Leader(Person):
+    crewId: Mapped[int] = mapped_column(ForeignKey(Crew.id, ondelete="CASCADE"))
 
-    userId: Mapped[int] = mapped_column(Integer, name=USER_ID, nullable=False)
-    crewId: Mapped[int] = mapped_column(
-        ForeignKey(Crew.id_key(), ondelete="CASCADE"),
-        name=CREW_ID,
-        nullable=False,
-    )
-
-    __table_args__ = (PrimaryKeyConstraint(USER_ID, CREW_ID), )
+    __table_args__ = (PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, crewId), )
 
 
+class Admin(Person):
+    teamId: Mapped[int] = mapped_column(ForeignKey(Team.id, ondelete="CASCADE"))
+
+    __table_args__ = (PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, teamId), )
+
+
+# Self testing
+if __name__ == "__main":
+
+    # Testing camel_to_snake
+    assert(camel_to_snake("ClassObjectX").lower() == "class_object_x")

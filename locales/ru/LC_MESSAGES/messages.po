@@ -331,7 +331,7 @@ msgstr "✅ Отключить список ожидающих"
 #: create_team.py:661
 #, fuzzy
 msgid "create_team_suspend_pending_queue_unchecked"
-msgstr "✅ Отключить список ожидающих"
+msgstr "✖ Отключить список ожидающих"
 
 #: create_team.py:666
 #, fuzzy
