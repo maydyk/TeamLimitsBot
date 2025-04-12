@@ -117,6 +117,7 @@ _RESET_MAXIMAL_CREWS: Final[str] = "skipMaximalCrews"
 _ENABLE_DEADLINE: Final[str] = "enableDeadline"
 _DEADLINE: Final[str] = fields(TeamModel).deadline
 _DEADLINE_NEXT: Final[str] = "deadline_next"
+_SUSPEND_COMPANIONS: Final[str] = fields(TeamModel).suspendCompanions
 _SUSPEND_RECRUITMENT: Final[str] = fields(TeamModel).suspendRecruitment
 _SUSPEND_PENDING_QUEUE: Final[str] = fields(TeamModel).suspendPendingQueue
 _SUSPEND_DEADLINE_QUEUE: Final[str] = fields(TeamModel).suspendDeadlineQueue
@@ -199,6 +200,7 @@ async def start_create_team(start_data: Dict|None, dialog_manager: DialogManager
         _ASK_DESCRIPTION,
         _ENABLE_CREWS,
         _ENABLE_DEADLINE,
+        _SUSPEND_COMPANIONS,
         _SUSPEND_RECRUITMENT,
         _SUSPEND_PENDING_QUEUE,
         _SUSPEND_DEADLINE_QUEUE,
@@ -649,6 +651,12 @@ create_team_dialog = Dialog(
     Window(
         NJinja(N_("create_team_options_welcome{deadline}")),
         Checkbox(
+            NConst(N_("create_team_suspend_companions_checked")),
+            NConst(N_("create_team_suspend_companions_unchecked")),
+            id=_SUSPEND_COMPANIONS,
+            on_state_changed=write_checkbox_state,
+        ),
+        Checkbox(
             NConst(N_("create_team_suspend_recruitment_checked")),
             NConst(N_("create_team_suspend_recruitment_unchecked")),
             id=_SUSPEND_RECRUITMENT,
@@ -750,12 +758,12 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
 
     # Build text
     msg = _("msg_manage_list_head")
-    for id, title, description, in teams:
-        teamId = even_hex(id)
+    for team in teams:
+        teamId = even_hex(team.id)
         msg += _("msg_manage_list_item{teamId}{title}{description}").format(
             teamId = teamId,
-            title = title,
-            description=description)
+            title = team.title,
+            description=team.description)
 
     await message.answer(msg)
 
@@ -772,7 +780,7 @@ async def handle_manage_team(message: Message, dialog_manager: DialogManager, **
     teamId = even_hex_parse(manage_pattern, message.text.lstrip('/'))
     if teamId is not None:
         teamStr = even_hex(teamId)
-        teamModel = await Repository().queryTeam(teamId, make_person(message.from_user))
+        teamModel = await Repository().queryAdminTeam(teamId, make_person(message.from_user))
         if teamModel:
             # Add the text representation of team ID
             team_values = dict(

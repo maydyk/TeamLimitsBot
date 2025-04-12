@@ -5,7 +5,9 @@
     "cSpell.language": "en,ru",
     "cSpell.words": [
         "aiogram",
+        "asyncstdlib",
         "conint",
+        "endfor",
         "Maydykovsky",
         "ondelete",
         "onupdate",

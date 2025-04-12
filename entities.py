@@ -88,6 +88,7 @@ class Team(Entity):
     minimalCrews: Mapped[int] = mapped_column()
     maximalCrews: Mapped[int] = mapped_column()
     deadline: Mapped[Optional[datetime]]
+    suspendCompanions: Mapped[bool] = mapped_column(server_default="0")
     suspendRecruitment: Mapped[bool]
     suspendPendingQueue: Mapped[bool]
     suspendDeadlineQueue: Mapped[bool]
@@ -144,8 +145,8 @@ class Member(Person):
     position: Mapped[int] = mapped_column()
 
     __table_args__ = (
-        PrimaryKeyConstraint(Person.USER_ID, number, teamId),
-        UniqueConstraint(Person.USER_NAME, number, teamId, position),
+        PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, number, teamId),
+        UniqueConstraint(Person.USER_ID, Person.USER_NAME, number, teamId, position, name="UniqueMember"),
     )
 
 

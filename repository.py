@@ -79,18 +79,36 @@ class Repository(metaclass = Singleton):
         await self.database.deleteTeam(teamId=teamId)
 
 
-    async def queryTeam(self, teamId: int, admin: PersonModel) -> TeamModel:
-        return await self.database.queryTeam(teamId=teamId, adminModel=admin)
+    async def queryAdminTeam(self, teamId: int, admin: PersonModel) -> TeamModel:
+        return await self.database.queryAdminTeam(teamId=teamId, adminModel=admin)
 
 
     async def queryAdminTeams(self, admin: PersonModel) -> Dict[int, Tuple[str, str]]:
         return await self.database.queryAdminTeams(adminModel=admin)
     
 
-    async def allowPersonTeam(self, teamId: int, member: Person) -> bool:
-        return await self.database.allowPersonTeam(teamId=teamId, memberModel=member)
+    async def checkAdminTeam(self, teamId: int, admin: PersonModel) -> bool:
+        return await self.database.checkAdminTeam(teamId = teamId, adminModel = admin)
+
     
-    async def queryTeamSummary(self, teamId: int) -> Any:
-        pass
+    async def checkOutcastMember(self, teamId: int, member: PersonModel) -> bool:
+        return await self.database.checkOutcastMember(teamId=teamId, memberModel=member)
+    
+    
+    async def queryTeamSummary(self, teamId: int, member: PersonModel) -> TeamSummary:
+        return await self.database.queryTeamSummary(teamId=teamId, memberModel=member)
+    
+    
+    async def canAddTeamMember(self, teamId: int, member: PersonModel) -> bool:
+        return await self.database.canAddTeamMember(teamId = teamId, memberModel = member)
+    
+    
+    async def addTeamMember(self, teamId: int, crewId: Optional[int], member: PersonModel) -> None:
+        await self.database.addTeamMember(teamId = teamId, crewId=crewId, memberModel = member)
+
+    
+    async def removeTeamMember(self, teamId: int, member: PersonModel) -> None:
+        await self.database.removeTeamMember(teamId = teamId, memberModel = member)
+
 
 

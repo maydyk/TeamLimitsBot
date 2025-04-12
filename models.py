@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import lru_cache
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
 from typing import TypeVar, cast, Any, reveal_type, TYPE_CHECKING
-from typing import Optional
+from typing import List, Optional
 
 class TeamHeader(BaseModel):
     id: Optional[int] = None
@@ -26,6 +26,7 @@ class TeamModel(TeamHeader):
     minimalCrews: NonNegativeInt = 0
     maximalCrews: NonNegativeInt = 0
     deadline: Optional[datetime] = None
+    suspendCompanions: bool = False
     suspendRecruitment: bool = False
     suspendPendingQueue: bool = False
     suspendDeadlineQueue: bool = False
@@ -86,7 +87,7 @@ class PersonModel(BaseModel):
 class MemberModel(PersonModel):
     number: NonNegativeInt
     teamId: int
-    crewId: int
+    crewId: Optional[int]
     position: NonNegativeInt
 
     model_config = ConfigDict(from_attributes=True)
@@ -112,6 +113,25 @@ class AdminModel(PersonModel):
     @classmethod
     def createFromPerson(cls, person: PersonModel, teamId: int):
         return AdminModel(teamId=teamId, **person.model_dump())
+    
+
+class CrewSummary(BaseModel):
+    as_leader: bool
+    crew: CrewModel
+    mates: List[MemberModel]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TeamSummary(BaseModel):
+    as_member: bool
+    as_admin: bool
+    team: TeamModel
+    members: List[MemberModel]
+    crews: List[CrewSummary]
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 
 # Get names of models fields
