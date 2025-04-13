@@ -1,3 +1,6 @@
+# Local environement
+.env
+
 # VSCode
 .vscode/*
 !.vscode/settings.json

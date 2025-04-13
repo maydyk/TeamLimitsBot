@@ -3,7 +3,6 @@ Database handler
 
 @Author: Denis Maydykovsky
 """
-import asyncio
 from functools import wraps
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import Engine
@@ -11,10 +10,9 @@ from sqlalchemy.event import listens_for, listen
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from typing import List
-from details import Singleton
 from entities import *
 from models import *
-
+from config import config
 
 
 class DatabaseError(Exception):
@@ -75,10 +73,10 @@ class Database:
     engine: AsyncEngine
     session_maker: async_sessionmaker
 
-    def __init__(self, database: str):
+    def __init__(self, database_url: str):
         # Open the database
         # Note: create_async_engine is not awaitable
-        self.engine  = create_async_engine(f"sqlite+aiosqlite:///{database}", echo=__debug__)
+        self.engine  = create_async_engine(database_url, echo=__debug__)
         self.session_maker = async_sessionmaker(self.engine, expire_on_commit=False)
 
 

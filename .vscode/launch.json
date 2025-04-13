@@ -12,13 +12,7 @@
             "program": "teamlimitsbot.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "cwd": "${workspaceFolder}",
-            "args": [
-                "-t",
-                "${env:TEAMLIMITSBOT_TOKEN}",
-                "-d",
-                "data/teamlimits.sqlite3"
-            ]
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

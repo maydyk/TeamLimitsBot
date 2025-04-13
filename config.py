@@ -1,61 +1,33 @@
 """
 module config
-Extract arguments from command line or environment.
+Extract settings from the file .env or environment.
 NOTE: Don't save the TOKEN in the code!
 
 @Author: Denis Maydykovsky
 """
 
-import argparse
-import os
+from typing import Optional
 
-# Parse command line
-_parser = argparse.ArgumentParser(
-    prog="teamlimitsbot",
-    usage="python teamlimitsbot [-t TOKEN] [-d DATABASE]"
-)
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Treat to the first command line argument as TOKEN.
-_parser.add_argument(
-    "-t", "--token",
-    nargs='?',
-    type=str, 
-    # Treat to an environment variable 
-    default=os.getenv("TEAMLIMITSBOT_TOKEN", None)
-    )
+class Config(BaseSettings):
+    TOKEN: str
+    SQLITE_DB_PATH: Optional[str] = None
 
-_parser.add_argument(
-    "-d", "--database",
-    nargs='?',
-    type=str,
-    # Treat to an environment variable
-    default=os.getenv("TEAMLIMITSBOT_DATABASE", None)
-    )
+    model_config = SettingsConfigDict(env_prefix="TEAMLIMITSBOT_", env_file=".env")
 
-_args = vars(_parser.parse_args())
+    def make_db_url(self) -> str:
+        if self.SQLITE_DB_PATH :
+            return f"sqlite+aiosqlite:///{self.SQLITE_DB_PATH}"
+        else:
+            raise RuntimeError("Database path or connection is not specified.")
 
-# Assign TOKEN variable
-_a = _args["token"]
-if _a:
-    TOKEN = _a
 
-# Assign Database path
-_a = _args["database"]
-if _a:
-    DATABASE = _a
-
+config = Config()
 
 # Self testing
 if __name__ == "__main__":
-    if "TOKEN" in globals():
-        print("Getting TOKEN=", TOKEN)
-    else:
-        print("TOKEN wasn't taken!")
-
-    if "DATABASE" in globals():
-        print("Getting DATABASE", DATABASE)
-    else:
-        print("DATABASE wasn't taken!")
+    print("Config settings\n", config.model_dump())
     
 
 
