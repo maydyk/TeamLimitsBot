@@ -54,8 +54,7 @@ async def member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[st
             "deadlineLeft": (teamSummary.team.deadline - datetime.datetime.now()).days() 
                 if teamSummary.team.deadline is not None else None,
             "members": teamSummary.members,
-            # NOTE: when= widget statement cannot use async functions
-            _ADD_MEMBER: await Repository().canAddTeamMember(teamId=teamId, member=userPerson),
+            _ADD_MEMBER: not (teamSummary.team.suspendCompanions and teamSummary.as_member)
 
                         
         }
