@@ -23,11 +23,10 @@ class Config(BaseSettings):
             raise RuntimeError("Database path or connection is not specified.")
 
 
-config = Config()
-
 # Self testing
 if __name__ == "__main__":
-    print("Config settings\n", config.model_dump())
+    settings = Config()
+    print("Config settings\n", settings.model_dump())
     
 
 

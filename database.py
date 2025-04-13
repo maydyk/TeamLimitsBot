@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from typing import List
 from entities import *
 from models import *
-from config import config
 
 
 class DatabaseError(Exception):

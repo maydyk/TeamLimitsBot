@@ -19,8 +19,8 @@ logging.basicConfig(level=logging.INFO)
 # Setup localization
 from international import _, localize_router
 
-# Extract token
-from config import config
+# Extract token and DB connection
+import config
 
 # Welcome screen
 import welcome
@@ -37,8 +37,11 @@ from repository import Repository
 
 async def main():
 
+    # Read config
+    settings = config.Config()
+
     # Main objects
-    bot = Bot(token=config.TOKEN)
+    bot = Bot(token=settings.TOKEN)
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     router = Router()
@@ -54,10 +57,10 @@ async def main():
     setup_dialogs(dp)
 
     # Close the repository even exception
-    async with Repository.build(config.make_db_url()):
+    async with Repository.build(settings.make_db_url()):
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
-        
+
 
 if __name__ == "__main__":
     asyncio.run(main())
