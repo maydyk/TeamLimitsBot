@@ -10,16 +10,16 @@ from aiogram.filters import Command
 from aiogram.fsm.state import State
 from aiogram_dialog import DialogManager, ChatEvent, StartMode
 from aiogram_dialog.api.entities import ShowMode, Data
+from aiogram_dialog.api.exceptions import InvalidWidgetType
 from aiogram_dialog.widgets.common import Whenable, WhenCondition
-from aiogram_dialog.widgets.kbd import Button, Calendar, Checkbox, ManagedCheckbox, Start
+from aiogram_dialog.widgets.kbd import Back, Button, Calendar, ManagedCheckbox, Next, Start, SwitchTo, Row
 from aiogram_dialog.widgets.kbd.button import OnClick
 from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
-from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.text import Text
-
+from aiogram_dialog.widgets.utils import GetterVariant, ensure_data_getter
 from datetime import date
-from international import NFormat
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Protocol, Union, Unpack
+from operator import itemgetter
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 
 import re
 
@@ -139,23 +139,6 @@ def zero_positive(text: str) -> int:
         raise ValueError(f"Negative number {text}")
     return value
 
-class Preview(NFormat):
-    """
-    Update...
-    """    
-    def __init__(self, text: str, key_source: str, key_target: str = "preview", when:WhenCondition = None):
-        super().__init__(text, when)
-        self.key_source = key_source
-        self.key_target = key_target
-
-    async def _render_text(self, data:dict, manager: DialogManager) -> str:
-        # Assign 
-        if self.key_source in data:
-            data[self.key_target] = data[self.key_source]
-            return await super()._render_text(data, manager)
-        else:
-            return ""
-
 
 async def filter_cancel(message: Message, dialog_manager: DialogManager, **kwargs) -> bool:
     cmd = Command("cancel")
@@ -210,12 +193,10 @@ def even_hex_parse(pattern: re.Pattern, text: str) -> str|None:
     return None
 
 
-DynamicDataProvider = Callable[[CallbackQuery, Button, DialogManager], Awaitable[dict],]
-
 
 # TODO: Combine DynamicDataMaker with Data
 # DynamicData = Union[dict, list, int, str, float, None, DynamicDataProvider]
-DynamicData = Union[Data, DynamicDataProvider]
+DynamicData = Union[Data, GetterVariant]
 
 class DStart(Start):
     def __init__(
@@ -228,20 +209,39 @@ class DStart(Start):
             show_mode: Optional[ShowMode] = None,
             mode: StartMode = StartMode.NORMAL,
             when: WhenCondition = None):
+        
+        # Check data is getter
+        try:
+            self.dynamic_data = ensure_data_getter(data)
+            data = None
+        except InvalidWidgetType:
+            self.dynamic_data = None
+
         super().__init__(text, id, state, data, on_click, show_mode, mode, when)
-        self.dynamic_data = data
+
 
     async def _on_click(self, callback: CallbackQuery, button: Button,
-                        manager: DialogManager):
+                        manager: DialogManager) ->None :
         # Replace start data before super call
-        if isinstance(self.dynamic_data, Callable):
-            self.start_data = await self.dynamic_data(callback, button, manager)
+        if self.dynamic_data:
+            self.start_data = await self.dynamic_data(**manager.middleware_data)
 
-        return await super()._on_click(callback, button, manager)
+        await super()._on_click(callback, button, manager)
+
+
+def dynamic_dialog_data_items(*keys: str) -> Callable[..., Awaitable[Dict[str, Any]]]:
+    """
+    Build a data getter for DStart, that extract specified keys from dialog data.
+    """
     
+    async def dialog_items(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+        return dict(zip(keys, itemgetter(*keys, dialog_manager.dialog_data)))
+    
+    return dialog_items
 
-async def dialog_dynamic_data(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    return dialog_manager.dialog_data
+    
+async def dynamic_dialog_start_data(dialog_manager: DialogManager, **kwargs) -> Dict:
+    return dialog_manager.start_data
 
 
 async def initialize_checkboxes(manager: DialogManager, *ids: List[str]) -> None:
@@ -255,6 +255,7 @@ async def initialize_checkboxes(manager: DialogManager, *ids: List[str]) -> None
         assert(isinstance(widget, ManagedCheckbox))
         if id in data:
             await widget.set_checked(data[id])
+
 
 
 # Self testing

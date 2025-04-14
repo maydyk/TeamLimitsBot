@@ -31,6 +31,9 @@ import manage_team
 # Client for members and crews
 import member_team
 
+# Create (and manage) crew wizard
+import manage_crew
+
 # Our data
 from repository import Repository
 
@@ -53,6 +56,7 @@ async def main():
     welcome.register_dispatcher(dp)
     manage_team.register_dispatcher(dp)
     member_team.register_dispatcher(dp)
+    manage_crew.register_dispatcher(dp)
     
     setup_dialogs(dp)
 

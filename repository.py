@@ -7,10 +7,9 @@ An intermediate layer between database.Repository() and Telegram UI
 
 from aiogram.types import User
 from contextlib import asynccontextmanager
-from entities import Person, Team
 from functools import wraps
 from details import Singleton
-from database import Database
+from database import Database, DatabaseError
 from models import *
 
 from typing import Any, Dict, Tuple
@@ -22,6 +21,43 @@ def make_person(user: User) -> PersonModel:
         firstName=user.first_name,
         lastName=user.last_name,
     )
+
+
+def make_person_team(data: Dict[str, Any]) -> Tuple[int, Any]:
+    """
+    Extracts team id and person data from specifies dictionary.
+    """
+    teamId = data[fields(MemberModel).teamId]
+    person = PersonModel(**data)
+    return (teamId, person)
+
+
+def get_person_team(teamId: int, person: PersonModel) -> Dict[str, Any]:
+    """
+    Combine person with teamId
+    """
+    return dict(
+        person.model_dump(),
+        **{ fields(MemberModel).teamId : teamId}
+        )
+
+
+class RepositoryError(Exception):
+    pass
+
+
+def database_error(method):
+    """
+    Decorator to translate 'DatabaseError' to 'RepositoryError'
+    """
+    @wraps(method)
+    async def wrapper(self, *args, **kwargs):
+        try:
+            await method(self, *args, **kwargs)
+        except DatabaseError as db_error:
+            raise RepositoryError(*db_error.args)
+                
+    return wrapper
 
 
 class Repository(metaclass = Singleton):
@@ -67,8 +103,12 @@ class Repository(metaclass = Singleton):
         return await self.database.checkTeamTitleIsUnique(title=title)
     
 
+    @database_error
     async def insertTeam(self, person: PersonModel, team: TeamModel) -> int:
-        return await self.database.insertTeam(personModel=person, teamModel=team)
+        try:
+            return await self.database.insertTeam(personModel=person, teamModel=team)
+        except DatabaseError as e:
+            raise RepositoryError
     
 
     async def updateTeam(self, team: TeamModel) -> int:
@@ -102,13 +142,34 @@ class Repository(metaclass = Singleton):
     async def canAddTeamMember(self, teamId: int, member: PersonModel) -> bool:
         return await self.database.canAddTeamMember(teamId = teamId, memberModel = member)
     
-    
+    @database_error
     async def addTeamMember(self, teamId: int, crewId: Optional[int], member: PersonModel) -> None:
         await self.database.addTeamMember(teamId = teamId, crewId=crewId, memberModel = member)
 
     
     async def removeTeamMember(self, teamId: int, member: PersonModel) -> None:
         await self.database.removeTeamMember(teamId = teamId, memberModel = member)
+
+
+    async def checkCrewTitleIsUnique(self, teamId: int, title: str) -> bool:
+        return await self.database.checkCrewTitleIsUnique(teamId = teamId, title = title)
+
+
+    async def insertCrew(self, person: PersonModel, crew: CrewModel) -> int:
+        return await self.database.insertCrew(personModel = person, crewModel = crew)
+
+
+    async def updateCrew(self, crew: CrewModel) -> int:
+        return await self.database.updateCrew(crewModel = crew)
+
+
+    async def deleteCrew(self, crewId: int) -> None:
+        await self.database.deleteCrew(crewId=crewId)
+
+
+    async def queryMemberTeams(self, member: PersonModel) -> List[TeamModel]:
+        return await self.database.queryMemberTeams(memberModel = member)
+
 
 
 

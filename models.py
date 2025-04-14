@@ -4,12 +4,10 @@ Module models
 @Author: Denis Maydykovsky
 """
 
-from dataclasses import dataclass
 from datetime import datetime
-from functools import lru_cache
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
-from typing import TypeVar, cast, Any, reveal_type, TYPE_CHECKING
-from typing import List, Optional
+from model_fields import fields
+from typing import Any, Dict, List, Optional, Tuple
 
 class TeamHeader(BaseModel):
     id: Optional[int] = None
@@ -66,7 +64,7 @@ class CrewModel(BaseModel):
 
     @model_validator(mode="after")
     def checkMates(self):
-        if self.maximalMates > self.minimalMates:
+        if self.maximalMates < self.minimalMates:
             raise ValueError(
                 f"Minimal mates {self.minimalMates} must be "
                 f"less or equal than maximal mates {self.maximalMates}."
@@ -83,6 +81,12 @@ class PersonModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    def display_user_name(self) -> str:
+        """
+        Build user name or id to display. 
+        """
+        return self.userName or str(self.userId)
+    
 
 class MemberModel(PersonModel):
     number: NonNegativeInt
@@ -103,6 +107,10 @@ class LeaderModel(PersonModel):
     crewId: int
 
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def createFromPerson(cls, person: PersonModel, crewId: int):
+        return LeaderModel(crewId=crewId, **person.model_dump())
 
 
 class AdminModel(PersonModel):
@@ -133,30 +141,6 @@ class TeamSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-
-# Get names of models fields
-# See https://github.com/pydantic/pydantic/discussions/8600#discussioncomment-8212526
-
-@dataclass(frozen=True)
-class _GetFields:
-    _model: type[BaseModel]
-
-    def __getattr__(self, item: str) -> Any:
-        if item in self._model.model_fields:
-            return item
-
-        return getattr(self._model, item)
-
-
-TModel = TypeVar("TModel", bound=BaseModel)
-
-
-def fields(model: type[TModel], /) -> TModel:
-    return cast(TModel, _GetFields(model))
-
-
-if not TYPE_CHECKING:
-    fields = lru_cache(maxsize=256)(fields)
 
 
 

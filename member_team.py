@@ -9,19 +9,19 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.state import State, StatesGroup
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
-from aiogram_dialog.widgets.common import Whenable
 from aiogram_dialog.widgets.kbd import Button
 from details import (
+    DStart,
+    dynamic_dialog_start_data,
     even_hex,
     even_hex_pattern,
     even_hex_parse,
-    dialog_copy_start_data,
-    dialog_data_getter
 )
-from models import MemberModel, fields
+from manage_crew import CreateCrew
+from models import PersonModel, MemberModel, fields
 from international import _, localize_router, N_, NConst, NJinja
-from repository import Repository, make_person
-from typing import Any, Dict, Final
+from repository import Repository, RepositoryError, make_person, make_person_team, get_person_team
+from typing import Any, Dict, Final, Tuple
 
 import datetime
 
@@ -29,16 +29,17 @@ class MemberTeam(StatesGroup):
     summary = State()
 
 
-_USER_PERSON: Final[str] = fields(MemberModel).userId
-_TEAM_ID: Final[str] = fields(MemberModel).teamId
-
 _ADD_MEMBER: Final[str] = "addMember"
 _REMOVE_MEMBER: Final[str] = "removeMember"
 _ADD_MEMBER_CREW: Final[str] = "addMemberCrew"
 
-async def member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
-    teamId = dialog_manager.start_data[_TEAM_ID]
-    userPerson = dialog_manager.start_data[_USER_PERSON]
+
+def _get_member(dialog_manager: DialogManager) -> Tuple[int, PersonModel]:
+    return make_person_team(dialog_manager.start_data)
+
+
+async def _member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    teamId, userPerson = _get_member(dialog_manager)
 
     teamSummary = await Repository().queryTeamSummary(teamId=teamId, member=userPerson)
 
@@ -54,7 +55,10 @@ async def member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[st
             "deadlineLeft": (teamSummary.team.deadline - datetime.datetime.now()).days() 
                 if teamSummary.team.deadline is not None else None,
             "members": teamSummary.members,
-            _ADD_MEMBER: not (teamSummary.team.suspendCompanions and teamSummary.as_member)
+            "crews": teamSummary.crews,
+            _ADD_MEMBER: not (teamSummary.team.suspendCompanions and teamSummary.as_member),
+            _REMOVE_MEMBER: teamSummary.as_member,
+            _ADD_MEMBER_CREW: teamSummary.team.enableCrews or teamSummary.as_admin,
 
                         
         }
@@ -62,50 +66,60 @@ async def member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[st
     return data
 
 
-async def on_add_member(
+async def _on_add_member(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
-) -> None:    
-    teamId = manager.start_data[_TEAM_ID]
-    userPerson = manager.start_data[_USER_PERSON]
-    await Repository().addTeamMember(teamId=teamId, crewId=None, member=userPerson)
-    
+        ) -> None:    
+    teamId, userPerson = _get_member(manager)
+    try:
+        # NOTE: Team configuration can be changed until a member is trying to add itself.
+        await Repository().addTeamMember(teamId=teamId, crewId=None, member=userPerson)
+    except RepositoryError as e:
+        callback.answer(_("member_team_add_member_failed{teamId}{userName}").format(
+            teamId = even_hex(teamId),
+            userName=userPerson.display_user_name(),
+        ))
 
-async def on_remove_member(
+
+
+async def _on_remove_member(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager
 ) -> None:
-    teamId = manager.start_data[_TEAM_ID]
-    userPerson = manager.start_data[_USER_PERSON]
+    teamId, userPerson = _get_member(manager)
     await Repository().removeTeamMember(teamId=teamId, member=userPerson)    
-    
+        
+
 member_team_dialog = Dialog(
     Window(
         NJinja(N_("member_team_summary")),
         Button(
-            NConst(N_("member_team_add")),
+            text = NConst(text = N_("member_team_add")),
             id=_ADD_MEMBER,
-            on_click=on_add_member,
+            on_click=_on_add_member,
             when=F[_ADD_MEMBER],
         ),
         Button(
-            NConst(N_("member_team_remove")),
+            text = NConst(text = N_("member_team_remove")),
             id = _REMOVE_MEMBER,
-            on_click=on_remove_member,
-            when=F["as_member"],
+            on_click=_on_remove_member,
+            when=F[_REMOVE_MEMBER],
         ),
-        Button(
-            NConst(N_("add_member_crew")),
+        DStart(
+            text = NConst(text = N_("add_member_crew")),
             id = _ADD_MEMBER_CREW,
-            when=F["enableCrews"],
+            state=CreateCrew.title,
+            data=dynamic_dialog_start_data,
+            when=F[_ADD_MEMBER_CREW],
         ),
         state=MemberTeam.summary,
         parse_mode="html"
     ),
-    getter=member_team_getter,
+    getter=_member_team_getter,
 )
+
 
 member_team_router = Router()
 member_team_router.include_router(member_team_dialog)
@@ -119,17 +133,36 @@ async def handle_member_team(message: Message, dialog_manager: DialogManager, **
     """
     teamId = even_hex_parse(member_pattern, message.text.lstrip('/'))
     if teamId is not None:
-        if await Repository().checkOutcastMember(teamId, make_person(message.from_user)):
+        person = make_person(message.from_user)
+        if await Repository().checkOutcastMember(teamId, person):
             await dialog_manager.start(
                 state=MemberTeam.summary,
-                data={
-                    _TEAM_ID: teamId,
-                    _USER_PERSON:make_person(message.from_user)
-                },
+                data=get_person_team(teamId, person),
                 mode=StartMode.RESET_STACK
             )
         else:
             await message.answer(_("msg_member_team_disallow"))
+
+
+@member_team_router.message(Command("member"))
+async def handle_team_list(message: Message, dialog_manager: DialogManager, **kwargs) -> None:
+    """
+    Show list of available teams.
+    """
+
+    person = make_person(message.from_user)
+    teams = await Repository().queryMemberTeams(member=person)
+    
+    # Build text
+    msg = _("msg_member_list_head")
+    for team in teams:
+        teamId = even_hex(team.id)
+        msg += _("msg_member_list_item{teamId}{title}{description}").format(
+            teamId=teamId,
+            title=team.title,
+            description=team.description,
+        )
+    await message.answer(msg)
 
 
 

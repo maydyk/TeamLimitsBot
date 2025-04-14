@@ -1,12 +1,11 @@
 """
-module manage_team
+module _manage_team
 
 Contains a dialog wizard to create or manage a new team.
 
 @Author: Denis Maydykovsky
 """
 
-from operator import itemgetter
 from aiogram import F, Dispatcher, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -16,23 +15,23 @@ from aiogram.types import (
     CallbackQuery,
 )
 
-from aiogram_dialog import Dialog, DialogManager, StartMode, ShowMode, Window
+from aiogram_dialog import Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.api.entities import Data
-from aiogram_dialog.widgets.common import Whenable, WhenCondition
 from aiogram_dialog.widgets.input import TextInput, ManagedTextInput
 from aiogram_dialog.widgets.kbd import (
-    Back,
     Button,
     Calendar,
     Cancel,
     Checkbox,
     Next,
     Row,
-    Start,
     SwitchTo,
 )
 
+from confirmation_dialog import make_confirmation_dialog
 from details import (
+    DStart,
+    dynamic_dialog_data_items,
     even_hex,
     even_hex_pattern,
     even_hex_parse,
@@ -40,44 +39,23 @@ from details import (
     dialog_copy_start_data,
     initialize_checkboxes,
     filter_cancel,
-    dialog_start_getter,
     write_dialog_data,
     write_calendar_date,
     write_checkbox_state,
     write_dialog_value,
     zero_positive,
-    DStart,
-    Preview,
 )
+from operator import itemgetter
+
+from wizard import wizard_control, wizard_preview, Preview
 
 # Setup localization
 from international import _, localize_router, N_, NConst, NFormat, NJinja
-from typing import Any, Dict, Final, List, Tuple
+from typing import Any, Dict, Final
 
 from repository import Repository, make_person
-from models import TeamModel, fields
-
-_CONFIRM_DELETE_TEAM_YES: Final[str] = "confirmDeleteTeamYes"
-
-class ConfirmDeleteTeam(StatesGroup):
-    confirm = State()
-
-delete_team_confirmation = Dialog(
-    Window(
-        NFormat(N_("delete_team_confirmation{teamId}{title}")),
-        Row(
-            Cancel(
-                NConst(N_("delete_team_confirmation_no"))),
-            Cancel(
-                NConst(N_("delete_team_confirmation_yes")),
-                id=_CONFIRM_DELETE_TEAM_YES,
-                result=_CONFIRM_DELETE_TEAM_YES,
-                ),
-        ),
-        state=ConfirmDeleteTeam.confirm,
-        getter=dialog_start_getter,
-    ),
-)
+from models import TeamModel
+from model_fields import fields
 
 
 class CreateTeam(StatesGroup):
@@ -96,7 +74,7 @@ class CreateTeam(StatesGroup):
 
 # Constants widget IDs
 _ID: Final[str] = fields(TeamModel).id
-_TEAM_ID: Final[str] = "teamId"
+_TEAM_ID_STR: Final[str] = "teamId" # A sting representation of _ID
 _TITLE: Final[str] = fields(TeamModel).title
 _ASK_DESCRIPTION: Final[str] = "askDescription"
 _DESCRIPTION: Final[str] = fields(TeamModel).description
@@ -127,41 +105,21 @@ _CANCEL_TEAM: Final[str] = "cancelTeam"
 _DELETE_TEAM: Final[str] = "deleteTeam"
 _INSERT_TEAM: Final[str] = "insertTeam"
 _UPDATE_TEAM: Final[str] = "updateTeam"
-_TEAM_HOME: Final[str] = "__home__"
 
 
-def _get_states_and_index(manager: DialogManager) -> Tuple[List[State], int]:
-    context = manager.current_context()
-    states = manager.dialog().states()
-    current_index = states.index(context.state)
+class ConfirmDeleteTeam(StatesGroup):
+    confirm = State()
 
-    return (states, current_index)
+_delete_team_confirmation = make_confirmation_dialog(
+    text = N_("delete_team_confirmation{teamId}{title}"),
+    no = N_("delete_team_confirmation_no"),
+    yes= N_("delete_team_confirmation_yes"),
+    result=_DELETE_TEAM,
+    state=ConfirmDeleteTeam.confirm
+)
 
-def when_back(
-        data: dict,
-        widget: Whenable,
-        manager: DialogManager
-        ) -> bool:
-    states, current_index = _get_states_and_index(manager)    
-    return current_index > 0
 
-def when_home(
-        data: dict,
-        widget: Whenable,
-        manager: DialogManager
-        ) -> bool:
-    states, current_index = _get_states_and_index(manager)    
-    return current_index != len(states) - 1
-
-def when_next(
-        data: dict,
-        widget: Whenable,
-        manager: DialogManager
-        ) -> bool:
-    states, current_index = _get_states_and_index(manager)    
-    return current_index < len(states) - 1
-
-async def on_query_title(
+async def _on_query_title(
         callback: CallbackQuery,
         source: ManagedTextInput,
         manager: DialogManager,
@@ -185,7 +143,8 @@ async def on_query_title(
             title=data
         ))
 
-async def start_create_team(start_data: Dict|None, dialog_manager: DialogManager) -> None:
+
+async def _start_create_team(start_data: Dict|None, dialog_manager: DialogManager) -> None:
     # Get data from start
     await dialog_copy_start_data(start_data, dialog_manager)
 
@@ -207,7 +166,7 @@ async def start_create_team(start_data: Dict|None, dialog_manager: DialogManager
         )
 
     
-async def minimal_members_error(
+async def _minimal_members_error(
         message: Message,
         source: ManagedTextInput,
         manager: DialogManager,
@@ -218,7 +177,7 @@ async def minimal_members_error(
     ))
 
 
-async def maximal_members_success(
+async def _maximal_members_success(
         message: Message,
         source: ManagedTextInput,
         manager: DialogManager,
@@ -238,7 +197,7 @@ async def maximal_members_success(
                 maximalMembers=maximalMembers,
             ))
 
-async def maximal_members_error(
+async def _maximal_members_error(
         message: Message,
         source: ManagedTextInput,
         manager: DialogManager,
@@ -249,7 +208,7 @@ async def maximal_members_error(
     ))
 
 
-async def fixed_maximal_members(
+async def _fixed_maximal_members(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager
@@ -317,7 +276,7 @@ async def fixed_maximal_crews(
     manager.dialog_data[_MAXIMAL_CREWS] = minimalCrews
 
 
-async def manage_team(
+async def _manage_team(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
@@ -325,7 +284,7 @@ async def manage_team(
     manager.dialog_data[_MANAGE_TEAM] = True
 
 
-async def cancel_team(
+async def _cancel_team(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
@@ -339,25 +298,14 @@ async def cancel_team(
     else:
         text = _("create_team_was_cancelled{title}")
     
+    # Put message and delete dialog
     await callback.message.answer(text.format(
         title=data[_TITLE]
     ))
     await callback.message.delete()
 
-async def delete_team_data(
-        callback: CallbackQuery,
-        button: Button,
-        manager: DialogManager,
-        ) -> Any:
-    """
-    Extract from DialogManager.dialog_data values to
-    use in delete confirmation dialog
-    """
-    keys = (_ID, _TEAM_ID, _TITLE,_DESCRIPTION)
-    return dict(zip(keys, itemgetter(*keys)(manager.dialog_data)))
 
-
-async def insert_team(
+async def _insert_team(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
@@ -372,7 +320,7 @@ async def insert_team(
         teamId = await Repository().insertTeam(person=person, team=team)
 
         await manager.done()
-        await callback.message.answer(_("create_team_inserted{teamId}{title}").format(
+        await callback.answer(_("create_team_inserted{teamId}{title}").format(
             teamId=even_hex(teamId),
             title=team.title,
             )
@@ -381,14 +329,16 @@ async def insert_team(
     except Exception as e:
         print(e)
         breakpoint()
-        await callback.message.answer(_("create_team_insert_failed{title}").format(
-            title=team_values.get(_TITLE, ""),
+        await callback.answer(
+            _("create_team_insert_failed{title}")
+            .format(
+                title=team_values.get(_TITLE, ""),
             )
         )
         pass
 
 
-async def update_team(
+async def _update_team(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
@@ -417,9 +367,9 @@ async def update_team(
         pass
 
 
-async def team_summary_result(data: Data, result: Any, dialog_manager: DialogManager) -> None:
-    print("team_summary_result", data, result)
-    if result == _CONFIRM_DELETE_TEAM_YES:
+async def _team_summary_result(data: Data, result: Any, dialog_manager: DialogManager) -> None:
+    print("_team_summary_result", data, result)
+    if result == _DELETE_TEAM:
         teamId = data[_ID]
         print(f"Delete the team {even_hex(teamId)}")
         try:
@@ -428,7 +378,7 @@ async def team_summary_result(data: Data, result: Any, dialog_manager: DialogMan
             # Remove ID from dictionary
             # Now we are being in state as a new team was created
             dialog_manager.dialog_data.pop(_ID, "")
-            dialog_manager.dialog_data.pop(_TEAM_ID, "")
+            dialog_manager.dialog_data.pop(_TEAM_ID_STR, "")
         except:
             breakpoint()
             # TODO: How to show a message here?
@@ -436,49 +386,48 @@ async def team_summary_result(data: Data, result: Any, dialog_manager: DialogMan
     pass
 
 
-manage_team_control = Row(
-    Back(NConst(N_("create_team_back")), when=when_back),
-    SwitchTo(
-        NConst(N_("create_team_home")),
-        id = _TEAM_HOME,
-        state=CreateTeam.summary,
-        when=when_home,
-        ),
-    Next(NConst(N_("create_team_next")), when=when_next),
-    when=F[_MANAGE_TEAM],
-    )
+# Row with manage controls
+_manage_team_wizard = wizard_control(
+    homeState=CreateTeam.summary,
+    showWizard=_MANAGE_TEAM,
+    back=N_("create_team_back"),
+    home=N_("create_team_home"),
+    next=N_("create_team_next"),
+)
 
 def _preview(key: str) -> Preview:
-    return Preview(
-        text=N_("create_team_preview{preview}"),
+    return wizard_preview(
+        text = N_("create_team_preview{preview}"),
+        showPreview=_MANAGE_TEAM,
         key_source=key,
-        when=F[_MANAGE_TEAM]
     )
 
-create_team_dialog = Dialog(
+
+# Main team dialog wizard
+_create_team_dialog = Dialog(
     # Query for team name and provide [v] checkbox to include description.
     Window(
-        NConst(N_("create_team_query_title")),
+        NConst(text=N_("create_team_query_title")),
         _preview(key=_TITLE),
-        TextInput(
-            id=_TITLE,
-            on_success=on_query_title,
-            filter=filter_cancel,
-        ),
         Checkbox(
-            NConst(N_("create_team_ask_description_checked")),
-            NConst(N_("create_team_ask_description_unchecked")),
+            checked_text=NConst(N_("create_team_ask_description_checked")),
+            unchecked_text=NConst(N_("create_team_ask_description_unchecked")),
             id=_ASK_DESCRIPTION,
             on_state_changed=write_checkbox_state,
         ),
-        manage_team_control,
+        _manage_team_wizard,
+        TextInput(
+            id=_TITLE,
+            on_success=_on_query_title,
+            filter=filter_cancel,
+        ),
         state=CreateTeam.title,
         getter=dialog_data_getter,
     ),
     
     # Query team description with [reset] button.
     Window(
-        NConst(N_("create_team_query_description")),
+        NConst(text=N_("create_team_query_description")),
         _preview(key=_DESCRIPTION),
         TextInput(
             id=_DESCRIPTION,
@@ -486,11 +435,11 @@ create_team_dialog = Dialog(
             filter=filter_cancel,
         ),
         Next(
-            NConst(N_("create_team_reset_description")),
+            text=NConst(text=N_("create_team_reset_description")),
             id=_RESET_DESCRIPTION,
             on_click=write_dialog_data(_DESCRIPTION, ""),
         ),
-        manage_team_control,
+        _manage_team_wizard,
         state=CreateTeam.description,
         getter=dialog_data_getter,
     ),
@@ -498,21 +447,21 @@ create_team_dialog = Dialog(
     # Query for team minimal members with [reset] button.
     # Zero or skip for minimalMembers
     Window(
-        NConst(N_("create_team_query_minimal_members")),
+        NConst(text=N_("create_team_query_minimal_members")),
         _preview(key=_MINIMAL_MEMBERS),
+        Next(
+            text=NConst(text=N_("create_team_reset_minimal_members")),
+            id=_RESET_MINIMAL_MEMBERS,
+            on_click=write_dialog_data(_MINIMAL_MEMBERS, 0),
+        ),
+        _manage_team_wizard,
         TextInput(
             id=_MINIMAL_MEMBERS,
             type_factory=zero_positive,
             on_success=Next(on_click=write_dialog_value(_MINIMAL_MEMBERS)),
-            on_error=minimal_members_error,
+            on_error=_minimal_members_error,
             filter=filter_cancel,
         ),
-        Next(
-            NConst(N_("create_team_reset_minimal_members")),
-            id=_RESET_MINIMAL_MEMBERS,
-            on_click=write_dialog_data(_MINIMAL_MEMBERS, 0),
-        ),
-        manage_team_control,
         state=CreateTeam.minimalMembers,
         getter=dialog_data_getter,
     ),
@@ -520,61 +469,61 @@ create_team_dialog = Dialog(
     # Query for team maximalMembers.
     # maximalMembers can be great or equal than minimalMembers
     Window(
-        NFormat(N_("create_team_query_maximal_members{minimalMembers}")),
+        NFormat(text=N_("create_team_query_maximal_members{minimalMembers}")),
         _preview(key=_MAXIMAL_MEMBERS),
-        TextInput(
-            id=_MAXIMAL_MEMBERS,
-            type_factory=zero_positive,
-            on_success=maximal_members_success,
-            on_error=maximal_members_error,
-            filter=filter_cancel,
-        ),
         Row(
             Next(
-                NFormat(N_("create_team_fix_maximal_members{minimalMembers}")),
+                text=NFormat(text=N_("create_team_fix_maximal_members{minimalMembers}")),
                 id=_FIXED_MAXIMAL_MEMBERS,
-                on_click=fixed_maximal_members,
+                on_click=_fixed_maximal_members,
                 when=F[_MINIMAL_MEMBERS]
             ),
             Next(
-                NConst(N_("create_team_skip_maximal_members")),
+                text=NConst(text=N_("create_team_skip_maximal_members")),
                 id=_RESET_MAXIMAL_MEMBERS,
                 on_click=write_dialog_data(_MAXIMAL_MEMBERS, 0),
                 )
             ),
-        manage_team_control,
+        _manage_team_wizard,
+        TextInput(
+            id=_MAXIMAL_MEMBERS,
+            type_factory=zero_positive,
+            on_success=_maximal_members_success,
+            on_error=_maximal_members_error,
+            filter=filter_cancel,
+        ),
         state=CreateTeam.maximalMembers,
         getter=dialog_data_getter,
     ),
 
     # Buttons and message to setup crews
     Window(
-        NConst(N_("create_team_crews_welcome")),
+        NConst(text=N_("create_team_crews_welcome")),
         Checkbox(
-            NConst(N_("create_team_enable_crews")),
-            NConst(N_("create_team_disable_crews")),
+            checked_text=NConst(text=N_("create_team_enable_crews")),
+            unchecked_text=NConst(text=N_("create_team_disable_crews")),
             id=_ENABLE_CREWS,
             on_state_changed=write_checkbox_state,
         ),
         Next(
-            NConst(N_("create_team_setup_crews_limits")),
+            text=NConst(text=N_("create_team_setup_crews_limits")),
             id=_SETUP_CREWS_LIMIT,
             when=F[_ENABLE_CREWS],
         ),
         SwitchTo(
-            NConst(N_("create_team_reset_crews_limits")),
+            text=NConst(text=N_("create_team_reset_crews_limits")),
             id=_RESET_CREWS_LIMIT,
             state=CreateTeam.deadline,
             on_click=reset_crews_limit
         ),
-        manage_team_control,
+        _manage_team_wizard,
         state=CreateTeam.enableCrews,
         getter=dialog_data_getter,
     ),
 
     # Query for minimal crews
     Window(
-        NConst(N_("create_team_query_minimal_crews")),
+        NConst(text=N_("create_team_query_minimal_crews")),
         _preview(key=_MINIMAL_CREWS),
         TextInput(
             id=_MINIMAL_CREWS,
@@ -584,11 +533,11 @@ create_team_dialog = Dialog(
             filter=filter_cancel,
         ),
         Next(
-            NConst(N_("create_team_reset_minimal_crews")),
+            text=NConst(N_("create_team_reset_minimal_crews")),
             id=_RESET_MINIMAL_CREWS,
             on_click=write_dialog_data(_MINIMAL_CREWS, 0),
         ),
-        manage_team_control,
+        _manage_team_wizard,
         state=CreateTeam.maximalCrews,
         getter=dialog_data_getter,
     ),
@@ -606,25 +555,25 @@ create_team_dialog = Dialog(
         ),
         Row(
             Next(
-                NFormat(N_("create_team_fixed_maximal_crews{minimalCrews}")),
+                text=NFormat(N_("create_team_fixed_maximal_crews{minimalCrews}")),
                 id=_FIXED_MAXIMAL_CREWS,
                 on_click=fixed_maximal_crews,
                 when=F[_MINIMAL_CREWS],
             ),
             Next(
-                NConst(N_("create_team_reset_maximal_crews")),
+                text=NConst(N_("create_team_reset_maximal_crews")),
                 id=_RESET_MAXIMAL_CREWS,
                 on_click=write_dialog_value(_MAXIMAL_CREWS, lambda x: x or 0),
             )
         ),
-        manage_team_control,
+        _manage_team_wizard,
         state=CreateTeam.minimalCrews,
         getter=dialog_data_getter,
     ),
 
     # Deadline
     Window(
-        NConst(N_("create_team_deadline_welcome")),
+        NConst(text=N_("create_team_deadline_welcome")),
         _preview(key=_DEADLINE),
         Calendar(
             id=_DEADLINE,
@@ -632,51 +581,51 @@ create_team_dialog = Dialog(
             when=F[_ENABLE_DEADLINE],
         ),
         Checkbox(
-            NConst(N_("create_team_enable_deadline_checked")),
-            NConst(N_("create_team_enable_deadline_unchecked")),
+            checked_text=NConst(N_("create_team_enable_deadline_checked")),
+            unchecked_text=NConst(N_("create_team_enable_deadline_unchecked")),
             id=_ENABLE_DEADLINE,
             on_state_changed=write_checkbox_state,
         ),
         Next(
-            NConst(N_("create_team_deadline_next")),
+            text=NConst(N_("create_team_deadline_next")),
             id=_DEADLINE_NEXT,
             when=~F[_ENABLE_DEADLINE],
             ),
-        manage_team_control,
+        _manage_team_wizard,
         state=CreateTeam.deadline,
         getter=dialog_data_getter,
     ),
 
     # Advanced options
     Window(
-        NJinja(N_("create_team_options_welcome{deadline}")),
+        NJinja(text=N_("create_team_options_welcome{deadline}")),
         Checkbox(
-            NConst(N_("create_team_suspend_companions_checked")),
-            NConst(N_("create_team_suspend_companions_unchecked")),
+            checked_text=NConst(N_("create_team_suspend_companions_checked")),
+            unchecked_text=NConst(N_("create_team_suspend_companions_unchecked")),
             id=_SUSPEND_COMPANIONS,
             on_state_changed=write_checkbox_state,
         ),
         Checkbox(
-            NConst(N_("create_team_suspend_recruitment_checked")),
-            NConst(N_("create_team_suspend_recruitment_unchecked")),
+            checked_text=NConst(N_("create_team_suspend_recruitment_checked")),
+            unchecked_text=NConst(N_("create_team_suspend_recruitment_unchecked")),
             id=_SUSPEND_RECRUITMENT,
             on_state_changed=write_checkbox_state,
         ),
         Checkbox(
-            NConst(N_("create_team_suspend_pending_queue_checked")),
-            NConst(N_("create_team_suspend_pending_queue_unchecked")),
+            checked_text=NConst(N_("create_team_suspend_pending_queue_checked")),
+            unchecked_text=NConst(N_("create_team_suspend_pending_queue_unchecked")),
             id=_SUSPEND_PENDING_QUEUE,
             on_state_changed=write_checkbox_state,
         ),
         Checkbox(
-            NConst(N_("create_team_suspend_deadline_queue_checked")),
-            NConst(N_("create_team_suspend_deadline_queue_unchecked")),
+            checked_text=NConst(N_("create_team_suspend_deadline_queue_checked")),
+            unchecked_text=NConst(N_("create_team_suspend_deadline_queue_unchecked")),
             id=_SUSPEND_DEADLINE_QUEUE,
             on_state_changed=write_checkbox_state,
             when=F[_ENABLE_DEADLINE],
         ),
-        Next(NConst(N_("create_team_options_next")), id=_OPTIONS_NEXT),
-        manage_team_control,
+        Next(text = NConst(N_("create_team_options_next")), id=_OPTIONS_NEXT),
+        _manage_team_wizard,
         state=CreateTeam.options,
         getter=dialog_data_getter,
         parse_mode="html",
@@ -686,51 +635,51 @@ create_team_dialog = Dialog(
 
     # Summary
     Window(
-        NJinja(N_("create_team_summary")),
+        NJinja(text = N_("create_team_summary")),
         Row(
-            manage_team_control,
+            _manage_team_wizard,
             Button(
-                NConst(N_("create_team_manage")),
+                text = NConst(N_("create_team_manage")),
                 id=_MANAGE_TEAM,
-                on_click=manage_team,
+                on_click=_manage_team,
                 when=~F[_MANAGE_TEAM],
             ),
-            Cancel(
-                NConst(N_("create_team_cancel")),
-                id=_CANCEL_TEAM,
-                on_click=cancel_team,
-            ),
             DStart(
-                NConst(N_("create_team_delete")),
+                text = NConst(N_("create_team_delete")),
                 id=_DELETE_TEAM,
                 state=ConfirmDeleteTeam.confirm,
-                data=delete_team_data,
+                data=dynamic_dialog_data_items(_ID,_TEAM_ID_STR,_TITLE,_DESCRIPTION),
                 when=F[_ID],
             ),
             Button(
-                NConst(N_("create_team_insert")),
+                text = NConst(N_("create_team_insert")),
                 id=_INSERT_TEAM,
-                on_click=insert_team,
-                when=~F[_ID]
+                on_click=_insert_team,
+                when=~F[_ID],
             ),
             Button(
-                NConst(N_("create_team_update")),
+                text = NConst(N_("create_team_update")),
                 id=_UPDATE_TEAM,
-                on_click=update_team,
-                when=F[_ID]
+                on_click=_update_team,
+                when=F[_ID],
+            ),
+            Cancel(
+                text = NConst(N_("create_team_cancel")),
+                id=_CANCEL_TEAM,
+                on_click=_cancel_team,
             ),
         ),
         state=CreateTeam.summary,
         getter=dialog_data_getter,
-        on_process_result=team_summary_result,
+        on_process_result=_team_summary_result,
         parse_mode="html",
     ),
-    on_start=start_create_team,
+    on_start=_start_create_team,
 )
 
 create_team_router = Router()
-create_team_router.include_router(create_team_dialog)
-create_team_router.include_router(delete_team_confirmation)
+create_team_router.include_router(_create_team_dialog)
+create_team_router.include_router(_delete_team_confirmation)
 
 
 @create_team_router.message(Command("cancel"))
@@ -785,7 +734,7 @@ async def handle_manage_team(message: Message, dialog_manager: DialogManager, **
             # Add the text representation of team ID
             team_values = dict(
                 teamModel.model_dump(),
-                **{_TEAM_ID : teamStr }
+                **{_TEAM_ID_STR : teamStr }
             )
 
             await dialog_manager.start(CreateTeam.summary, data = team_values, mode = StartMode.RESET_STACK)

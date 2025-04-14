@@ -47,7 +47,8 @@ async def handle_start(message: Message, dialog_manager: DialogManager) -> None:
         commands=[
             BotCommand(command="cancel", description=_("menu_cancel_anywhere")),
             BotCommand(command="create", description=_("menu_create_team")),
-            BotCommand(command="manage", description=_("menu_manage_team"))
+            BotCommand(command="manage", description=_("menu_manage_team")),
+            BotCommand(command="member", description=_("menu_member_team")),
         ],
     )
 

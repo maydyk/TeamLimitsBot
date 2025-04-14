@@ -29,12 +29,12 @@ class DatabaseErrorSuspendedCompanions(DatabaseError):
 def connection(method):
     """
     Decorator to wrap session without commit.
-    Use it with query
+    Use it with query without modification
     """
     @wraps(method)
     async def wrapper(self, *args, **kwargs):
         async with self.session_maker() as session:
-            return await method(self, *args, session = session, **kwargs)
+            return await method(self, *args, session=session, **kwargs)
     return wrapper
 
 
@@ -92,7 +92,7 @@ class Database:
         query = select(func.count(Team.title)).where(Team.title == title)
         print(query)
         res = (await session.execute(query)).scalar_one_or_none()
-        return (res or 0) == 0
+        return not res
     
     
     @connection
@@ -117,7 +117,7 @@ class Database:
 
         # Build a new team
         if teamModel.title == "" or not await self.checkTeamTitleIsUnique(teamModel.title):
-            raise DatabaseErrorDuplicatedTitle(f"Title for a new team {teamModel.title} is empty or already exists.")
+            raise DatabaseErrorDuplicatedTitle(f"The title for a new team {teamModel.title} is empty or already exists.")
             
         # Insert the new team
         team = Team(**teamModel.model_dump())
@@ -126,20 +126,21 @@ class Database:
         teamId = team.id
 
         # Create a fake crew for the team
-        defaultCrew = Crew(
-            **CrewModel(
+        await self.insertCrew(
+            personModel = personModel,
+            crewModel = CrewModel(
                 teamId = teamId,
                 title="",
                 special=Crew.DEFAULT_CREW_SPECIAL,
-            ).model_dump()
-        )
-        session.add(defaultCrew)
-        await session.flush()
+                ),
+            session = session,
+            )
+
         
         # Add current user as administrator
         admin = Admin(
             **AdminModel.createFromPerson(personModel, teamId).model_dump()
-        )
+            )
         session.add(admin)
 
         return teamId
@@ -229,7 +230,10 @@ class Database:
         
         query = select(func.count(Member.teamId)).where(
             (Member.teamId == teamId) &
-            ((Member.userId == memberModel.userId) | (Member.userName == memberModel.userName))
+            (
+                (Member.userId == memberModel.userId) |
+                (Member.userName == memberModel.userName)
+            )
         )
         print(query)
 
@@ -338,6 +342,7 @@ class Database:
             members=memberModels,
             crews=crewModels
         )
+    
         
     @transaction
     async def canAddTeamMember(self, teamId: int, memberModel: PersonModel, session: AsyncSession) -> bool:
@@ -404,7 +409,6 @@ class Database:
             )
         )
         session.add(member)
-        session.commit()
             
 
     @transaction
@@ -431,8 +435,77 @@ class Database:
                 )))
             )
         print(query)
+        await session.execute(query)
+
+
+    @transaction
+    async def checkCrewTitleIsUnique(self, teamId: int, title: str, session: AsyncSession) -> bool:
+        query = select(func.count(Crew.id)).where(
+            (Crew.teamId == teamId) &
+            (Crew.title == title)
+        )
+        print(query)
+
+        res = (await session.execute(query)).scalar_one_or_none()
+        return not res
+        
+
+    @transaction
+    async def insertCrew(self, personModel: PersonModel, crewModel: CrewModel, session: AsyncSession) -> int:
+        # Disable to insert team with defined ID
+        assert(crewModel.id is None)
+
+        # Build a new team
+        if crewModel.special == 0 and crewModel.title == "" or not await self.checkCrewTitleIsUnique(teamId=crewModel.teamId, title=crewModel.title):
+            raise DatabaseErrorDuplicatedTitle(f"The title for a new crew {crewModel.title} is already exists.")
+
+
+        # Insert the new crew
+        crew = Crew(**crewModel.model_dump())
+        session.add(crew)
+        await session.flush()
+        crewId = crew.id
+
+        # Mark the person as a crew leader
+        leader = Leader(
+            **LeaderModel.createFromPerson(personModel, crewId).model_dump()
+            )
+        session.add(leader)
+
+        return crewId
+
+    
+    @transaction
+    async def updateCrew(self, crewModel: CrewModel, session: AsyncSession) -> int:
+        assert(crewModel.id is not None)
+
+        crewId = crewModel.id
+        query = update(Crew).where(Crew.id == crewId).values(**crewModel.model_dump())
+        print(query)
 
         await session.execute(query)
+        return crewId
+    
+
+    @transaction
+    async def deleteCrew(self, crewId: int, session: AsyncSession) -> None:
+        query = delete(Crew).where(Crew.id == crewId)
+        print(query)
+        await session.execute(query)
+
+    @connection
+    async def queryMemberTeams(self, memberModel: PersonModel, session: AsyncSession) -> List[TeamModel]:
+        query = select(Team).where(Team.id.in_(
+            select(Member.teamId).where(
+                (Member.userId == memberModel.userId) |
+                (Member.userName == memberModel.userName)
+            )
+        )).order_by(Team.id)
+        print(query)
+
+        teams = (await session.execute(query)).scalars().all()
+        return list(teams)
+
 
 
 

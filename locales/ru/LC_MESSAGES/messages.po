@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-12 15:39+0300\n"
+"POT-Creation-Date: 2025-04-14 21:52+0300\n"
 "PO-Revision-Date: 2025-02-28 21:48+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,79 +19,219 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: manage_team.py:67
+#: manage_crew.py:62
+#, fuzzy
+msgid "create_crew_back"
+msgstr "⏪ Назад."
+
+#: manage_crew.py:63
+#, fuzzy
+msgid "create_crew_home"
+msgstr "🏠"
+
+#: manage_crew.py:64
+#, fuzzy
+msgid "create_crew_next"
+msgstr "Далее. ⏩"
+
+#: manage_crew.py:69
+#, fuzzy
+msgid "create_crew_preview{preview}"
+msgstr ""
+"\n"
+"Текущее значение: {preview}"
+
+#: manage_crew.py:92
+#, fuzzy
+msgid "create_crew_duplicated_title{title}"
+msgstr "Экипаж с именем {title} уже существует. Придумайте другое название."
+
+#: manage_crew.py:103
+#, fuzzy
+msgid "create_crew_minimal_mates_error{value}"
+msgstr ""
+"Укажите положительное число для минимального числа пассажиров (или 0) "
+"вместо {value}."
+
+#: manage_crew.py:130
+#, fuzzy
+msgid "create_crew_maximal_mates_invalid{minimalMates}{maximalMates}"
+msgstr ""
+"Минимальное число пассажиров {minimalMates} должно быть меньше или равно "
+"минимальному числу пассажиров {maximalMates}."
+
+#: manage_crew.py:144
+#, fuzzy
+msgid "create_crew_maximal_mates_error{value}"
+msgstr ""
+"Укажите положительное число для максимального числа пассажиров (или 0) "
+"вместо {value}."
+
+#: manage_crew.py:178
+#, fuzzy
+msgid "create_crew_insert_failed{title}"
+msgstr ""
+"Не удалось создать экипаж \"{title}\"\n"
+"Попробуйте изменить название."
+
+#: manage_crew.py:200
+#, fuzzy
+msgid "create_crew_update_failed{title}"
+msgstr ""
+"Не удалось обновить экипаж \"{title}\"\n"
+"Попробуйте изменить название."
+
+#: manage_crew.py:230
+#, fuzzy
+msgid "delete_crew_confirmation{title}"
+msgstr "Вы уверены что хотите удалить экипаж \"{title}\"?"
+
+#: manage_crew.py:231
+#, fuzzy
+msgid "delete_crew_confirmation_no"
+msgstr "Нет"
+
+#: manage_crew.py:232
+#, fuzzy
+msgid "delete_crew_confirmation_yes"
+msgstr "ДА!"
+
+#: manage_crew.py:242
+#, fuzzy
+msgid "create_crew_query_title"
+msgstr "Придумайте название нового Экипажа."
+
+#: manage_crew.py:256
+#, fuzzy
+msgid "create_crew_minimal_mates"
+msgstr "Укажите минимально число пассажиров."
+
+#: manage_crew.py:259
+#, fuzzy
+msgid "create_crew_reset_minimal_mates"
+msgstr "Сбросить"
+
+#: manage_crew.py:277
+#, fuzzy
+msgid "create_crew_maximal_mates"
+msgstr "Укажите максимальное число пассажиров."
+
+#: manage_crew.py:281
+#, fuzzy
+msgid "create_crew_fixed_maximal_mates{minimalMates}"
+msgstr "Фикс. {minimalMates}"
+
+#: manage_crew.py:287
+#, fuzzy
+msgid "create_team_reset_reset_maximal_mates"
+msgstr "Пропустить"
+
+#: manage_crew.py:306
+#, fuzzy
+msgid "create_crew_summary"
+msgstr ""
+"<u>Сводка экипажа</u> \"{{title}}\"\n"
+"<b>Минимально пассажиров</b> : {{minimalMates or \"не задано\"}}\n"
+"<b>Максимально пассажиров</b>: {{maximalMates or \"не задано\"}}\n"
+
+#: manage_crew.py:310
+#, fuzzy
+msgid "create_crew_manage"
+msgstr "Изменить"
+
+#: manage_crew.py:316
+#, fuzzy
+msgid "create_crew_delete"
+msgstr "Удалить?"
+
+#: manage_crew.py:323
+#, fuzzy
+msgid "create_crew_insert"
+msgstr "Создать!"
+
+#: manage_crew.py:329
+#, fuzzy
+msgid "create_crew_update"
+msgstr "Применить"
+
+#: manage_crew.py:335
+#, fuzzy
+msgid "create_crew_finish"
+msgstr "Вернуться"
+
+#: manage_team.py:114
 #, fuzzy
 msgid "delete_team_confirmation{teamId}{title}"
 msgstr "Вы уверены что хотите удалить команду {teamId} \"{title}\"?"
 
-#: manage_team.py:70
+#: manage_team.py:115
 #, fuzzy
 msgid "delete_team_confirmation_no"
 msgstr "Нет"
 
-#: manage_team.py:72
+#: manage_team.py:116
 #, fuzzy
 msgid "delete_team_confirmation_yes"
 msgstr "ДА!"
 
-#: manage_team.py:184
+#: manage_team.py:142
 #, fuzzy
 msgid "create_team_duplicated_title{title}"
 msgstr "Команда с именем {title} уже существует. Придумайте другое название."
 
-#: manage_team.py:216
+#: manage_team.py:175
 #, fuzzy
 msgid "create_team_minimal_members_error{value}"
 msgstr ""
 "Укажите положительное число для минимального числа участников (или 0) "
 "вместо {value}."
 
-#: manage_team.py:235
+#: manage_team.py:194
 #, fuzzy
 msgid "create_team_maximal_members_invalid{minimalMembers}{maximalMembers}"
 msgstr ""
 "Минимальное число участников {minimalMembers} должно быть меньше или "
 "равно минимальному числу участников {maximalMembers}."
 
-#: manage_team.py:247
+#: manage_team.py:206
 #, fuzzy
 msgid "create_team_maximal_members_error{value}"
 msgstr ""
 "Укажите положительное число для максимального числа участников (или 0) "
 "вместо {value}."
 
-#: manage_team.py:276
+#: manage_team.py:235
 #, fuzzy
 msgid "create_team_minimal_crews_error{value}"
 msgstr ""
 "Укажите положительное число для минимального числа Экипажей (или 0) "
 "вместо {value}."
 
-#: manage_team.py:294
+#: manage_team.py:253
 #, fuzzy
 msgid "create_team_maximal_crews_invalid{minimalCrews}{maximalCrews}"
 msgstr ""
 "Минимальное число Экипажей {minimalCrews} должно быть меньше или равно "
 "минимальному числу Экипажей {maximalCrews}."
 
-#: manage_team.py:306
+#: manage_team.py:265
 #, fuzzy
 msgid "create_team_maximal_crews_error{value}"
 msgstr ""
 "Укажите положительное число для максимального числа участников (или 0) "
 "вместо {value}."
 
-#: manage_team.py:338
+#: manage_team.py:297
 #, fuzzy
 msgid "manage_team_was_cancelled{title}"
 msgstr "Изменение команды {title} было отменено."
 
-#: manage_team.py:340
+#: manage_team.py:299
 #, fuzzy
 msgid "create_team_was_cancelled{title}"
 msgstr "Создание команды {title} было отменено."
 
-#: manage_team.py:375
+#: manage_team.py:323
 #, fuzzy
 msgid "create_team_inserted{teamId}{title}"
 msgstr ""
@@ -100,14 +240,14 @@ msgstr ""
 "Вы сможете вернуться к управлению Командой /m{teamId}.\n"
 "Принять участие в Команде /t{teamId}."
 
-#: manage_team.py:384
+#: manage_team.py:333
 #, fuzzy
 msgid "create_team_insert_failed{title}"
 msgstr ""
 "Не удалось создать команду {title}\n"
 "Попробуйте изменить название."
 
-#: manage_team.py:405
+#: manage_team.py:355
 #, fuzzy
 msgid "create_team_updated{teamId}{title}"
 msgstr ""
@@ -116,64 +256,64 @@ msgstr ""
 "Вы сможете вернуться к управлению Командой /m{teamId}.\n"
 "Принять участие в Команде /t{teamId}."
 
-#: manage_team.py:413
+#: manage_team.py:363
 #, fuzzy
 msgid "create_team_update_failed{title}"
 msgstr ""
 "Не удалось обновить команду {title}\n"
 "Попробуйте изменить название."
 
-#: manage_team.py:440
+#: manage_team.py:393
 #, fuzzy
 msgid "create_team_back"
 msgstr "⏪ Назад."
 
-#: manage_team.py:442
+#: manage_team.py:394
 #, fuzzy
 msgid "create_team_home"
 msgstr "🏠"
 
-#: manage_team.py:447
+#: manage_team.py:395
 #, fuzzy
 msgid "create_team_next"
 msgstr "Далее. ⏩"
 
-#: manage_team.py:453
+#: manage_team.py:400
 #, fuzzy
 msgid "create_team_preview{preview}"
 msgstr ""
 "\n"
 "Текущее значение: {preview}"
 
-#: manage_team.py:461
+#: manage_team.py:410
 msgid "create_team_query_title"
 msgstr ""
 "Придумайте название вашей Команды. Это обязательно, иначе вы не сможете "
 "отличать одну Команду от другой."
 
-#: manage_team.py:469
+#: manage_team.py:413
 #, fuzzy
 msgid "create_team_ask_description_checked"
 msgstr "✅ добавить подробное описание?"
 
-#: manage_team.py:470
+#: manage_team.py:414
 #, fuzzy
 msgid "create_team_ask_description_unchecked"
 msgstr "✖ добавить подробное описание?"
 
-#: manage_team.py:481
+#: manage_team.py:430
 #, fuzzy
 msgid "create_team_query_description"
 msgstr ""
 "Укажите подробное описание Команды (это не обязательно) или нажмите "
 "кнопку внизу 👇 чтобы…"
 
-#: manage_team.py:489
+#: manage_team.py:438
 #, fuzzy
 msgid "create_team_reset_description"
 msgstr "Сбросить"
 
-#: manage_team.py:501
+#: manage_team.py:450
 #, fuzzy
 msgid "create_team_query_minimal_members"
 msgstr ""
@@ -183,12 +323,12 @@ msgstr ""
 "минимального ограничения нет, то введите 0 или нажмите кнопку внизу 👇 "
 "чтобы…"
 
-#: manage_team.py:511
+#: manage_team.py:453
 #, fuzzy
 msgid "create_team_reset_minimal_members"
 msgstr "Сбросить"
 
-#: manage_team.py:523
+#: manage_team.py:472
 #, fuzzy
 msgid "create_team_query_maximal_members{minimalMembers}"
 msgstr ""
@@ -198,17 +338,17 @@ msgstr ""
 "планируете использовать Экипажи, то можно указать 0 или пропустить. Тогда"
 " предельное число участников будет определяться Экипажами."
 
-#: manage_team.py:534
+#: manage_team.py:476
 #, fuzzy
 msgid "create_team_fix_maximal_members{minimalMembers}"
 msgstr "Фикс. {minimalMembers}"
 
-#: manage_team.py:540
+#: manage_team.py:482
 #, fuzzy
 msgid "create_team_skip_maximal_members"
 msgstr "Сбросить"
 
-#: manage_team.py:552
+#: manage_team.py:501
 msgid "create_team_crews_welcome"
 msgstr ""
 "Экипажи это группы участников, в которые они смогут добавиться "
@@ -216,27 +356,27 @@ msgstr ""
 "можете задействовать Экипажи и Если число Экипажей не ограничено, нажмите"
 " кнопку пропустить 👇"
 
-#: manage_team.py:554
+#: manage_team.py:503
 #, fuzzy
 msgid "create_team_enable_crews"
 msgstr "✅ Задействовать Экипажи"
 
-#: manage_team.py:555
+#: manage_team.py:504
 #, fuzzy
 msgid "create_team_disable_crews"
 msgstr "✖ Задействовать Экипажи"
 
-#: manage_team.py:560
+#: manage_team.py:509
 #, fuzzy
 msgid "create_team_setup_crews_limits"
 msgstr "Настроить ограничения Экипажей."
 
-#: manage_team.py:565
+#: manage_team.py:514
 #, fuzzy
 msgid "create_team_reset_crews_limits"
 msgstr "Сбросить"
 
-#: manage_team.py:577
+#: manage_team.py:526
 #, fuzzy
 msgid "create_team_query_minimal_crews"
 msgstr ""
@@ -244,12 +384,12 @@ msgstr ""
 "числа будет отображаться предупреждение. Если минимального ограничения "
 "нет, то введите 0 или нажмите кнопку внизу 👇 чтобы…"
 
-#: manage_team.py:587
+#: manage_team.py:536
 #, fuzzy
 msgid "create_team_reset_minimal_crews"
 msgstr "Сбросить"
 
-#: manage_team.py:598
+#: manage_team.py:547
 #, fuzzy
 msgid "create_team_query_maximal_crews{minimalCrews}"
 msgstr ""
@@ -258,17 +398,17 @@ msgstr ""
 " ожидания. Если вы не хотите ограничивать число Экипажей, укажите 0 или "
 "нажмите кнопку Сбросить."
 
-#: manage_team.py:609
+#: manage_team.py:558
 #, fuzzy
 msgid "create_team_fixed_maximal_crews{minimalCrews}"
 msgstr "Фикс. {minimalCrews}"
 
-#: manage_team.py:615
+#: manage_team.py:564
 #, fuzzy
 msgid "create_team_reset_maximal_crews"
 msgstr "Пропустить"
 
-#: manage_team.py:627
+#: manage_team.py:576
 #, fuzzy
 msgid "create_team_deadline_welcome"
 msgstr ""
@@ -276,81 +416,80 @@ msgstr ""
 "новых участников будет закончен. Это может пригодиться, если вы "
 "бронируете  гостиницу на фактическое число Участников."
 
-#: manage_team.py:635
+#: manage_team.py:584
 #, fuzzy
 msgid "create_team_enable_deadline_checked"
 msgstr "✅ Установить Крайний Срок"
 
-#: manage_team.py:636
+#: manage_team.py:585
 #, fuzzy
 msgid "create_team_enable_deadline_unchecked"
 msgstr "✖ Установить Крайний Срок"
 
-#: manage_team.py:641
+#: manage_team.py:590
 #, fuzzy
 msgid "create_team_deadline_next"
 msgstr "Пропустить"
 
-#: manage_team.py:652
+#: manage_team.py:601
 #, fuzzy
 msgid "create_team_options_welcome{deadline}"
 msgstr ""
 "Дополнительные параметры. Используйте их с осторожностью.\n"
 "<b>Приостановить набор домочадцев</b> каждый Участник может вступать в "
-"Команду всего 1 раз."
-"<b>Приостановить набор участников</b> позволяет временно заблокировать "
-"добавление новых Участников\n"
+"Команду всего 1 раз.<b>Приостановить набор участников</b> позволяет "
+"временно заблокировать добавление новых Участников\n"
 "<b>Отключить список ожидающих</b> не позволяет добавлять в команду новых "
 "Участников, если достигнуты пределы Команды\n"
 "<b>Очистить после Крайнего Срока</b> после достижения Крайнего Срока "
 "{{deadline}} список ожидающих будет автоматически очищен."
 
-#: manage_team.py:654
+#: manage_team.py:603
 #, fuzzy
 msgid "create_team_suspend_companions_checked"
 msgstr "✅ Приостановить набор домочадцев"
 
-#: manage_team.py:655
+#: manage_team.py:604
 #, fuzzy
 msgid "create_team_suspend_companions_unchecked"
 msgstr "✖ Приостановить набор домочадцев"
 
-#: manage_team.py:660
+#: manage_team.py:609
 #, fuzzy
 msgid "create_team_suspend_recruitment_checked"
 msgstr "✅ Приостановить набор участников"
 
-#: manage_team.py:661
+#: manage_team.py:610
 #, fuzzy
 msgid "create_team_suspend_recruitment_unchecked"
 msgstr "✖ Приостановить набор участников"
 
-#: manage_team.py:666
+#: manage_team.py:615
 #, fuzzy
 msgid "create_team_suspend_pending_queue_checked"
 msgstr "✅ Отключить список ожидающих"
 
-#: manage_team.py:667
+#: manage_team.py:616
 #, fuzzy
 msgid "create_team_suspend_pending_queue_unchecked"
 msgstr "✖ Отключить список ожидающих"
 
-#: manage_team.py:672
+#: manage_team.py:621
 #, fuzzy
 msgid "create_team_suspend_deadline_queue_checked"
 msgstr "✅ Очистить после Крайнего Срока"
 
-#: manage_team.py:673
+#: manage_team.py:622
 #, fuzzy
 msgid "create_team_suspend_deadline_queue_unchecked"
 msgstr "✖ Очистить после Крайнего Срока"
 
-#: manage_team.py:678
+#: manage_team.py:627
 #, fuzzy
 msgid "create_team_options_next"
 msgstr "Пропустить"
 
-#: manage_team.py:689
+#: manage_team.py:638
 #, fuzzy
 msgid "create_team_summary"
 msgstr ""
@@ -377,44 +516,48 @@ msgstr ""
 "<b>Останов. после Крайнего Ср.</b>: {{ \"Да!\" if suspendDeadlineQueue "
 "else \"Нет\" }}\n"
 
-#: manage_team.py:693
+#: manage_team.py:642
 #, fuzzy
 msgid "create_team_manage"
 msgstr "Изменить"
 
-#: manage_team.py:699
-#, fuzzy
-msgid "create_team_cancel"
-msgstr "Отменить"
-
-#: manage_team.py:704
+#: manage_team.py:648
 #, fuzzy
 msgid "create_team_delete"
 msgstr "Удалить?"
 
-#: manage_team.py:711
+#: manage_team.py:655
 #, fuzzy
 msgid "create_team_insert"
 msgstr "Создать!"
 
-#: manage_team.py:717
+#: manage_team.py:661
 #, fuzzy
 msgid "create_team_update"
 msgstr "Применить"
 
-#: manage_team.py:760
+#: manage_team.py:667
+#, fuzzy
+msgid "create_team_cancel"
+msgstr "Отменить"
+
+#: manage_team.py:709
 msgid "msg_manage_list_head"
 msgstr "Вы управляете командами:\n"
 
-#: manage_team.py:763
+#: manage_team.py:712
 msgid "msg_manage_list_item{teamId}{title}{description}"
-msgstr "/m{teamId}: {title}\n"
+msgstr "/m{teamId}: {title} ({description})\n"
 
-#: manage_team.py:794
+#: manage_team.py:743
 msgid "msg_team_not_found{teamId}"
 msgstr "Команда {teamId} не найдена."
 
-#: member_team.py:82
+#: member_team.py:78
+msgid "member_team_add_member_failed{teamId}{userName}"
+msgstr "Не удалось добавить участника {userName} в команду {teamId}."
+
+#: member_team.py:96
 #, fuzzy
 msgid "member_team_summary"
 msgstr ""
@@ -427,27 +570,46 @@ msgstr ""
 "вступить в список ожидания.{% endif %}\n"
 "{% endif %}{% if deadline %} До крайнего срока {{deadline}} осталось "
 "{{deadlineLeft}}\n"
-"{% endif %}Участники команды:\n"
+"{% endif %}<b>Экипажи Команды:</b>\n"
+"{% for crew in crews %}"
+"{% if crew.crew.special == 0 %}"
+"{{crew.crew.title}}\n"
+"{% for mate in crew.mates %}"
+"{{mate.position + 1}} : {{mate.userName}}\n"
+"{% endfor %}\n"
+"{% endif %}"
+"{% endfor %}\n"
+"Участники команды:\n"
 "{% for member in members %}{{member.position + 1}}: {{member.userName}} "
 "{% if member.number > 0 %}(+{{member.number}}){% endif +%}\n"
 "{% endfor %}"
 
-#: member_team.py:84
+#: member_team.py:98
 msgid "member_team_add"
 msgstr "Вступить в Команду"
 
-#: member_team.py:90
+#: member_team.py:104
 #, fuzzy
 msgid "member_team_remove"
 msgstr "Выйти из Команды"
 
-#: member_team.py:95
+#: member_team.py:110
 msgid "add_member_crew"
 msgstr "Добавить Экипаж"
 
-#: member_team.py:127
+#: member_team.py:143
 msgid "msg_member_team_disallow"
 msgstr "Вы не можете принять участие в этой Команде."
+
+#: member_team.py:156
+#, fuzzy
+msgid "msg_member_list_head"
+msgstr "Вы участвуете в Командах:\n"
+
+#: member_team.py:159
+#, fuzzy
+msgid "msg_member_list_item{teamId}{title}{description}"
+msgstr "/t{teamId}: {title} ({description})\n"
 
 #: welcome.py:23
 msgid "msg_start_welcome{bot_name}"
@@ -473,7 +635,7 @@ msgstr ""
 "Теперь выберете действие\n"
 "/create чтобы создать новую Команду.\n"
 "/manage чтобы изменить существующую Команду.\n"
-"Если вы знаете номер Команды укажите /mНОМЕР."
+"/member чтобы показать список Команд в которых вы участвуете\n"
 
 #: welcome.py:48
 msgid "menu_cancel_anywhere"
@@ -488,6 +650,11 @@ msgstr "Создать новую Команду"
 #, fuzzy
 msgid "menu_manage_team"
 msgstr "Управлять Командами"
+
+#: welcome.py:51
+#, fuzzy
+msgid "menu_member_team"
+msgstr "Участвовать в Команде"
 
 #~ msgid "create_team_enable_recruitment"
 #~ msgstr "✅ Приостановить набор участников"
@@ -533,4 +700,10 @@ msgstr "Управлять Командами"
 
 #~ msgid "create_team_broaden_crews"
 #~ msgstr "✖ Экипажи Участников"
+
+#~ msgid "manage_crew_was_cancelled{title}"
+#~ msgstr "Изменение экипажа \"{title}\" было отменено."
+
+#~ msgid "create_crew_was_cancelled{title}"
+#~ msgstr "Создание экипажа \"{title}\" было отменено."
 
