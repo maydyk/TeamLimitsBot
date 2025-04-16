@@ -7,6 +7,7 @@ Many useful functions
 
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Command
+from aiogram.filters.command import CommandObject, CommandPatternType
 from aiogram.fsm.state import State
 from aiogram_dialog import DialogManager, ChatEvent, StartMode
 from aiogram_dialog.api.entities import ShowMode, Data
@@ -140,16 +141,31 @@ def zero_positive(text: str) -> int:
     return value
 
 
-async def filter_cancel(message: Message, dialog_manager: DialogManager, **kwargs) -> bool:
-    cmd = Command("cancel")
-    ch = await cmd(message=message, bot=message.bot)
-    if ch:
+async def dialog_filter_cancel(message: Message, dialog_manager: DialogManager, **kwargs) -> bool:
+    if await filter_command(message, "cancel"):
         manager = dialog_manager
         await manager.done()
         return False
     else:
         return True
     
+
+async def parse_command(message: Message, *values: CommandPatternType) -> str:
+    res = await Command(*values)(message=message, bot=message.bot)
+    if isinstance(res, dict):
+        cmd = res.get("command")
+        if isinstance(cmd, CommandObject):
+            return cmd.command
+    # Command wasn't parsed
+    return ""
+
+
+async def filter_command(message: Message, *values: CommandPatternType) -> bool:
+    """
+    Returns True if one of value match as command.
+    """
+    return bool(await Command(*values)(message=message, bot=message.bot))
+
 
 # See Method 3 from https://stackoverflow.com/q/6760685/3023211
 class Singleton(type):
@@ -183,7 +199,7 @@ def even_hex_pattern(prefix: str) -> re.Pattern:
     return re.compile(f"^{prefix}((?:[0-9A-Fa-f]{{2}})+)$")
 
 
-def even_hex_parse(pattern: re.Pattern, text: str) -> str|None:
+def even_hex_parse(pattern: re.Pattern, text: str) -> Optional[str]:
     match = pattern.search(text)
     if match:
         value = match.group(1)
@@ -191,7 +207,6 @@ def even_hex_parse(pattern: re.Pattern, text: str) -> str|None:
             return int(value, 16)
     
     return None
-
 
 
 # TODO: Combine DynamicDataMaker with Data

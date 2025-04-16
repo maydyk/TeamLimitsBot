@@ -37,15 +37,14 @@ from details import (
     even_hex_parse,
     dialog_data_getter,
     dialog_copy_start_data,
+    dialog_filter_cancel,
     initialize_checkboxes,
-    filter_cancel,
     write_dialog_data,
     write_calendar_date,
     write_checkbox_state,
     write_dialog_value,
     zero_positive,
 )
-from operator import itemgetter
 
 from wizard import wizard_control, wizard_preview, Preview
 
@@ -74,7 +73,7 @@ class CreateTeam(StatesGroup):
 
 # Constants widget IDs
 _ID: Final[str] = fields(TeamModel).id
-_TEAM_ID_STR: Final[str] = "teamId" # A sting representation of _ID
+_TEAM_ID_STR: Final[str] = "teamIdStr" # A sting representation of _ID
 _TITLE: Final[str] = fields(TeamModel).title
 _ASK_DESCRIPTION: Final[str] = "askDescription"
 _DESCRIPTION: Final[str] = fields(TeamModel).description
@@ -111,7 +110,7 @@ class ConfirmDeleteTeam(StatesGroup):
     confirm = State()
 
 _delete_team_confirmation = make_confirmation_dialog(
-    text = N_("delete_team_confirmation{teamId}{title}"),
+    text = N_("delete_team_confirmation{teamIdStr}{title}"),
     no = N_("delete_team_confirmation_no"),
     yes= N_("delete_team_confirmation_yes"),
     result=_DELETE_TEAM,
@@ -320,8 +319,8 @@ async def _insert_team(
         teamId = await Repository().insertTeam(person=person, team=team)
 
         await manager.done()
-        await callback.answer(_("create_team_inserted{teamId}{title}").format(
-            teamId=even_hex(teamId),
+        await callback.answer(_("create_team_inserted{teamIdStr}{title}").format(
+            teamIdStr=even_hex(teamId),
             title=team.title,
             )
         )
@@ -352,8 +351,8 @@ async def _update_team(
         teamId = await Repository().updateTeam(team=team)
 
         await manager.done()
-        await callback.message.answer(_("create_team_updated{teamId}{title}").format(
-            teamId=even_hex(teamId),
+        await callback.message.answer(_("create_team_updated{teamIdStr}{title}").format(
+            teamIdStr=even_hex(teamId),
             title=team_values[_TITLE],
             )
         )
@@ -419,7 +418,7 @@ _create_team_dialog = Dialog(
         TextInput(
             id=_TITLE,
             on_success=_on_query_title,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         state=CreateTeam.title,
         getter=dialog_data_getter,
@@ -432,7 +431,7 @@ _create_team_dialog = Dialog(
         TextInput(
             id=_DESCRIPTION,
             on_success=Next(on_click=write_dialog_value(_DESCRIPTION)),
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         Next(
             text=NConst(text=N_("create_team_reset_description")),
@@ -460,7 +459,7 @@ _create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=Next(on_click=write_dialog_value(_MINIMAL_MEMBERS)),
             on_error=_minimal_members_error,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         state=CreateTeam.minimalMembers,
         getter=dialog_data_getter,
@@ -490,7 +489,7 @@ _create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=_maximal_members_success,
             on_error=_maximal_members_error,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         state=CreateTeam.maximalMembers,
         getter=dialog_data_getter,
@@ -530,7 +529,7 @@ _create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=Next(on_click=write_dialog_value(_MINIMAL_CREWS)),
             on_error=minimal_crews_error,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         Next(
             text=NConst(N_("create_team_reset_minimal_crews")),
@@ -551,7 +550,7 @@ _create_team_dialog = Dialog(
             type_factory=zero_positive,
             on_success=maximal_crews_success,
             on_error=maximal_crews_error,
-            filter=filter_cancel
+            filter=dialog_filter_cancel
         ),
         Row(
             Next(
@@ -708,9 +707,9 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
     # Build text
     msg = _("msg_manage_list_head")
     for team in teams:
-        teamId = even_hex(team.id)
-        msg += _("msg_manage_list_item{teamId}{title}{description}").format(
-            teamId = teamId,
+        teamIdStr = even_hex(team.id)
+        msg += _("msg_manage_list_item{teamIdStr}{title}{description}").format(
+            teamIdStr = teamIdStr,
             title = team.title,
             description=team.description)
 
@@ -728,20 +727,20 @@ async def handle_manage_team(message: Message, dialog_manager: DialogManager, **
     """
     teamId = even_hex_parse(manage_pattern, message.text.lstrip('/'))
     if teamId is not None:
-        teamStr = even_hex(teamId)
+        teamIdStr = even_hex(teamId)
         teamModel = await Repository().queryAdminTeam(teamId, make_person(message.from_user))
         if teamModel:
             # Add the text representation of team ID
             team_values = dict(
                 teamModel.model_dump(),
-                **{_TEAM_ID_STR : teamStr }
+                **{_TEAM_ID_STR : teamIdStr }
             )
 
             await dialog_manager.start(CreateTeam.summary, data = team_values, mode = StartMode.RESET_STACK)
         else:
             # Team is not exists
-            await message.answer(_("msg_team_not_found{teamId}").format(
-                teamId = teamStr
+            await message.answer(_("msg_team_not_found{teamIdStr}").format(
+                teamIdStr = teamIdStr
             ))    
 
 

@@ -12,7 +12,6 @@ Define database entities
 import re
 
 from datetime import datetime
-from operator import itemgetter
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -102,7 +101,7 @@ class Team(Entity):
 
 class Crew(Entity):
 
-    DEFAULT_CREW_SPECIAL: Final[int] = 1
+    _DEFAULT_CREW_SPECIAL: Final[int] = 1
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     teamId: Mapped[int] = mapped_column(

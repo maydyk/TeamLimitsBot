@@ -6,13 +6,17 @@ An intermediate layer between database.Repository() and Telegram UI
 """
 
 from aiogram.types import User
+from collections import deque
 from contextlib import asynccontextmanager
+from database import CrewInfo, Database, DatabaseError, TeamInfo
+from details import even_hex, Singleton
 from functools import wraps
-from details import Singleton
-from database import Database, DatabaseError
+from itertools import accumulate
 from models import *
+from operator import itemgetter
+from typing import Any, Dict, Tuple, Final
 
-from typing import Any, Dict, Tuple
+import datetime
 
 def make_person(user: User) -> PersonModel:
     return PersonModel(
@@ -136,8 +140,50 @@ class Repository(metaclass = Singleton):
     
     
     async def queryTeamSummary(self, teamId: int, member: PersonModel) -> TeamSummary:
-        return await self.database.queryTeamSummary(teamId=teamId, memberModel=member)
-    
+        # Query all team data
+        teamInfo: TeamInfo = await self.database.queryTeamInfo(teamId=teamId, memberModel=member)
+
+        # Transform raw data
+
+        # Transform CrewInfo to CrewSummary
+        crews = list(map(lambda crewInfo: CrewSummary(
+            **CrewModel(**crewInfo.model_dump()).model_dump(),
+            crewIdStr=even_hex(crewInfo.id),
+            as_leader=crewInfo.as_leader,
+            mates = crewInfo.mates,
+            ),
+            teamInfo.crews
+        ))
+
+        # Extract default crew
+        defaultCrew = next(filter(lambda crew: crew.special == CrewInfo._DEFAULT_CREW_SPECIAL, crews))
+        crews[:] = filter(lambda crew: crew.special == 0, crews)
+
+        # Compute totalMembers: all mates, all members except mates of defaultCrew 
+        totalMembers = len(teamInfo.members) + deque(
+            accumulate(map(lambda crew: len(crew.mates), crews), initial=0),
+            maxlen = 1).pop()
+        
+        # Build TeamSummary
+        return TeamSummary.model_validate(
+            dict(TeamModel.model_validate(teamInfo.model_dump()).model_dump(), **{
+                fields(TeamSummary).teamIdStr : even_hex(teamInfo.id),
+                fields(TeamSummary).as_admin : teamInfo.as_admin,
+                fields(TeamSummary).as_member : teamInfo.as_member,
+                fields(TeamSummary).crews : crews,
+                fields(TeamSummary).defaultCrew : defaultCrew,
+                fields(TeamSummary).members : teamInfo.members,
+                fields(TeamSummary).totalMembers : totalMembers,
+                fields(TeamSummary).deadlineDaysLeft : 
+                    (teamInfo.deadline - datetime.datetime.now()).days 
+                        if teamInfo.deadline is not None else None,
+                fields(TeamSummary).canAddMember : 
+                    not (teamInfo.suspendCompanions and teamInfo.as_member),
+                fields(TeamSummary).canRemoveMember : teamInfo.as_member,
+                fields(TeamSummary).canAddMemberCrew : teamInfo.enableCrews or teamInfo.as_admin,
+            }))
+
+
     
     async def canAddTeamMember(self, teamId: int, member: PersonModel) -> bool:
         return await self.database.canAddTeamMember(teamId = teamId, memberModel = member)
@@ -169,7 +215,14 @@ class Repository(metaclass = Singleton):
 
     async def queryMemberTeams(self, member: PersonModel) -> List[TeamModel]:
         return await self.database.queryMemberTeams(memberModel = member)
+    
+    
+    async def setCrewMate(self, teamId: int, crewId: int, mate: PersonModel) -> None:
+        return await self.database.setCrewMate(teamId=teamId, crewId=crewId, mateModel=mate)
+    
 
+    async def queryLeaderCrew(self, crewId: int, person: PersonModel) -> CrewModel:
+        return await self.database.queryLeaderCrew(crewId = crewId, personModel=person)
 
 
 

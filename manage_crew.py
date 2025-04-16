@@ -20,14 +20,13 @@ from details import (
     dialog_copy_start_data,
     dialog_data_getter,
     dynamic_dialog_data_items,
-    filter_cancel,
+    dialog_filter_cancel,
     write_dialog_data,
     write_dialog_value,
     zero_positive,
 )
 from international import N_, NConst, NFormat, NJinja, _, localize_router
 from models import CrewModel, fields, PersonModel, MemberModel
-from operator import itemgetter
 from repository import Repository, make_person_team
 from typing import Any, Dict, Final, Tuple
 from wizard import wizard_control, wizard_preview, Preview
@@ -40,8 +39,7 @@ class CreateCrew(StatesGroup):
 
 # Constants widget IDs
 _ID: Final[str] = fields(CrewModel).id
-_CREW_ID_STR: Final[str] = "crewId"
-_TEAM_ID: Final[str] = fields(CrewModel).teamId
+_CREW_ID_STR: Final[str] = "crewIdStr"
 _TITLE: Final[str] = fields(CrewModel).title
 _MINIMAL_MATES: Final[str] = fields(CrewModel).minimalMates
 _RESET_MINIMAL_MATES: Final[str] = "resetMinimalMates"
@@ -245,7 +243,7 @@ _create_crew_dialog = Dialog(
         TextInput(
             id = _TITLE,
             on_success=_on_query_title,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         state=CreateCrew.title,
         getter=dialog_data_getter,
@@ -266,7 +264,7 @@ _create_crew_dialog = Dialog(
             type_factory=zero_positive,
             on_success=Next(on_click=write_dialog_value(_MINIMAL_MATES)),
             on_error=_minimal_mates_error,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         state=CreateCrew.minimalMates,
         getter=dialog_data_getter,
@@ -295,7 +293,7 @@ _create_crew_dialog = Dialog(
             type_factory=zero_positive,
             on_success=_maximal_mates_success,
             on_error=_maximal_mates_error,
-            filter=filter_cancel,
+            filter=dialog_filter_cancel,
         ),
         state=CreateCrew.maximalMates,
         getter=dialog_data_getter,
@@ -304,8 +302,8 @@ _create_crew_dialog = Dialog(
     # Crew summary
     Window(
         NJinja(N_("create_crew_summary")),
-        _manage_crew_wizard,
         Row(
+            _manage_crew_wizard,
             Button(
                 text = NConst(text=N_("create_crew_manage")),
                 id = _MANAGE_CREW,

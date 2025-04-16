@@ -13,6 +13,26 @@ from typing import List
 from entities import *
 from models import *
 
+# Raw crew data from database
+class CrewInfo(CrewModel):
+    as_admin: bool
+    as_leader: bool
+    mates: List[MemberModel]
+
+    model_config = ConfigDict(from_attributes=True)
+
+    _DEFAULT_CREW_SPECIAL: Final[int] = Crew._DEFAULT_CREW_SPECIAL
+
+
+# Raw team data from database
+class TeamInfo(TeamModel):
+    as_admin: bool
+    as_member: bool
+    crews: List[CrewInfo]
+    members: List[MemberModel]
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class DatabaseError(Exception):
     pass
@@ -131,7 +151,7 @@ class Database:
             crewModel = CrewModel(
                 teamId = teamId,
                 title="",
-                special=Crew.DEFAULT_CREW_SPECIAL,
+                special=Crew._DEFAULT_CREW_SPECIAL,
                 ),
             session = session,
             )
@@ -199,7 +219,7 @@ class Database:
         
     
     @connection
-    async def checkAdminTeam(self, teamId: int, adminModel: PersonModel, session: AsyncSession) -> Optional[TeamModel]:
+    async def checkAdminTeam(self, teamId: int, adminModel: PersonModel, session: AsyncSession) -> bool:
         """
         Check if specified person is administrator of team.
         """
@@ -301,47 +321,54 @@ class Database:
                 for teamId, title, description in res]
     
 
-    @transaction
-    async def queryTeamSummary(self, teamId: int, memberModel: Person, session: AsyncSession) -> TeamSummary:
+    @connection
+    async def queryTeamInfo(self, teamId: int, memberModel: Person, session: AsyncSession) -> TeamInfo:
 
         # Detect member status
-        as_member = await self.checkMemberTeam(teamId=teamId, memberModel=memberModel)
-        as_admin = await self.checkAdminTeam(teamId=teamId, adminModel=memberModel)
+        as_member: Final[bool] = await self.checkMemberTeam(teamId=teamId, memberModel=memberModel)
+        as_admin: Final[bool] = await self.checkAdminTeam(teamId=teamId, adminModel=memberModel)
 
         # Query team definition
-        team = (await session.execute(select(Team).where(Team.id == teamId))).scalar_one()
-        teamModel = TeamModel.model_validate(team)
-
-        # Query members
-        members = (await session.execute(select(Member).where(Member.teamId == teamId).order_by(Member.position))).scalars()
-        memberModels = [MemberModel.model_validate(member) for member in members]
+        team: Final[Team] = (await session.execute(select(Team).where(Team.id == teamId))).scalar_one()
+        teamModel: Final[TeamModel] = TeamModel.model_validate(team)
 
         # Query team crews
-        crews = (await session.execute(select(Crew).where(Crew.teamId == teamId))).scalars()
+        crews = (await session.execute(select(Crew).where(Crew.teamId == teamId).order_by(Crew.id))).scalars()
 
-        async def make_crew_summary(crew: Crew) -> CrewSummary:
+        async def make_crew_info(crew: Crew) -> CrewInfo:
             # Query crew leader
             as_leader = await self.checkLeaderCrew(crewId=crew.id, leaderModel=memberModel)
 
             # Query mates of crew
-            query = select(Member).where(Member.crewId == crew.id)
-            mateModels = [MemberModel.model_validate(mate) for mate in await session.execute(query)]
+            query = select(Member).where(Member.crewId == crew.id).order_by(Member.position)
+            mateModels = [MemberModel.model_validate(mate) for mate in (await session.execute(query)).scalars()]
             
             crewModel = CrewModel.model_validate(crew)
-            return CrewSummary(as_leader=as_leader, crew=crewModel, mates=mateModels)
+            return CrewInfo.model_validate(
+                dict(crewModel.model_dump(), **{
+                    fields(CrewInfo).as_admin: as_admin,
+                    fields(CrewInfo).as_leader: as_leader,
+                    fields(CrewInfo).mates: mateModels,
+                }))
         
         # Build crew list
-        crewModels = [await make_crew_summary(crew) for crew in crews]
-        # crewModels = asyncio.gather(map(make_crew_summary, crews))
+        crewInfoList = [await make_crew_info(crew) for crew in crews]
+        
+        # Query members
+        members = (await session.execute(select(Member).where(
+            (Member.teamId == teamId) &
+            (Member.crewId == None)
+            ).order_by(Member.position))).scalars()
+        memberModels = [MemberModel.model_validate(member) for member in members]
 
         # build team summary
-        return TeamSummary(
-            as_member=as_member,
-            as_admin=as_admin,
-            team=teamModel,
-            members=memberModels,
-            crews=crewModels
-        )
+        return TeamInfo.model_validate(
+            dict(teamModel.model_dump(), **{
+                fields(TeamInfo).as_admin : as_admin,
+                fields(TeamInfo).as_member : as_member,
+                fields(TeamInfo).crews : crewInfoList,
+                fields(TeamInfo).members : memberModels,
+            }))
     
         
     @transaction
@@ -480,7 +507,7 @@ class Database:
         assert(crewModel.id is not None)
 
         crewId = crewModel.id
-        query = update(Crew).where(Crew.id == crewId).values(**crewModel.model_dump())
+        query = update(Crew).where(Crew.id == crewId).values(crewModel.model_dump())
         print(query)
 
         await session.execute(query)
@@ -492,6 +519,7 @@ class Database:
         query = delete(Crew).where(Crew.id == crewId)
         print(query)
         await session.execute(query)
+
 
     @connection
     async def queryMemberTeams(self, memberModel: PersonModel, session: AsyncSession) -> List[TeamModel]:
@@ -505,6 +533,50 @@ class Database:
 
         teams = (await session.execute(query)).scalars().all()
         return list(teams)
+    
+
+    @transaction
+    async def setCrewMate(self, teamId: int, crewId: Optional[int], mateModel: PersonModel, session: AsyncSession) -> None:
+        query = update(Member).where(
+            (Member.teamId == teamId) &
+            (
+                (Member.userId == mateModel.userId) |
+                (Member.userName == mateModel.userName)
+            ) &
+            (Member.number.in_(select(func.min(Member.number)).where(
+                # NOTE: check both arguments are NULL, that means them are equal.
+                func.coalesce(Member.crewId, crewId, False) & 
+                func.coalesce((Member.crewId != crewId), True) &
+                (Member.teamId == teamId) &
+                (
+                    (Member.userId == mateModel.userId) |
+                    (Member.userName == mateModel.userName)
+                )
+        )))).values({Member.crewId : crewId})
+        print(query)
+
+        await session.execute(query)
+
+
+    @connection
+    async def queryLeaderCrew(self, crewId: int, personModel: PersonModel, session: AsyncSession) -> Optional[CrewModel]:
+        query = (
+            select(Crew)
+            .join(Admin, Admin.teamId == Crew.teamId)
+            .join(Leader, Leader.crewId == Crew.id)
+            .where(
+                (Crew.id == crewId) &
+                (
+                    (Admin.userId == personModel.userId) |
+                    (Admin.userName == personModel.userName) |
+                    (Leader.userId == personModel.userId) |
+                    (Leader.userName == personModel.userName)
+                )
+            )
+        )
+
+        crew = (await session.execute(query)).scalar_one_or_none()
+        return CrewModel.model_validate(crew) if crew else None
 
 
 

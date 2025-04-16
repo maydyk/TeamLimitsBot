@@ -123,22 +123,30 @@ class AdminModel(PersonModel):
         return AdminModel(teamId=teamId, **person.model_dump())
     
 
-class CrewSummary(BaseModel):
+class CrewSummary(CrewModel):
+    crewIdStr: str
     as_leader: bool
-    crew: CrewModel
     mates: List[MemberModel]
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class TeamSummary(BaseModel):
+class TeamSummary(TeamModel):
+    teamIdStr: str
     as_member: bool
     as_admin: bool
-    team: TeamModel
-    members: List[MemberModel]
     crews: List[CrewSummary]
+    defaultCrew: CrewSummary
+    members: List[MemberModel]
+    totalMembers: int
+    deadlineDaysLeft: Optional[int]
+    canAddMember: bool
+    canRemoveMember: bool
+    canAddMemberCrew: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
 
 
 
