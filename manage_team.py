@@ -96,8 +96,7 @@ _DEADLINE: Final[str] = fields(TeamModel).deadline
 _DEADLINE_NEXT: Final[str] = "deadline_next"
 _SUSPEND_COMPANIONS: Final[str] = fields(TeamModel).suspendCompanions
 _SUSPEND_RECRUITMENT: Final[str] = fields(TeamModel).suspendRecruitment
-_SUSPEND_PENDING_QUEUE: Final[str] = fields(TeamModel).suspendPendingQueue
-_SUSPEND_DEADLINE_QUEUE: Final[str] = fields(TeamModel).suspendDeadlineQueue
+_SUSPEND_ON_DEADLINE: Final[str] = fields(TeamModel).suspendOnDeadline
 _OPTIONS_NEXT: Final[str] = "optionsNext"
 _MANAGE_TEAM: Final[str] = "manageTeam"
 _CANCEL_TEAM: Final[str] = "cancelTeam"
@@ -160,8 +159,7 @@ async def _start_create_team(start_data: Dict|None, dialog_manager: DialogManage
         _ENABLE_DEADLINE,
         _SUSPEND_COMPANIONS,
         _SUSPEND_RECRUITMENT,
-        _SUSPEND_PENDING_QUEUE,
-        _SUSPEND_DEADLINE_QUEUE,
+        _SUSPEND_ON_DEADLINE,
         )
 
     
@@ -611,15 +609,9 @@ _create_team_dialog = Dialog(
             on_state_changed=write_checkbox_state,
         ),
         Checkbox(
-            checked_text=NConst(N_("create_team_suspend_pending_queue_checked")),
-            unchecked_text=NConst(N_("create_team_suspend_pending_queue_unchecked")),
-            id=_SUSPEND_PENDING_QUEUE,
-            on_state_changed=write_checkbox_state,
-        ),
-        Checkbox(
-            checked_text=NConst(N_("create_team_suspend_deadline_queue_checked")),
-            unchecked_text=NConst(N_("create_team_suspend_deadline_queue_unchecked")),
-            id=_SUSPEND_DEADLINE_QUEUE,
+            checked_text=NConst(N_("create_team_suspend_on_deadline_queue")),
+            unchecked_text=NConst(N_("create_team_suspend_on_deadline_unchecked")),
+            id=_SUSPEND_ON_DEADLINE,
             on_state_changed=write_checkbox_state,
             when=F[_ENABLE_DEADLINE],
         ),

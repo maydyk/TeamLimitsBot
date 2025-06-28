@@ -26,8 +26,7 @@ class TeamModel(TeamHeader):
     deadline: Optional[datetime] = None
     suspendCompanions: bool = False
     suspendRecruitment: bool = False
-    suspendPendingQueue: bool = False
-    suspendDeadlineQueue: bool = False
+    suspendOnDeadline: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

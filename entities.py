@@ -89,8 +89,7 @@ class Team(Entity):
     deadline: Mapped[Optional[datetime]]
     suspendCompanions: Mapped[bool] = mapped_column(server_default="0")
     suspendRecruitment: Mapped[bool]
-    suspendPendingQueue: Mapped[bool]
-    suspendDeadlineQueue: Mapped[bool]
+    suspendOnDeadline: Mapped[bool] = mapped_column(server_default="0")
 
     __table_args__ = (
         CheckConstraint(title != '', name="title_is_not_empty"),
