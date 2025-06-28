@@ -122,9 +122,9 @@ async def _maximal_mates_success(
         data: Any,
         ) -> None:
     minimalMates = manager.dialog_data[_MINIMAL_MATES] or 0
-    maximalMates = data
+    maximalMates = data or None
 
-    if minimalMates <= maximalMates:
+    if maximalMates is None or minimalMates <= maximalMates:
         manager.dialog_data[_MAXIMAL_MATES] = maximalMates
         await manager.next()
     else:
@@ -288,7 +288,7 @@ _create_crew_dialog = Dialog(
             Next(
                 text = NConst(text=N_("create_team_reset_reset_maximal_mates")),
                 id = _RESET_MAXIMAL_MATES,
-                on_click=write_dialog_data(_MAXIMAL_MATES, 0),
+                on_click=write_dialog_data(_MAXIMAL_MATES, None),
             )
         ),
         _manage_crew_wizard,

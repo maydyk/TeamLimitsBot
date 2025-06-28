@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for, listen
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from typing import List
+from typing import Any, Awaitable, Callable, List
 from entities import *
 from models import *
 
@@ -47,7 +47,8 @@ class CrewInfo(CrewModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    _DEFAULT_CREW_SPECIAL: Final[int] = Crew._DEFAULT_CREW_SPECIAL
+    _CREW_SPECIAL_UNSET: Final[int] = Crew._CREW_SPECIAL_UNSET
+    _CREW_SPECIAL_DEFAULT: Final[int] = Crew._CREW_SPECIAL_DEFAULT
 
 
 # Raw team data from database
@@ -72,27 +73,33 @@ class DatabaseErrorSuspendedCompanions(DatabaseError):
     pass
 
 
-def connection(method):
+def connection(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]: 
     """
     Decorator to wrap the session without commit.
     Use it with the query without modifications.
     """
     @wraps(method)
-    async def wrapper(self, *args, **kwargs):
-        async with self.session_maker() as session:
-            return await method(self, *args, session=session, **kwargs)
+    async def wrapper(self, *args, **kwargs) -> Any:
+        if "session" in kwargs:
+            return method(self, *args, *kwargs)
+        else:
+            async with self.session_maker() as session:
+                return await method(self, *args, session=session, **kwargs)
     return wrapper
 
 
-def transaction(method):
+def transaction(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
     """
     Decorator to wrap the session with commit.
     Use it to modify data.
     """
     @wraps(method)
-    async def wrapper(self, *args, **kwargs):
-        async with self.session_maker.begin() as session:
-            return await method(self, *args, session=session, **kwargs)
+    async def wrapper(self, *args, **kwargs) -> Any:
+        if "session" in kwargs:
+            return await method(self, *args, **kwargs)
+        else:
+            async with self.session_maker.begin() as session:
+                return await method(self, *args, session=session, **kwargs)
     return wrapper
 
 
@@ -159,7 +166,7 @@ class Database:
         """
         
         # Disable to insert team with defined ID
-        assert(teamModel.id is None)
+        assert teamModel.id is None, "TeamModel.id for the new model must be None."
 
         # Build a new team
         if teamModel.title == "" or not await self.checkTeamTitleIsUnique(teamModel.title):
@@ -177,9 +184,9 @@ class Database:
             crewModel = CrewModel(
                 teamId = teamId,
                 title="",
-                special=Crew._DEFAULT_CREW_SPECIAL,
+                special=Crew._CREW_SPECIAL_DEFAULT,
                 ),
-            session = session,
+            session=session,
             )
 
         
@@ -199,10 +206,11 @@ class Database:
         """
 
         # Need to know Team ID
-        assert(teamModel.id is not None)
+        assert teamModel.id is not None, "TeamModel.id when updating cannot be None."
         teamId = teamModel.id
     
-        query = update(Team).where(Team.id == teamId).values(teamModel.model_dump())
+        team = Team(**teamModel.model_dump())
+        query = update(Team).where(Team.id == teamId).values(**team.to_dict())
         _logger.query(query)
 
         await session.execute(query)
@@ -506,7 +514,7 @@ class Database:
     @transaction
     async def insertCrew(self, personModel: PersonModel, crewModel: CrewModel, session: AsyncSession) -> int:
         # Disable to insert team with defined ID
-        assert(crewModel.id is None)
+        assert crewModel.id is None, "CrewModel.id for the new created model must be None."
 
         # Build a new team
         if crewModel.special == 0 and crewModel.title == "" or not await self.checkCrewTitleIsUnique(teamId=crewModel.teamId, title=crewModel.title):
@@ -520,9 +528,7 @@ class Database:
         crewId = crew.id
 
         # Mark the person as a crew leader
-        leader = Leader(
-            **LeaderModel.createFromPerson(personModel, crewId).model_dump()
-            )
+        leader = Leader(**LeaderModel.createFromPerson(personModel, crewId).model_dump())
         session.add(leader)
 
         return crewId
@@ -530,7 +536,7 @@ class Database:
     
     @transaction
     async def updateCrew(self, crewModel: CrewModel, session: AsyncSession) -> int:
-        assert(crewModel.id is not None)
+        assert crewModel.id is not None, "CrewModel.id on updating cannot be None"
 
         crewId = crewModel.id
         query = update(Crew).where(Crew.id == crewId).values(crewModel.model_dump())

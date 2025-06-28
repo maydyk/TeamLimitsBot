@@ -5,24 +5,34 @@ Module models
 """
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator, computed_field
 from model_fields import fields
 from typing import Any, Dict, List, Optional, Tuple
+from details import even_hex
 
 class TeamHeader(BaseModel):
     id: Optional[int] = None
     title: str
     description: str = ""
 
+    @computed_field
+    @property
+    def idStr(self) -> str:
+        """
+        A computed field represents id as string
+        """
+        return even_hex(self.id)
+
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class TeamModel(TeamHeader):
     minimalMembers: NonNegativeInt = 0
-    maximalMembers: NonNegativeInt = 0
+    maximalMembers: Optional[NonNegativeInt] = None
     enableCrews: bool = False
     minimalCrews: NonNegativeInt = 0
-    maximalCrews: NonNegativeInt = 0
+    maximalCrews: Optional[NonNegativeInt] = 0
     deadline: Optional[datetime] = None
     suspendCompanions: bool = False
     suspendRecruitment: bool = False
@@ -32,7 +42,7 @@ class TeamModel(TeamHeader):
 
     @model_validator(mode="after")
     def checkMembers(self):
-        if self.maximalMembers < self.minimalMembers:
+        if self.maximalMembers and self.maximalMembers < self.minimalMembers:
             raise ValueError(
                 f"Minimal members {self.minimalMembers} must be "
                 f"less or equal than maximal members {self.maximalMembers},"
@@ -42,7 +52,7 @@ class TeamModel(TeamHeader):
         
     @model_validator(mode="after")
     def checkCrews(self):
-        if self.maximalCrews < self.minimalCrews:
+        if self.maximalCrews and self.maximalCrews < self.minimalCrews:
             raise ValueError(
                 f"Minimal crews {self.minimalCrews} must be "
                 f"less or equal than maximal crews {self.maximalCrews}."
@@ -56,14 +66,14 @@ class CrewModel(BaseModel):
     teamId: int
     title: str
     minimalMates: NonNegativeInt = 0
-    maximalMates: NonNegativeInt = 0
+    maximalMates: Optional[NonNegativeInt] = None
     special: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
     def checkMates(self):
-        if self.maximalMates < self.minimalMates:
+        if self.maximalMates and self.maximalMates < self.minimalMates:
             raise ValueError(
                 f"Minimal mates {self.minimalMates} must be "
                 f"less or equal than maximal mates {self.maximalMates}."

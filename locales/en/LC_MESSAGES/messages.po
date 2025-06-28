@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-06-28 14:02+0300\n"
+"POT-Creation-Date: 2025-06-28 22:53+0300\n"
 "PO-Revision-Date: 2025-02-28 22:10+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,426 +18,423 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: manage_crew.py:60
+#: manage_crew.py:64
 #, fuzzy
 msgid "create_crew_back"
 msgstr "Enter the team description"
 
-#: manage_crew.py:61
+#: manage_crew.py:65
 #, fuzzy
 msgid "create_crew_home"
 msgstr "Enter the team description"
 
-#: manage_crew.py:62
+#: manage_crew.py:66
 #, fuzzy
 msgid "create_crew_next"
 msgstr "Enter the team description"
 
-#: manage_crew.py:67
+#: manage_crew.py:71
 #, fuzzy
 msgid "create_crew_preview{preview}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:90
+#: manage_crew.py:94
 #, fuzzy
 msgid "create_crew_duplicated_title{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:101
+#: manage_crew.py:105
 #, fuzzy
 msgid "create_crew_minimal_mates_error{value}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:128
+#: manage_crew.py:132
 #, fuzzy
 msgid "create_crew_maximal_mates_invalid{minimalMates}{maximalMates}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:142
+#: manage_crew.py:146
 #, fuzzy
 msgid "create_crew_maximal_mates_error{value}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:176
+#: manage_crew.py:180
 #, fuzzy
 msgid "create_crew_insert_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:198
+#: manage_crew.py:202
 #, fuzzy
 msgid "create_crew_update_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:228
+#: manage_crew.py:232
 #, fuzzy
 msgid "delete_crew_confirmation{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:229
+#: manage_crew.py:233
 #, fuzzy
 msgid "delete_crew_confirmation_no"
 msgstr "Enter the team description"
 
-#: manage_crew.py:230
+#: manage_crew.py:234
 #, fuzzy
 msgid "delete_crew_confirmation_yes"
 msgstr "Enter the team description"
 
-#: manage_crew.py:240
+#: manage_crew.py:244
 #, fuzzy
 msgid "create_crew_query_title"
 msgstr "Enter the team description"
 
-#: manage_crew.py:254
+#: manage_crew.py:258
 #, fuzzy
 msgid "create_crew_minimal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:257
+#: manage_crew.py:261
 #, fuzzy
 msgid "create_crew_reset_minimal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:275
+#: manage_crew.py:279
 #, fuzzy
 msgid "create_crew_maximal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:279
+#: manage_crew.py:283
 #, fuzzy
 msgid "create_crew_fixed_maximal_mates{minimalMates}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:285
+#: manage_crew.py:289
 #, fuzzy
 msgid "create_team_reset_reset_maximal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:304
+#: manage_crew.py:308
 #, fuzzy
 msgid "create_crew_summary"
 msgstr "Enter the team description"
 
-#: manage_crew.py:308
+#: manage_crew.py:312
 #, fuzzy
 msgid "create_crew_manage"
 msgstr "Enter the team description"
 
-#: manage_crew.py:314
+#: manage_crew.py:318
 #, fuzzy
 msgid "create_crew_delete"
 msgstr "Enter the team description"
 
-#: manage_crew.py:321
+#: manage_crew.py:325
 #, fuzzy
 msgid "create_crew_insert"
 msgstr "Enter the team description"
 
-#: manage_crew.py:327
+#: manage_crew.py:331
 #, fuzzy
 msgid "create_crew_update"
 msgstr "Enter the team description"
 
-#: manage_crew.py:333
+#: manage_crew.py:337
 #, fuzzy
 msgid "create_crew_finish"
 msgstr "Enter the team description"
 
-#: manage_team.py:112
+#: manage_team.py:117
 #, fuzzy
 msgid "delete_team_confirmation{teamIdStr}{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:113
+#: manage_team.py:118
 #, fuzzy
 msgid "delete_team_confirmation_no"
 msgstr "Enter the team description"
 
-#: manage_team.py:114
+#: manage_team.py:119
 msgid "delete_team_confirmation_yes"
 msgstr ""
 
-#: manage_team.py:140
+#: manage_team.py:145
 #, fuzzy
 msgid "create_team_duplicated_title{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:172
+#: manage_team.py:177
 #, fuzzy
 msgid "create_team_minimal_members_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:191
+#: manage_team.py:196
 #, fuzzy
 msgid "create_team_maximal_members_invalid{minimalMembers}{maximalMembers}"
 msgstr "Enter the team description"
 
-#: manage_team.py:203
+#: manage_team.py:208
 #, fuzzy
 msgid "create_team_maximal_members_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:232
+#: manage_team.py:237
 #, fuzzy
 msgid "create_team_minimal_crews_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:250
+#: manage_team.py:255
 #, fuzzy
 msgid "create_team_maximal_crews_invalid{minimalCrews}{maximalCrews}"
 msgstr "Enter the team description"
 
-#: manage_team.py:262
+#: manage_team.py:267
 #, fuzzy
 msgid "create_team_maximal_crews_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:294
+#: manage_team.py:299
 #, fuzzy
 msgid "manage_team_was_cancelled{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:296
+#: manage_team.py:301
 #, fuzzy
 msgid "create_team_was_cancelled{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:320
+#: manage_team.py:326
 #, fuzzy
 msgid "create_team_inserted{teamIdStr}{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:330
+#: manage_team.py:336
 #, fuzzy
 msgid "create_team_insert_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:352
+#: manage_team.py:357
 #, fuzzy
 msgid "create_team_updated{teamIdStr}{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:360
+#: manage_team.py:365
 #, fuzzy
 msgid "create_team_update_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:390
+#: manage_team.py:395
 #, fuzzy
 msgid "create_team_back"
 msgstr "Enter the team description"
 
-#: manage_team.py:391
+#: manage_team.py:396
 #, fuzzy
 msgid "create_team_home"
 msgstr "Enter the team description"
 
-#: manage_team.py:392
+#: manage_team.py:397
 #, fuzzy
 msgid "create_team_next"
 msgstr "Enter the team description"
 
-#: manage_team.py:397
+#: manage_team.py:402
 #, fuzzy
 msgid "create_team_preview{preview}"
 msgstr "Enter the team description"
 
-#: manage_team.py:407
+#: manage_team.py:412
 msgid "create_team_query_title"
 msgstr ""
 
-#: manage_team.py:410
+#: manage_team.py:415
 #, fuzzy
 msgid "create_team_ask_description_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:411
+#: manage_team.py:416
 #, fuzzy
 msgid "create_team_ask_description_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:427
+#: manage_team.py:432
 #, fuzzy
 msgid "create_team_query_description"
 msgstr "Enter the team description"
 
-#: manage_team.py:435
+#: manage_team.py:440
 #, fuzzy
 msgid "create_team_reset_description"
 msgstr "Enter the team description"
 
-#: manage_team.py:447
+#: manage_team.py:452
 #, fuzzy
 msgid "create_team_query_minimal_members"
 msgstr "Enter the team description"
 
-#: manage_team.py:450
+#: manage_team.py:455
 #, fuzzy
 msgid "create_team_reset_minimal_members"
 msgstr "Enter the team description"
 
-#: manage_team.py:469
+#: manage_team.py:474
 #, fuzzy
 msgid "create_team_query_maximal_members{minimalMembers}"
 msgstr "Enter the team description"
 
-#: manage_team.py:473
+#: manage_team.py:478
 #, fuzzy
 msgid "create_team_fix_maximal_members{minimalMembers}"
 msgstr "Enter the team description"
 
-#: manage_team.py:479
+#: manage_team.py:484
 #, fuzzy
 msgid "create_team_skip_maximal_members"
 msgstr "Enter the team description"
 
-#: manage_team.py:498
+#: manage_team.py:503
 msgid "create_team_crews_welcome"
 msgstr ""
 
-#: manage_team.py:500
+#: manage_team.py:505
 #, fuzzy
 msgid "create_team_enable_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:501
+#: manage_team.py:506
 #, fuzzy
 msgid "create_team_disable_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:506
+#: manage_team.py:511
 msgid "create_team_setup_crews_limits"
 msgstr ""
 
-#: manage_team.py:511
+#: manage_team.py:516
 #, fuzzy
 msgid "create_team_reset_crews_limits"
 msgstr "Enter the team description"
 
-#: manage_team.py:523
+#: manage_team.py:528
 #, fuzzy
 msgid "create_team_query_minimal_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:533
+#: manage_team.py:538
 #, fuzzy
 msgid "create_team_reset_minimal_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:544
+#: manage_team.py:549
 #, fuzzy
 msgid "create_team_query_maximal_crews{minimalCrews}"
 msgstr "Enter the team description"
 
-#: manage_team.py:555
+#: manage_team.py:560
 #, fuzzy
 msgid "create_team_fixed_maximal_crews{minimalCrews}"
 msgstr "Enter the team description"
 
-#: manage_team.py:561
+#: manage_team.py:566
 #, fuzzy
 msgid "create_team_reset_maximal_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:573
+#: manage_team.py:578
 #, fuzzy
 msgid "create_team_deadline_welcome"
 msgstr "Enter the team description"
 
-#: manage_team.py:581
+#: manage_team.py:586
 #, fuzzy
 msgid "create_team_enable_deadline_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:582
+#: manage_team.py:587
 #, fuzzy
 msgid "create_team_enable_deadline_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:587
+#: manage_team.py:592
 #, fuzzy
 msgid "create_team_deadline_next"
 msgstr "Enter the team description"
 
-#: manage_team.py:598
+#: manage_team.py:603
 #, fuzzy
 msgid "create_team_options_welcome{deadline}"
 msgstr "Enter the team description"
 
-#: manage_team.py:600
+#: manage_team.py:605
 #, fuzzy
 msgid "create_team_suspend_companions_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:601
+#: manage_team.py:606
 #, fuzzy
 msgid "create_team_suspend_companions_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:606
+#: manage_team.py:611
 #, fuzzy
 msgid "create_team_suspend_recruitment_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:607
+#: manage_team.py:612
 #, fuzzy
 msgid "create_team_suspend_recruitment_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:612
+#: manage_team.py:617
 #, fuzzy
 msgid "create_team_suspend_on_deadline_queue"
 msgstr "Enter the team description"
 
-#: manage_team.py:613
+#: manage_team.py:618
 #, fuzzy
 msgid "create_team_suspend_on_deadline_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:618
+#: manage_team.py:623
 #, fuzzy
 msgid "create_team_options_next"
 msgstr "Enter the team description"
 
-#: manage_team.py:629
+#: manage_team.py:634
 #, fuzzy
 msgid "create_team_summary"
 msgstr "Enter the team description"
 
-#: manage_team.py:633
+#: manage_team.py:638
 #, fuzzy
 msgid "create_team_manage"
 msgstr "Enter the team description"
 
-#: manage_team.py:639
+#: manage_team.py:644
 #, fuzzy
 msgid "create_team_delete"
 msgstr "Enter the team description"
 
-#: manage_team.py:646
+#: manage_team.py:651
 #, fuzzy
 msgid "create_team_insert"
 msgstr "Enter the team description"
 
-#: manage_team.py:652
+#: manage_team.py:657
 #, fuzzy
 msgid "create_team_update"
 msgstr "Enter the team description"
 
-#: manage_team.py:658
+#: manage_team.py:663
 #, fuzzy
 msgid "create_team_cancel"
 msgstr "Enter the team description"
 
-#: manage_team.py:700
-msgid "msg_manage_list_head"
-msgstr ""
+#: manage_team.py:705
+#, fuzzy
+msgid "msg_manage_teams"
+msgstr "Enter the team description"
 
-#: manage_team.py:703
-msgid "msg_manage_list_item{teamIdStr}{title}{description}"
-msgstr ""
-
-#: manage_team.py:734
+#: manage_team.py:733
 msgid "msg_team_not_found{teamIdStr}"
 msgstr ""
 
@@ -725,4 +722,10 @@ msgstr "Enter the team description"
 
 #~ msgid "create_team_suspend_on_deadline_checked"
 #~ msgstr "Enter the team description"
+
+#~ msgid "msg_manage_list_head"
+#~ msgstr ""
+
+#~ msgid "msg_manage_list_item{teamIdStr}{title}{description}"
+#~ msgstr ""
 

@@ -44,7 +44,7 @@ async def dialog_data_getter(dialog_manager: DialogManager, **kwargs):
     return dialog_manager.dialog_data
 
 
-def write_dialog_value(id: str, conversion = None) -> OnClick:
+def write_dialog_value(id: str, conversion: Optional[Callable[[Any], Any]] = None) -> OnClick:
     """
     Create and return a Button `on_click` handler who
     Writes value of widget with `id` to DialogManager's dialog_data
@@ -63,7 +63,7 @@ def write_dialog_value(id: str, conversion = None) -> OnClick:
     return on_click
 
 
-def write_dialog_data(id: str, data: Any|None) -> OnClick:
+def write_dialog_data(id: str, data: Optional[Any]) -> OnClick:
     async def on_click(
             callback: CallbackQuery,
             button: Button,
@@ -243,7 +243,7 @@ def dynamic_dialog_data_items(*keys: str) -> Callable[..., Awaitable[Dict[str, A
     """
     
     async def dialog_items(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
-        return dict(zip(keys, itemgetter(*keys, dialog_manager.dialog_data)))
+        return dict(zip(keys, itemgetter(*keys)(dialog_manager.dialog_data)))
     
     return dialog_items
 

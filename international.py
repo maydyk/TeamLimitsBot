@@ -46,9 +46,11 @@ def localize_router(router: Router):
 # Alias for gettext method
 _ = _i18n.gettext
 
+
 # Alias for dialogs. This is the one of default pybabel prefixes.
 # We use this empty prefix to generate strings by pybabel.
 def N_(text: str) -> str: return text
+
 
 class NConst(Const):
     """
@@ -58,6 +60,7 @@ class NConst(Const):
     async def _render_text(self, data: dict, manager: DialogManager) -> str:
         return _(self.text)
     
+
 class NJinja(Jinja):
     """
     Use this class instead Jinja to localize strings.
@@ -75,7 +78,8 @@ class NJinja(Jinja):
             return await template.render_async(data)
         else:
             return template.render(data)
-        
+
+
 class NFormat(Format):
     """
     Use this class instead Format to localize strings.

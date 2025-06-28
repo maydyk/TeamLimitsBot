@@ -142,7 +142,7 @@ async def _on_query_title(
         else:
             await manager.switch_to(CreateTeam.minimalMembers)
     else:
-        await callback.answer(_("create_team_duplicated_title{title}").format(
+        await callback.message.answer(_("create_team_duplicated_title{title}").format(
             title=data
         ))
 
@@ -186,9 +186,9 @@ async def _maximal_members_success(
         data: Any
     ) -> None:
     minimalMembers = manager.dialog_data.get(_MINIMAL_MEMBERS) or 0
-    maximalMembers = data
+    maximalMembers = data or None
     
-    if minimalMembers <= maximalMembers:
+    if maximalMembers is None or minimalMembers <= maximalMembers:
         manager.dialog_data[_MAXIMAL_MEMBERS] = maximalMembers
         await manager.next()
     else:
@@ -245,9 +245,9 @@ async def maximal_crews_success(
         manager: DialogManager,
         data: Any) -> None:
     minimalCrews = manager.dialog_data.get(_MINIMAL_CREWS) or 0
-    maximalCrews = data
+    maximalCrews = data or None
 
-    if minimalCrews <= maximalCrews:
+    if maximalCrews is None or minimalCrews <= maximalCrews:
         manager.dialog_data[_MAXIMAL_CREWS] = maximalCrews
         await manager.next()
     else:
@@ -322,22 +322,22 @@ async def _insert_team(
         teamId = await Repository().insertTeam(person=person, team=team)
 
         await manager.done()
-        await callback.answer(_("create_team_inserted{teamIdStr}{title}").format(
+        callback.answer
+        await callback.message.answer(_("create_team_inserted{teamIdStr}{title}").format(
             teamIdStr=even_hex(teamId),
             title=team.title,
-            )
+            ),
         )
         
     except Exception as e:
         _logger.exception(e)
         breakpoint()
-        await callback.answer(
+        await callback.message.answer(
             _("create_team_insert_failed{title}")
             .format(
                 title=team_values.get(_TITLE, ""),
             )
         )
-        pass
 
 
 async def _update_team(
@@ -483,7 +483,7 @@ _create_team_dialog = Dialog(
             Next(
                 text=NConst(text=N_("create_team_skip_maximal_members")),
                 id=_RESET_MAXIMAL_MEMBERS,
-                on_click=write_dialog_data(_MAXIMAL_MEMBERS, 0),
+                on_click=write_dialog_data(_MAXIMAL_MEMBERS, None),
                 )
             ),
         _manage_team_wizard,
@@ -565,7 +565,7 @@ _create_team_dialog = Dialog(
             Next(
                 text=NConst(N_("create_team_reset_maximal_crews")),
                 id=_RESET_MAXIMAL_CREWS,
-                on_click=write_dialog_value(_MAXIMAL_CREWS, lambda x: x or 0),
+                on_click=write_dialog_data(_MAXIMAL_CREWS, None),
             )
         ),
         _manage_team_wizard,
@@ -701,16 +701,10 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
     """
     teams = await Repository().queryAdminTeams(make_person(message.from_user))
 
-    # Build text
-    msg = _("msg_manage_list_head")
-    for team in teams:
-        teamIdStr = even_hex(team.id)
-        msg += _("msg_manage_list_item{teamIdStr}{title}{description}").format(
-            teamIdStr = teamIdStr,
-            title = team.title,
-            description=team.description)
 
-    await message.answer(msg)
+    jinja = NJinja(N_("msg_manage_teams"))
+    msg = await jinja.render_text({"teams" : teams}, dialog_manager)
+    await message.answer(msg, parse_mode="html")
 
 
 

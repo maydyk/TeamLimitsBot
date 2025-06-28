@@ -13,8 +13,7 @@ from details import even_hex, Singleton
 from functools import wraps
 from itertools import accumulate
 from models import *
-from operator import itemgetter
-from typing import Any, Dict, Tuple, Final
+from typing import Any, Awaitable, Callable, Dict, Tuple, Final
 
 import datetime
 import logging
@@ -53,14 +52,14 @@ class RepositoryError(Exception):
     pass
 
 
-def database_error(method):
+def database_error(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
     """
     Decorator to translate 'DatabaseError' to 'RepositoryError'
     """
     @wraps(method)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self, *args, **kwargs) -> Any:
         try:
-            await method(self, *args, **kwargs)
+            return await method(self, *args, **kwargs)
         except DatabaseError as db_error:
             raise RepositoryError(*db_error.args)
                 
@@ -99,12 +98,6 @@ class Repository(metaclass = Singleton):
         finally:
             await repository.close()
 
-
-    # def __getattr__(self, item):
-    #     try:
-    #         return getattr(self.database, item)
-    #     except AttributeError:
-    #         return getattr(self, item)
 
     async def checkTeamTitleIsUnique(self, title) -> bool:
         return await self.database.checkTeamTitleIsUnique(title=title)
@@ -159,8 +152,8 @@ class Repository(metaclass = Singleton):
         ))
 
         # Extract default crew
-        defaultCrew = next(filter(lambda crew: crew.special == CrewInfo._DEFAULT_CREW_SPECIAL, crews))
-        crews[:] = filter(lambda crew: crew.special == 0, crews)
+        defaultCrew = next(filter(lambda crew: crew.special == CrewInfo._CREW_SPECIAL_DEFAULT, crews))
+        crews[:] = filter(lambda crew: crew.special == CrewInfo._CREW_SPECIAL_UNSET, crews)
 
         # Compute totalMembers: all mates, all members except mates of defaultCrew 
         totalMembers = len(teamInfo.members) + deque(
