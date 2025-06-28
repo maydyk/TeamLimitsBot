@@ -6,9 +6,10 @@ NOTE: Don't save the TOKEN in the code!
 @Author: Denis Maydykovsky
 """
 
-from typing import Optional
 
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Config(BaseSettings):
     TOKEN: str
@@ -23,11 +24,9 @@ class Config(BaseSettings):
             raise RuntimeError("Database path or connection is not specified.")
 
 
+
 # Self testing
 if __name__ == "__main__":
     settings = Config()
     print("Config settings\n", settings.model_dump())
-    
-
-
     

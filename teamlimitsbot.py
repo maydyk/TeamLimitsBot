@@ -6,15 +6,30 @@ A Telegram bot to manage number of participants of some event.
 
 Usage: python3 TeamLimitsBot.py <YOUR BOT TOKEN>
 '''
-import asyncio
-import logging
-
 from aiogram import F, Bot, Dispatcher, Router
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram_dialog import setup_dialogs
 
+import aiogram
+import aiogram_dialog
+import aiosqlite
+import asyncio
+import logging
+import sqlalchemy
+
+
 # Setup logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG if __debug__ else logging.ERROR)
+
+
+# Disable annoying messages from the libraries
+if __debug__:
+    logging.getLogger(aiogram.__name__).setLevel(logging.ERROR)
+    logging.getLogger(asyncio.__name__).setLevel(logging.ERROR)
+    logging.getLogger(aiogram_dialog.__name__).setLevel(logging.ERROR)
+    logging.getLogger(aiosqlite.__name__).setLevel(logging.ERROR)
+    logging.getLogger(sqlalchemy.__name__).setLevel(logging.ERROR)
+
 
 # Setup localization
 from international import _, localize_router

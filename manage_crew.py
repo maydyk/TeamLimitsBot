@@ -31,6 +31,10 @@ from repository import Repository, make_person_team
 from typing import Any, Dict, Final, Tuple
 from wizard import wizard_control, wizard_preview, Preview
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 class CreateCrew(StatesGroup):
     title = State()
     minimalMates = State()
@@ -170,7 +174,7 @@ async def _insert_crew(
         crewId = await Repository().insertCrew(person = member, crew=crew)
         manager.dialog_data[_ID] = crewId
     except Exception as e:
-        print(e)
+        
         breakpoint()
         await callback.answer(
             _("create_crew_insert_failed{title}")
@@ -192,7 +196,7 @@ async def _update_crew(
         crew = CrewModel(**crew_values)
         crewId = await Repository().updateCrew(crew=crew)
     except Exception as e:
-        print(e)
+        _logger.exception(e)
         breakpoint()
         await callback.answer(
             _("create_crew_update_failed{title}")

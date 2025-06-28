@@ -17,6 +17,9 @@ from operator import itemgetter
 from typing import Any, Dict, Tuple, Final
 
 import datetime
+import logging
+
+_logger = logging.getLogger(__name__)
 
 def make_person(user: User) -> PersonModel:
     return PersonModel(
@@ -91,7 +94,7 @@ class Repository(metaclass = Singleton):
         try:
             yield
         except Exception as ex:
-            print("Sql exception", ex)
+            _logger.exception("A SQL exception", ex)
             raise
         finally:
             await repository.close()

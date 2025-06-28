@@ -13,6 +13,32 @@ from typing import List
 from entities import *
 from models import *
 
+import logging
+
+# The module logger
+class QueryLogger(logging.Logger):
+    LEVEL = logging.DEBUG + 1
+    LEVEL_NAME = "QUERY"
+
+    def __init__(self, name: str, level: logging = logging.NOTSET):
+        logging.Logger.__init__(self, name, level)
+
+    def query(self, msg, *args, **kwargs):
+        if self.isEnabledFor(QueryLogger.LEVEL):
+            # Yes, logger takes its '*args' as 'args'.
+            self._log(QueryLogger.LEVEL, msg, args, **kwargs)
+
+    @classmethod
+    def setup_logging(cls):
+        logging.addLevelName(QueryLogger.LEVEL, QueryLogger.LEVEL_NAME)
+        logging.setLoggerClass(QueryLogger)
+        # logging.add
+
+QueryLogger.setup_logging()
+
+_logger = logging.getLogger(__name__)
+_logger.addFilter(logging.Filter(__name__))
+
 # Raw crew data from database
 class CrewInfo(CrewModel):
     as_admin: bool
@@ -48,8 +74,8 @@ class DatabaseErrorSuspendedCompanions(DatabaseError):
 
 def connection(method):
     """
-    Decorator to wrap session without commit.
-    Use it with query without modification
+    Decorator to wrap the session without commit.
+    Use it with the query without modifications.
     """
     @wraps(method)
     async def wrapper(self, *args, **kwargs):
@@ -60,8 +86,8 @@ def connection(method):
 
 def transaction(method):
     """
-    Decorator to wrap session with commit.
-    Use it to modify data
+    Decorator to wrap the session with commit.
+    Use it to modify data.
     """
     @wraps(method)
     async def wrapper(self, *args, **kwargs):
@@ -95,7 +121,7 @@ class Database:
     def __init__(self, database_url: str):
         # Open the database
         # Note: create_async_engine is not awaitable
-        self.engine  = create_async_engine(database_url, echo=__debug__)
+        self.engine  = create_async_engine(database_url, echo=False)
         self.session_maker = async_sessionmaker(self.engine, expire_on_commit=False)
 
 
@@ -110,7 +136,7 @@ class Database:
         """
 
         query = select(func.count(Team.title)).where(Team.title == title)
-        print(query)
+        _logger.query(query)
         res = (await session.execute(query)).scalar_one_or_none()
         return not res
     
@@ -122,7 +148,7 @@ class Database:
         """
 
         query = select(Team).where(Team.id == teamId)
-        print(query)
+        _logger.query(query)
         return (await session.execute(query)).scalar_one()
 
     
@@ -177,7 +203,7 @@ class Database:
         teamId = teamModel.id
     
         query = update(Team).where(Team.id == teamId).values(teamModel.model_dump())
-        print(query)
+        _logger.query(query)
 
         await session.execute(query)
         return teamId
@@ -190,7 +216,7 @@ class Database:
         """
         
         query = delete(Team).where(Team.id == teamId)
-        print(query)
+        _logger.query(query)
         await session.execute(query)
 
 
@@ -212,7 +238,7 @@ class Database:
                 )
             )
         )
-        print(query)
+        _logger.query(query)
         
         team = (await session.execute(query)).scalar_one_or_none()
         return TeamModel.model_validate(team) if team else None
@@ -234,7 +260,7 @@ class Database:
                 )
             )
         )
-        print(query)
+        _logger.query(query)
         
         res = (await session.execute(query)).scalar_one_or_none()
 
@@ -255,7 +281,7 @@ class Database:
                 (Member.userName == memberModel.userName)
             )
         )
-        print(query)
+        _logger.query(query)
 
         res = (await session.execute(query)).scalar_one_or_none()
 
@@ -275,7 +301,7 @@ class Database:
                     )
                 )
         )
-        print(query)
+        _logger.query(query)
 
         res = (await session.execute(query)).scalar_one_or_none()
 
@@ -295,7 +321,7 @@ class Database:
                 )
             )
         )
-        print(query)
+        _logger.query(query)
 
         res = (await session.execute(query)).scalar_one_or_none()
 
@@ -314,7 +340,7 @@ class Database:
             )
             .order_by(Team.id)
         )
-        print(query)
+        _logger.query(query)
 
         res = await session.execute(query)
         return [TeamHeader(id=teamId, title=title, description=description) 
@@ -401,7 +427,7 @@ class Database:
                 (Member.userName == memberModel.userName)
             )
         )
-        print(query)
+        _logger.query(query)
         number = (await session.execute(query)).scalar_one()
 
         # Check team enables companions
@@ -418,7 +444,7 @@ class Database:
         query = select(func.coalesce(func.max(Member.position), -1)).where(
             Member.teamId == teamId
         )
-        print(query)
+        _logger.query(query)
         position = (await session.execute(query)).scalar_one()
 
         # Generate next position
@@ -461,7 +487,7 @@ class Database:
                     ((Member.userId == memberModel.userId) | (Member.userName == memberModel.userName))
                 )))
             )
-        print(query)
+        _logger.query(query)
         await session.execute(query)
 
 
@@ -471,7 +497,7 @@ class Database:
             (Crew.teamId == teamId) &
             (Crew.title == title)
         )
-        print(query)
+        _logger.query(query)
 
         res = (await session.execute(query)).scalar_one_or_none()
         return not res
@@ -508,7 +534,7 @@ class Database:
 
         crewId = crewModel.id
         query = update(Crew).where(Crew.id == crewId).values(crewModel.model_dump())
-        print(query)
+        _logger.query(query)
 
         await session.execute(query)
         return crewId
@@ -517,7 +543,7 @@ class Database:
     @transaction
     async def deleteCrew(self, crewId: int, session: AsyncSession) -> None:
         query = delete(Crew).where(Crew.id == crewId)
-        print(query)
+        _logger.query(query)
         await session.execute(query)
 
 
@@ -529,7 +555,7 @@ class Database:
                 (Member.userName == memberModel.userName)
             )
         )).order_by(Team.id)
-        print(query)
+        _logger.query(query)
 
         teams = (await session.execute(query)).scalars().all()
         return list(teams)
@@ -553,7 +579,7 @@ class Database:
                     (Member.userName == mateModel.userName)
                 )
         )))).values({Member.crewId : crewId})
-        print(query)
+        _logger.query(query)
 
         await session.execute(query)
 

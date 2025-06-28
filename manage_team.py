@@ -50,11 +50,16 @@ from wizard import wizard_control, wizard_preview, Preview
 
 # Setup localization
 from international import _, localize_router, N_, NConst, NFormat, NJinja
+
 from typing import Any, Dict, Final
 
 from repository import Repository, make_person
 from models import TeamModel
 from model_fields import fields
+
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class CreateTeam(StatesGroup):
@@ -324,7 +329,7 @@ async def _insert_team(
         )
         
     except Exception as e:
-        print(e)
+        _logger.exception(e)
         breakpoint()
         await callback.answer(
             _("create_team_insert_failed{title}")
@@ -355,7 +360,7 @@ async def _update_team(
             )
         )
     except Exception as e:
-        print(e)
+        _logger.exception(e)
         breakpoint()
         await callback.message.answer(_("create_team_update_failed{title}").format(
             title=team_values.get(_TITLE, ""),
@@ -365,10 +370,10 @@ async def _update_team(
 
 
 async def _team_summary_result(data: Data, result: Any, dialog_manager: DialogManager) -> None:
-    print("_team_summary_result", data, result)
+    _logger.debug("_team_summary_result", data, result)
     if result == _DELETE_TEAM:
         teamId = data[_ID]
-        print(f"Delete the team {even_hex(teamId)}")
+        _logger.debug(f"Delete the team {even_hex(teamId)}")
         try:
             await Repository().deleteTeam(teamId)
 

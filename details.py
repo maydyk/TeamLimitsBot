@@ -24,13 +24,6 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 
 import re
 
-async def print_dialog_event(data: Any, manager: DialogManager):
-    """
-    Simple print dialog event data.
-    """
-    if __debug__:
-        print(data)
-
 
 async def dialog_copy_start_data(start_data: Dict|None, dialog_manager: DialogManager) ->  None:
     """
