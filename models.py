@@ -5,16 +5,31 @@ Module models
 """
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator, computed_field
-from model_fields import fields
-from typing import Any, Dict, List, Optional, Tuple
+from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator, computed_field
+from typing import List, Optional
 from details import even_hex
 
 class TeamHeader(BaseModel):
+    """
+    Basic information about Team: id, title, description.
+    """
     id: Optional[int] = None
     title: str
     description: str = ""
 
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TeamHeaderView(TeamHeader):
+    """
+    A [TeamHeader] with additional computed field.
+    We cannot use TeamHeader directly in some cases because the computed field is rejected.
+    """
+
+    def __init__(self, header: TeamHeader):
+        TeamHeader.__init__(self, **header.model_dump())
+
+    
     @computed_field
     @property
     def idStr(self) -> str:

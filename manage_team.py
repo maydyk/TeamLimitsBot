@@ -54,7 +54,7 @@ from international import _, localize_router, N_, NConst, NFormat, NJinja
 from typing import Any, Dict, Final
 
 from repository import Repository, make_person
-from models import TeamModel
+from models import TeamHeaderView, TeamModel
 from model_fields import fields
 
 import logging
@@ -699,7 +699,10 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
     """
     Show list of managed teams
     """
-    teams = await Repository().queryAdminTeams(make_person(message.from_user))
+    teams = map(
+        lambda header: TeamHeaderView(header),
+        await Repository().queryAdminTeams(make_person(message.from_user)),
+        )
 
 
     jinja = NJinja(N_("msg_manage_teams"))

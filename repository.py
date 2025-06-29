@@ -13,7 +13,8 @@ from details import even_hex, Singleton
 from functools import wraps
 from itertools import accumulate
 from models import *
-from typing import Any, Awaitable, Callable, Dict, Tuple, Final
+from model_fields import fields
+from typing import Any, Awaitable, Callable, Dict, Tuple
 
 import datetime
 import logging
@@ -105,10 +106,7 @@ class Repository(metaclass = Singleton):
 
     @database_error
     async def insertTeam(self, person: PersonModel, team: TeamModel) -> int:
-        try:
-            return await self.database.insertTeam(personModel=person, teamModel=team)
-        except DatabaseError as e:
-            raise RepositoryError
+        return await self.database.insertTeam(personModel=person, teamModel=team)
     
 
     async def updateTeam(self, team: TeamModel) -> int:
@@ -123,7 +121,7 @@ class Repository(metaclass = Singleton):
         return await self.database.queryAdminTeam(teamId=teamId, adminModel=admin)
 
 
-    async def queryAdminTeams(self, admin: PersonModel) -> Dict[int, Tuple[str, str]]:
+    async def queryAdminTeams(self, admin: PersonModel) -> List[TeamHeader]:
         return await self.database.queryAdminTeams(adminModel=admin)
     
 

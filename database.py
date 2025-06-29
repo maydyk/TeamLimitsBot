@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from typing import Any, Awaitable, Callable, List
 from entities import *
 from models import *
+from model_fields import fields
 
 import logging
 
@@ -209,8 +210,7 @@ class Database:
         assert teamModel.id is not None, "TeamModel.id when updating cannot be None."
         teamId = teamModel.id
     
-        team = Team(**teamModel.model_dump())
-        query = update(Team).where(Team.id == teamId).values(**team.to_dict())
+        query = update(Team).where(Team.id == teamId).values(**teamModel.model_dump())
         _logger.query(query)
 
         await session.execute(query)

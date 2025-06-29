@@ -21,6 +21,7 @@ from details import (
 )
 from manage_crew import CreateCrew
 from models import *
+from model_fields import fields
 from international import _, localize_router, N_, NConst, NJinja
 from repository import Repository, RepositoryError, make_person, make_person_team, get_person_team
 from typing import Any, Dict, Final, Tuple

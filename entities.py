@@ -38,19 +38,19 @@ def _camel_to_snake(text: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", text)
 
 
-def _declarative_constructor(self, **kwargs):
-    """Don't raise a TypeError for unknown attribute names."""
-    cls_ = type(self)
-    for k in kwargs:
-        if not hasattr(cls_, k):
-            continue
-        setattr(self, k, kwargs[k])
+# def _declarative_constructor(self, **kwargs):
+#     """Don't raise a TypeError for unknown attribute names."""
+#     cls_ = type(self)
+#     for k in kwargs:
+#         if not hasattr(cls_, k):
+#             continue
+#         setattr(self, k, kwargs[k])
 
 
-_Base = declarative_base(constructor=_declarative_constructor)
+# _Base = declarative_base(constructor=_declarative_constructor)
 
 
-class Entity(AsyncAttrs, _Base):
+class Entity(AsyncAttrs, DeclarativeBase):
     """
     Common entity
     """
