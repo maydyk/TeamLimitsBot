@@ -54,7 +54,8 @@ from international import _, localize_router, N_, NConst, NFormat, NJinja
 from typing import Any, Dict, Final
 
 from repository import Repository, make_person
-from models import TeamHeaderView, TeamModel
+from models_base import TeamModel
+from models_view import TeamHeaderView
 from model_fields import fields
 
 import logging
@@ -327,6 +328,7 @@ async def _insert_team(
             teamIdStr=even_hex(teamId),
             title=team.title,
             ),
+            parse_mode="html",
         )
         
     except Exception as e:
@@ -357,7 +359,8 @@ async def _update_team(
         await callback.message.answer(_("create_team_updated{teamIdStr}{title}").format(
             teamIdStr=even_hex(teamId),
             title=team_values[_TITLE],
-            )
+            ),
+            parse_mode="html",
         )
     except Exception as e:
         _logger.exception(e)
@@ -701,7 +704,7 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
     """
     teams = map(
         lambda header: TeamHeaderView(header),
-        await Repository().queryAdminTeams(make_person(message.from_user)),
+        await Repository().queryAdminTeamHeaders(make_person(message.from_user)),
         )
 
 

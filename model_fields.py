@@ -16,7 +16,12 @@ class _GetFields:
     _model: type[BaseModel]
 
     def __getattr__(self, item: str) -> Any:
+        # check regular fields
         if item in self._model.model_fields:
+            return item
+        
+        # check computed fields
+        if item in self._model.model_computed_fields:
             return item
 
         return getattr(self._model, item)

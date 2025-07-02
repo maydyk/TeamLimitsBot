@@ -26,7 +26,7 @@ from details import (
     zero_positive,
 )
 from international import N_, NConst, NFormat, NJinja, _, localize_router
-from models import CrewModel, PersonModel
+from models_base import CrewModel, PersonModel
 from model_fields import fields
 from repository import Repository, make_person_team
 from typing import Any, Final, Tuple

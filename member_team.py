@@ -20,11 +20,12 @@ from details import (
     parse_command,
 )
 from manage_crew import CreateCrew
-from models import *
 from model_fields import fields
 from international import _, localize_router, N_, NConst, NJinja
 from repository import Repository, RepositoryError, make_person, make_person_team, get_person_team
 from typing import Any, Dict, Final, Tuple
+from models_base import CrewModel, PersonModel
+from models_view import TeamView
 
 import re
 
@@ -32,9 +33,9 @@ class MemberTeam(StatesGroup):
     summary = State()
 
 
-_ADD_MEMBER: Final[str] = fields(TeamSummary).canAddMember
-_REMOVE_MEMBER: Final[str] = fields(TeamSummary).canRemoveMember
-_ADD_MEMBER_CREW: Final[str] = fields(TeamSummary).canAddMemberCrew
+_ADD_MEMBER: Final[str] = fields(TeamView).canAddMember
+_REMOVE_MEMBER: Final[str] = fields(TeamView).canRemoveMember
+_ADD_MEMBER_CREW: Final[str] = fields(TeamView).canAddMemberCrew
 
 
 def _get_member(dialog_manager: DialogManager) -> Tuple[int, PersonModel]:
@@ -44,7 +45,7 @@ def _get_member(dialog_manager: DialogManager) -> Tuple[int, PersonModel]:
 async def _member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     teamId, userPerson = _get_member(dialog_manager)
 
-    teamSummary = await Repository().queryTeamSummary(teamId=teamId, member=userPerson)
+    teamSummary = await Repository().queryTeamView(teamId=teamId, member=userPerson)
 
     data = teamSummary.model_dump()
     return data

@@ -26,7 +26,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, declared_attr, declarative_base, Mapped, mapped_column, class_mapper
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from typing import Any, Dict, Final, List, Optional
+from typing import Final, List, Optional
+from models_base import CrewModel
 
 
 def _camel_to_snake(text: str) -> str:
@@ -113,8 +114,8 @@ class Team(Entity):
 
 class Crew(Entity):
 
-    _CREW_SPECIAL_UNSET: Final[int] = 0
-    _CREW_SPECIAL_DEFAULT: Final[int] = 1
+    _CREW_SPECIAL_UNSET: Final[int] = CrewModel._CREW_SPECIAL_UNSET
+    _CREW_SPECIAL_DEFAULT: Final[int] = CrewModel._CREW_SPECIAL_DEFAULT
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     teamId: Mapped[int] = mapped_column(
@@ -124,12 +125,14 @@ class Crew(Entity):
     title: Mapped[str] = mapped_column()
     minimalMates: Mapped[int] = mapped_column()
     maximalMates: Mapped[Optional[int]] = mapped_column()
+    position: Mapped[int] = mapped_column(server_default="0", nullable=False)
     special: Mapped[int] = mapped_column()
 
     # Crew title must be unique in the crew. 
     __table_args__ = (
         UniqueConstraint(teamId, title, special), 
-        CheckConstraint((special != 0) or (title != ''), name="special_title"),
+        CheckConstraint((special != _CREW_SPECIAL_UNSET) or (title != ''), name="special_title"),
+        CheckConstraint((special != _CREW_SPECIAL_UNSET) or (position >= 0), name="Non-negative or special position"),
         CheckConstraint((maximalMates is None) or (minimalMates <= maximalMates), name="min_max_mates"),
     )
     
@@ -159,6 +162,7 @@ class Member(Person):
     __table_args__ = (
         PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, number, teamId),
         UniqueConstraint(Person.USER_ID, Person.USER_NAME, number, teamId, position, name="UniqueMember"),
+        CheckConstraint(position >= 0, name="Non-negative position")
     )
 
 

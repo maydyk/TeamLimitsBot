@@ -1,13 +1,12 @@
 """
-Module models
+Module models contains a st of base Models
 
 @Author: Denis Maydykovsky
 """
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator, computed_field
-from typing import List, Optional
-from details import even_hex
+from typing import Final, Optional
 
 class TeamHeader(BaseModel):
     """
@@ -20,29 +19,10 @@ class TeamHeader(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class TeamHeaderView(TeamHeader):
-    """
-    A [TeamHeader] with additional computed field.
-    We cannot use TeamHeader directly in some cases because the computed field is rejected.
-    """
-
-    def __init__(self, header: TeamHeader):
-        TeamHeader.__init__(self, **header.model_dump())
-
-    
-    @computed_field
-    @property
-    def idStr(self) -> str:
-        """
-        A computed field represents id as string
-        """
-        return even_hex(self.id)
-
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 class TeamModel(TeamHeader):
+    """
+    Full team description.
+    """
     minimalMembers: NonNegativeInt = 0
     maximalMembers: Optional[NonNegativeInt] = None
     enableCrews: bool = False
@@ -77,12 +57,19 @@ class TeamModel(TeamHeader):
     
 
 class CrewModel(BaseModel):
+    """
+    A crew description.
+    """
+    _CREW_SPECIAL_UNSET: Final[int] = 0
+    _CREW_SPECIAL_DEFAULT: Final[int] = 1
+
     id: Optional[int] = None
     teamId: int
     title: str
     minimalMates: NonNegativeInt = 0
     maximalMates: Optional[NonNegativeInt] = None
-    special: int = 0
+    position: int
+    special: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -95,9 +82,22 @@ class CrewModel(BaseModel):
             )
         else:
             return self
+        
+
+    @model_validator(mode="after")
+    def checkPosition(self):
+        if self.special == CrewModel._CREW_SPECIAL_UNSET and self.position < 0:
+            raise ValueError(
+                f"Non-special crew {self.special} has negative position {self.position}"
+            )
+        else:
+            return self
             
 
 class PersonModel(BaseModel):
+    """
+    A basic user description.
+    """
     userId: int
     userName: str
     firstName: str
@@ -113,6 +113,9 @@ class PersonModel(BaseModel):
     
 
 class MemberModel(PersonModel):
+    """
+    Team member.
+    """
     number: NonNegativeInt
     teamId: int
     crewId: Optional[int]
@@ -122,12 +125,19 @@ class MemberModel(PersonModel):
 
 
 class OutcastModel(PersonModel):
+    """
+    An Outcast (banned) person.
+    """
     teamId: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class LeaderModel(PersonModel):
+    """
+    A leader for specified crew.
+    A leader can not be a crew a mate or a team member.
+    """
     crewId: int
 
     model_config = ConfigDict(from_attributes=True)
@@ -138,6 +148,10 @@ class LeaderModel(PersonModel):
 
 
 class AdminModel(PersonModel):
+    """
+    A team administrator.
+    An administrator can not be a team member.
+    """
     teamId: int
 
     model_config = ConfigDict(from_attributes=True)
@@ -146,33 +160,4 @@ class AdminModel(PersonModel):
     def createFromPerson(cls, person: PersonModel, teamId: int):
         return AdminModel(teamId=teamId, **person.model_dump())
     
-
-class CrewSummary(CrewModel):
-    crewIdStr: str
-    as_leader: bool
-    mates: List[MemberModel]
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class TeamSummary(TeamModel):
-    teamIdStr: str
-    as_member: bool
-    as_admin: bool
-    crews: List[CrewSummary]
-    defaultCrew: CrewSummary
-    members: List[MemberModel]
-    totalMembers: int
-    deadlineDaysLeft: Optional[int]
-    canAddMember: bool
-    canRemoveMember: bool
-    canAddMemberCrew: bool
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-
-
-
-
 

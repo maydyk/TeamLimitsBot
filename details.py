@@ -19,8 +19,9 @@ from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
 from aiogram_dialog.widgets.text import Text
 from aiogram_dialog.widgets.utils import GetterVariant, ensure_data_getter
 from datetime import date
+from itertools import filterfalse
 from operator import itemgetter
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, Union
 
 import re
 
@@ -201,6 +202,26 @@ def even_hex_parse(pattern: re.Pattern, text: str) -> Optional[str]:
     
     return None
 
+
+_CF = TypeVar("T")
+
+def coerce_first(items: List[_CF], maximal: Optional[int]) -> List[_CF]:
+    """
+    Returns first maximal items from the list. Treat None as full list.
+    """
+    return items[: maximal if maximal is not None else len(items)]
+    
+
+def coerce_last(items: List[_CF], maximal: Optional[int]) -> List[_CF]:
+    return items[maximal if maximal is not None else len(items) :]
+
+
+# See https://stackoverflow.com/a/33491327/3023211
+def list_difference(minuend: List[_CF], subtrahend: List[_CF]) -> List[_CF]:
+    # Convert to a set for better performance.
+    s = set(subtrahend)
+    # inverse filtering
+    return list(filterfalse(s.__contains__, minuend))
 
 # TODO: Combine DynamicDataMaker with Data
 # DynamicData = Union[dict, list, int, str, float, None, DynamicDataProvider]

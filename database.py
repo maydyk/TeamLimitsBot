@@ -9,10 +9,12 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for, listen
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from typing import Any, Awaitable, Callable, List
-from entities import *
-from models import *
+from typing import Any, Awaitable, Callable, Final, Iterable, List, Optional
 from model_fields import fields
+
+from entities import Admin, Crew, Leader, Member, Outcast, Person, Team
+from models_base import AdminModel, CrewModel, LeaderModel, MemberModel, PersonModel, TeamHeader, TeamModel
+from models_data import CrewData, MemberData, TeamData
 
 import logging
 
@@ -39,27 +41,6 @@ QueryLogger.setup_logging()
 
 _logger = logging.getLogger(__name__)
 _logger.addFilter(logging.Filter(__name__))
-
-# Raw crew data from database
-class CrewInfo(CrewModel):
-    as_admin: bool
-    as_leader: bool
-    mates: List[MemberModel]
-
-    model_config = ConfigDict(from_attributes=True)
-
-    _CREW_SPECIAL_UNSET: Final[int] = Crew._CREW_SPECIAL_UNSET
-    _CREW_SPECIAL_DEFAULT: Final[int] = Crew._CREW_SPECIAL_DEFAULT
-
-
-# Raw team data from database
-class TeamInfo(TeamModel):
-    as_admin: bool
-    as_member: bool
-    crews: List[CrewInfo]
-    members: List[MemberModel]
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class DatabaseError(Exception):
@@ -138,9 +119,20 @@ class Database:
 
 
     @connection
+    async def __queryTeam(self, teamId: int, session: AsyncSession) -> Team:
+        """
+        Helper method to get the team by id
+        """
+
+        query = select(Team).where(Team.id == teamId)
+        _logger.query(query)
+        return (await session.execute(query)).scalar_one()
+
+    
+    @connection
     async def checkTeamTitleIsUnique(self, title: str, session: AsyncSession) -> bool:
         """
-        Check specified title is unique in all team list. 
+        Check the specified title is unique in all team list. 
         """
 
         query = select(func.count(Team.title)).where(Team.title == title)
@@ -149,17 +141,6 @@ class Database:
         return not res
     
     
-    @connection
-    async def __queryTeam(self, teamId: int, session: AsyncSession) -> Team:
-        """
-        Helper method to get team by id
-        """
-
-        query = select(Team).where(Team.id == teamId)
-        _logger.query(query)
-        return (await session.execute(query)).scalar_one()
-
-    
     @transaction
     async def insertTeam(self, personModel: PersonModel, teamModel: TeamModel, session: AsyncSession) -> int:
         """
@@ -167,7 +148,7 @@ class Database:
         """
         
         # Disable to insert team with defined ID
-        assert teamModel.id is None, "TeamModel.id for the new model must be None."
+        assert teamModel.id is None, "TeamInfo.id for the new model must be None."
 
         # Build a new team
         if teamModel.title == "" or not await self.checkTeamTitleIsUnique(teamModel.title):
@@ -185,6 +166,7 @@ class Database:
             crewModel = CrewModel(
                 teamId = teamId,
                 title="",
+                position=-1,
                 special=Crew._CREW_SPECIAL_DEFAULT,
                 ),
             session=session,
@@ -252,6 +234,24 @@ class Database:
         return TeamModel.model_validate(team) if team else None
         
     
+    @connection
+    async def queryAdminTeamHeaders(self, adminModel: PersonModel, session: AsyncSession) ->List[TeamHeader]:
+        query = (
+            select(Admin.teamId, Team.title, Team.description)
+            .join(Team, Team.id == Admin.teamId)
+            .where(
+                (Admin.userId == adminModel.userId) |
+                (Admin.userName == adminModel.userName)
+            )
+            .order_by(Team.id)
+        )
+        _logger.query(query)
+
+        res = await session.execute(query)
+        return [TeamHeader(id=teamId, title=title, description=description) 
+                for teamId, title, description in res]
+    
+
     @connection
     async def checkAdminTeam(self, teamId: int, adminModel: PersonModel, session: AsyncSession) -> bool:
         """
@@ -333,30 +333,12 @@ class Database:
 
         res = (await session.execute(query)).scalar_one_or_none()
 
-        # The person is a leader of crew!
-        return res is not None
+        # The person is a leader of the crew!
+        return bool(res)
 
 
     @connection
-    async def queryAdminTeams(self, adminModel: PersonModel, session: AsyncSession) ->List[TeamHeader]:
-        query = (
-            select(Admin.teamId, Team.title, Team.description)
-            .join(Team, Team.id == Admin.teamId)
-            .where(
-                (Admin.userId == adminModel.userId) |
-                (Admin.userName == adminModel.userName)
-            )
-            .order_by(Team.id)
-        )
-        _logger.query(query)
-
-        res = await session.execute(query)
-        return [TeamHeader(id=teamId, title=title, description=description) 
-                for teamId, title, description in res]
-    
-
-    @connection
-    async def queryTeamInfo(self, teamId: int, memberModel: Person, session: AsyncSession) -> TeamInfo:
+    async def queryTeamData(self, teamId: int, memberModel: Person, session: AsyncSession) -> TeamData:
 
         # Detect member status
         as_member: Final[bool] = await self.checkMemberTeam(teamId=teamId, memberModel=memberModel)
@@ -364,45 +346,55 @@ class Database:
 
         # Query team definition
         team: Final[Team] = (await session.execute(select(Team).where(Team.id == teamId))).scalar_one()
-        teamModel: Final[TeamModel] = TeamModel.model_validate(team)
 
-        # Query team crews
-        crews = (await session.execute(select(Crew).where(Crew.teamId == teamId).order_by(Crew.id))).scalars()
 
-        async def make_crew_info(crew: Crew) -> CrewInfo:
+        def make_mate_data_list(mates: Iterable[Member]) -> List[MemberData]:
+            return [MemberData.model_validate(mate) for mate in mates]
+
+
+        async def make_crew_data(crew: Crew) -> CrewData:
             # Query crew leader
             as_leader = await self.checkLeaderCrew(crewId=crew.id, leaderModel=memberModel)
 
             # Query mates of crew
             query = select(Member).where(Member.crewId == crew.id).order_by(Member.position)
-            mateModels = [MemberModel.model_validate(mate) for mate in (await session.execute(query)).scalars()]
-            
-            crewModel = CrewModel.model_validate(crew)
-            return CrewInfo.model_validate(
-                dict(crewModel.model_dump(), **{
-                    fields(CrewInfo).as_admin: as_admin,
-                    fields(CrewInfo).as_leader: as_leader,
-                    fields(CrewInfo).mates: mateModels,
-                }))
+            mates = make_mate_data_list((await session.execute(query)).scalars())
+
+            return CrewData.model_validate(
+                CrewModel.model_validate(crew).model_dump() |
+                {
+                    fields(CrewData).as_admin: as_admin,
+                    fields(CrewData).as_leader: as_leader,
+                    fields(CrewData).mates: mates,
+                }
+            )
         
-        # Build crew list
-        crewInfoList = [await make_crew_info(crew) for crew in crews]
         
-        # Query members
-        members = (await session.execute(select(Member).where(
-            (Member.teamId == teamId) &
-            (Member.crewId == None)
-            ).order_by(Member.position))).scalars()
-        memberModels = [MemberModel.model_validate(member) for member in members]
+        async def make_crew_data_list(crews: Iterable[Crew]) -> List[CrewData]:
+            return [await make_crew_data(crew) for crew in crews]
+        
+        # Query team crews
+        crews = (await session.execute(select(Crew).where(Crew.teamId == teamId).order_by(Crew.position))).scalars()
+
+        # Query members without crew.
+        outboards = (await session.execute(
+            select(Member)
+            .where((Member.teamId == teamId) 
+                   and (Member.crewId == None)
+                   )
+            .order_by(Member.position))
+        ).scalars()
 
         # build team summary
-        return TeamInfo.model_validate(
-            dict(teamModel.model_dump(), **{
-                fields(TeamInfo).as_admin : as_admin,
-                fields(TeamInfo).as_member : as_member,
-                fields(TeamInfo).crews : crewInfoList,
-                fields(TeamInfo).members : memberModels,
-            }))
+        return TeamData.model_validate(
+            TeamModel.model_validate(team).model_dump() |
+            {
+                fields(TeamData).as_admin : as_admin,
+                fields(TeamData).as_member : as_member,
+                fields(TeamData).crews : await make_crew_data_list(crews),
+                fields(TeamData).outboards : make_mate_data_list(outboards),
+            }
+        )
     
         
     @transaction
@@ -412,12 +404,12 @@ class Database:
         """
 
         team = await self.__queryTeam(teamId=teamId)
-        if team.suspendCompanions:
-            # Check member is already in the team
-            return not await self.checkMemberTeam(teamId=teamId, memberModel=memberModel)
-        else:
-            # Can add companions
-            return True
+
+        # Check member is already in the team
+        return not (
+            team.suspendCompanions and 
+            await self.checkMemberTeam(teamId=teamId, memberModel=memberModel)
+        )
 
 
         
@@ -445,7 +437,7 @@ class Database:
                 "Cannot insert companion for user "
                 f"{memberModel.userId}, {memberModel.userName}")
         
-        # Generate the next number (will be zero for first time)
+        # Generate the next number (will be zero for the first time)
         number += 1
 
         # Query current position in given team
@@ -516,13 +508,25 @@ class Database:
         # Disable to insert team with defined ID
         assert crewModel.id is None, "CrewModel.id for the new created model must be None."
 
-        # Build a new team
+        # Build a new crew
         if crewModel.special == 0 and crewModel.title == "" or not await self.checkCrewTitleIsUnique(teamId=crewModel.teamId, title=crewModel.title):
             raise DatabaseErrorDuplicatedTitle(f"The title for a new crew {crewModel.title} is already exists.")
 
-
         # Insert the new crew
         crew = Crew(**crewModel.model_dump())
+
+        # Find the next crew position in the current team
+        if crewModel.special == Crew._CREW_SPECIAL_UNSET:
+            query = select(func.coalesce(func.max(Crew.position), -1)).where(
+                Crew.teamId == crewModel.teamId
+            )
+            _logger.query(query)
+            position = (await session.execute(query)).scalar_one()
+
+            # Generate next position
+            crew.position = position + 1
+
+
         session.add(crew)
         await session.flush()
         crewId = crew.id
