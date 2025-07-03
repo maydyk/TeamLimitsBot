@@ -3,6 +3,7 @@ Module to show team client.
 
 @Author: Denis Maydykovsky
 """
+import re
 
 from aiogram import Dispatcher, F, Router
 from aiogram.filters import Command
@@ -11,23 +12,23 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram_dialog import ChatEvent, Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input import MessageInput
-from details import (
+from typing import Any, Dict, Final, Tuple
+
+from ...details.even_hex import even_hex, even_hex_pattern, even_hex_parse
+from ...models.base import CrewModel, PersonModel
+from ...models.fields import fields
+from ...repository.models_view import TeamView
+from ...repository.repository import Repository, RepositoryError
+
+from .details import (
     DStart,
     filter_command,
-    even_hex,
-    even_hex_pattern,
-    even_hex_parse,
     parse_command,
 )
-from manage_crew import CreateCrew
-from model_fields import fields
-from international import _, localize_router, N_, NConst, NJinja
-from repository import Repository, RepositoryError, make_person, make_person_team, get_person_team
-from typing import Any, Dict, Final, Tuple
-from models_base import CrewModel, PersonModel
-from models_view import TeamView
+from .international import _, localize_router, N_, NConst, NJinja
+from .make_person import make_person, make_person_team, get_person_team
+from .manage_crew import CreateCrew
 
-import re
 
 class MemberTeam(StatesGroup):
     summary = State()

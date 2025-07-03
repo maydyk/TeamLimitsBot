@@ -27,8 +27,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, declared_attr, declarative_base, Mapped, mapped_column, class_mapper
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from typing import Final, List, Optional
-from models_base import CrewModel
 
+from ..models.common import CrewSpecial
 
 def _camel_to_snake(text: str) -> str:
     """
@@ -114,9 +114,6 @@ class Team(Entity):
 
 class Crew(Entity):
 
-    _CREW_SPECIAL_UNSET: Final[int] = CrewModel._CREW_SPECIAL_UNSET
-    _CREW_SPECIAL_DEFAULT: Final[int] = CrewModel._CREW_SPECIAL_DEFAULT
-
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     teamId: Mapped[int] = mapped_column(
         ForeignKey(Team.id, ondelete="CASCADE"),
@@ -131,8 +128,8 @@ class Crew(Entity):
     # Crew title must be unique in the crew. 
     __table_args__ = (
         UniqueConstraint(teamId, title, special), 
-        CheckConstraint((special != _CREW_SPECIAL_UNSET) or (title != ''), name="special_title"),
-        CheckConstraint((special != _CREW_SPECIAL_UNSET) or (position >= 0), name="Non-negative or special position"),
+        CheckConstraint((special != CrewSpecial.CREW_SPECIAL_UNSET) or (title != ''), name="special_title"),
+        CheckConstraint((special != CrewSpecial.CREW_SPECIAL_UNSET) or (position >= 0), name="Non-negative or special position"),
         CheckConstraint((maximalMates is None) or (minimalMates <= maximalMates), name="min_max_mates"),
     )
     

@@ -1,12 +1,14 @@
 """
-Module models contains a st of base Models
+Module models contains a set of base Models
 
 @Author: Denis Maydykovsky
 """
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator, computed_field
-from typing import Final, Optional
+from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
+from typing import Optional
+
+from .common import CrewSpecial
 
 class TeamHeader(BaseModel):
     """
@@ -60,8 +62,6 @@ class CrewModel(BaseModel):
     """
     A crew description.
     """
-    _CREW_SPECIAL_UNSET: Final[int] = 0
-    _CREW_SPECIAL_DEFAULT: Final[int] = 1
 
     id: Optional[int] = None
     teamId: int
@@ -86,7 +86,7 @@ class CrewModel(BaseModel):
 
     @model_validator(mode="after")
     def checkPosition(self):
-        if self.special == CrewModel._CREW_SPECIAL_UNSET and self.position < 0:
+        if self.special == CrewSpecial.CREW_SPECIAL_UNSET and self.position < 0:
             raise ValueError(
                 f"Non-special crew {self.special} has negative position {self.position}"
             )

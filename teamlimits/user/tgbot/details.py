@@ -19,7 +19,6 @@ from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
 from aiogram_dialog.widgets.text import Text
 from aiogram_dialog.widgets.utils import GetterVariant, ensure_data_getter
 from datetime import date
-from itertools import filterfalse
 from operator import itemgetter
 from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, Union
 
@@ -160,68 +159,6 @@ async def filter_command(message: Message, *values: CommandPatternType) -> bool:
     """
     return bool(await Command(*values)(message=message, bot=message.bot))
 
-
-# See Method 3 from https://stackoverflow.com/q/6760685/3023211
-class Singleton(type):
-    """
-    A metaclass for singletons
-    """
-    __instances = {}
-
-    def __call__(cls, *args, **kwds):
-        if cls not in cls.__instances:
-            cls.__instances[cls] = super(Singleton, cls).__call__(*args, **kwds)
-        return cls.__instances[cls]
-
-
-def even_hex(number: int) -> str:
-    """
-    Format number as even hex without prefix
-    """
-
-    # Remove prefix 0x
-    text = hex(number)[2:].upper()
-    # Pad by zero
-    l = len(text)
-    return text.rjust(l + (l % 2), '0')
-
-
-def even_hex_pattern(prefix: str) -> re.Pattern:
-    """
-    Build a regular expression to parse even hex string with prefix
-    """
-    return re.compile(f"^{prefix}((?:[0-9A-Fa-f]{{2}})+)$")
-
-
-def even_hex_parse(pattern: re.Pattern, text: str) -> Optional[str]:
-    match = pattern.search(text)
-    if match:
-        value = match.group(1)
-        if value:
-            return int(value, 16)
-    
-    return None
-
-
-_CF = TypeVar("T")
-
-def coerce_first(items: List[_CF], maximal: Optional[int]) -> List[_CF]:
-    """
-    Returns first maximal items from the list. Treat None as full list.
-    """
-    return items[: maximal if maximal is not None else len(items)]
-    
-
-def coerce_last(items: List[_CF], maximal: Optional[int]) -> List[_CF]:
-    return items[maximal if maximal is not None else len(items) :]
-
-
-# See https://stackoverflow.com/a/33491327/3023211
-def list_difference(minuend: List[_CF], subtrahend: List[_CF]) -> List[_CF]:
-    # Convert to a set for better performance.
-    s = set(subtrahend)
-    # inverse filtering
-    return list(filterfalse(s.__contains__, minuend))
 
 # TODO: Combine DynamicDataMaker with Data
 # DynamicData = Union[dict, list, int, str, float, None, DynamicDataProvider]

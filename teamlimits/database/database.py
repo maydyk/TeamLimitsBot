@@ -3,20 +3,22 @@ Database handler
 
 @Author: Denis Maydykovsky
 """
+
+import logging
+
 from functools import wraps
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import Engine
-from sqlalchemy.event import listens_for, listen
+from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-
 from typing import Any, Awaitable, Callable, Final, Iterable, List, Optional
-from model_fields import fields
 
-from entities import Admin, Crew, Leader, Member, Outcast, Person, Team
-from models_base import AdminModel, CrewModel, LeaderModel, MemberModel, PersonModel, TeamHeader, TeamModel
-from models_data import CrewData, MemberData, TeamData
+from ..models.base import AdminModel, CrewModel, LeaderModel, MemberModel, PersonModel, TeamHeader, TeamModel
+from ..models.common import CrewSpecial
+from ..models.fields import fields
+from .entities import Admin, Crew, Leader, Member, Outcast, Person, Team
+from .models_data import CrewData, MemberData, TeamData
 
-import logging
 
 # The module logger
 class QueryLogger(logging.Logger):
@@ -167,7 +169,7 @@ class Database:
                 teamId = teamId,
                 title="",
                 position=-1,
-                special=Crew._CREW_SPECIAL_DEFAULT,
+                special=CrewSpecial.CREW_SPECIAL_DEFAULT,
                 ),
             session=session,
             )
@@ -516,7 +518,7 @@ class Database:
         crew = Crew(**crewModel.model_dump())
 
         # Find the next crew position in the current team
-        if crewModel.special == Crew._CREW_SPECIAL_UNSET:
+        if crewModel.special == CrewSpecial.CREW_SPECIAL_UNSET:
             query = select(func.coalesce(func.max(Crew.position), -1)).where(
                 Crew.teamId == crewModel.teamId
             )

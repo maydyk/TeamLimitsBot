@@ -6,6 +6,8 @@ Contains a telegram dialog to create and manage a crew
 @Author: Denis Maydykovsky
 """
 
+import logging
+
 from aiogram import Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
@@ -14,8 +16,13 @@ from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.api.entities import Data
 from aiogram_dialog.widgets.input import ManagedTextInput, TextInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, Next, Row
-from confirmation_dialog import make_confirmation_dialog
-from details import (
+from typing import Any, Final, Tuple
+
+from ...models.base import CrewModel, PersonModel
+from ...models.fields import fields
+from ...repository.repository import Repository
+from .confirmation_dialog import make_confirmation_dialog
+from .details import (
     DStart,
     dialog_copy_start_data,
     dialog_data_getter,
@@ -25,14 +32,10 @@ from details import (
     write_dialog_value,
     zero_positive,
 )
-from international import N_, NConst, NFormat, NJinja, _, localize_router
-from models_base import CrewModel, PersonModel
-from model_fields import fields
-from repository import Repository, make_person_team
-from typing import Any, Final, Tuple
-from wizard import wizard_control, wizard_preview, Preview
+from .international import N_, NConst, NFormat, NJinja, _, localize_router
+from .make_person import make_person_team
+from .wizard import wizard_control, wizard_preview, Preview
 
-import logging
 
 _logger = logging.getLogger(__name__)
 

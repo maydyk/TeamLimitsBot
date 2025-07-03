@@ -14,9 +14,11 @@ from aiogram_dialog.widgets.kbd import Button, Cancel, Row, Start
 from aiogram_dialog.widgets.kbd.button import OnClick
 from aiogram_dialog.widgets.text import Text
 from aiogram_dialog.widgets.utils import GetterVariant, ensure_data_getter
-from details import DStart, dialog_start_getter
-from international import NConst, NFormat
-from typing import Any, Final, Optional, Tuple
+
+from typing import Any, Final
+
+from .details import DStart, dialog_start_getter
+from .international import NConst, NFormat
 
 _CONFIRM_YES: Final[str] = "__confirm_yes__"
 

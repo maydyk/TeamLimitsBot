@@ -5,48 +5,25 @@ An intermediate layer between database.Repository() and Telegram UI
 @Author: Denis Maydykovsky
 """
 
-from aiogram.types import User
-from contextlib import asynccontextmanager
-from database import Database, DatabaseError
-from details import coerce_first, list_difference, Singleton
-from functools import wraps
-from itertools import chain
-from model_fields import fields
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
-from models_base import CrewModel, PersonModel, MemberModel, TeamHeader, TeamModel
-from models_data import CrewData, MemberData, TeamData
-from models_view import CrewView, MemberView, TeamView
-
 import logging
 
+from contextlib import asynccontextmanager
+from functools import wraps
+from itertools import chain
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
+
+from ..database.database import Database, DatabaseError
+from ..details.coerce_list import coerce_first
+from ..details.list_difference import list_difference
+from ..details.singleton import Singleton
+
+from ..models.fields import fields
+from ..models.base import CrewModel, PersonModel, MemberModel, TeamHeader, TeamModel
+from ..models.common import CrewSpecial
+from ..database.models_data import CrewData, MemberData, TeamData
+from .models_view import CrewView, MemberView, TeamView
+
 _logger = logging.getLogger(__name__)
-
-def make_person(user: User) -> PersonModel:
-    return PersonModel(
-        userId=user.id,
-        userName=user.username,
-        firstName=user.first_name,
-        lastName=user.last_name,
-    )
-
-
-def make_person_team(data: Dict[str, Any]) -> Tuple[int, PersonModel]:
-    """
-    Extracts team id and person data from specifies dictionary.
-    """
-    teamId = data[fields(MemberModel).teamId]
-    person = PersonModel(**data)
-    return (teamId, person)
-
-
-def get_person_team(teamId: int, person: PersonModel) -> Dict[str, Any]:
-    """
-    Combine person with teamId
-    """
-    return dict(
-        person.model_dump(),
-        **{ fields(MemberModel).teamId : teamId }
-        )
 
 
 class RepositoryError(Exception):
@@ -164,7 +141,7 @@ class Repository(metaclass = Singleton):
         # Extract default crew members from valid list.
         validDefaultCrewMembers = list(
             filter(
-                lambda member: member.crewId == CrewData._CREW_SPECIAL_DEFAULT,
+                lambda member: member.crewId == CrewSpecial.CREW_SPECIAL_DEFAULT,
                 validMembers
             )
         )

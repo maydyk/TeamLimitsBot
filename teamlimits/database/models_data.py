@@ -2,18 +2,19 @@
 Rearranged data given from database
 """
 
-from details import coerce_first, coerce_last
 from pydantic import ConfigDict, computed_field
 from typing import List, Optional
 
-import models_base 
 
+from ..details.coerce_list import coerce_first, coerce_last
+from ..models.base import CrewModel, MemberModel, TeamModel
+from ..models.common import CrewSpecial
 
-class MemberData(models_base.MemberModel, frozen=True):
+class MemberData(MemberModel, frozen=True):
     model_config = ConfigDict(from_attributes=True)
 
 
-class CrewData(models_base.CrewModel):
+class CrewData(CrewModel):
     as_admin: bool
     as_leader: bool
     mates: List[MemberData]
@@ -63,7 +64,7 @@ class CrewData(models_base.CrewModel):
 
 
 # Raw team data from database
-class TeamData(models_base.TeamModel):
+class TeamData(TeamModel):
     as_admin: bool
     as_member: bool
     crews: List[CrewData]
@@ -84,7 +85,7 @@ class TeamData(models_base.TeamModel):
         if self._defaultCrew is None:
             self._defaultCrew = next(
                 filter(
-                    lambda crew: crew.special == CrewData._CREW_SPECIAL_DEFAULT,
+                    lambda crew: crew.special == CrewSpecial.CREW_SPECIAL_DEFAULT,
                     self.crews
                     )
                 )
@@ -100,7 +101,7 @@ class TeamData(models_base.TeamModel):
         if self._regularCrews is None:
             self._regularCrews = list(
                 filter(
-                    lambda crew: crew.special == CrewData._CREW_SPECIAL_UNSET,
+                    lambda crew: crew.special == CrewSpecial.CREW_SPECIAL_UNSET,
                     self.crews
                     )
             )

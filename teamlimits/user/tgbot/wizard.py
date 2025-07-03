@@ -8,8 +8,10 @@ from aiogram.fsm.state import State
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Back, Next, Row, SwitchTo
 from aiogram_dialog.widgets.common import Whenable, WhenCondition
-from international import NConst, NFormat
 from typing import Final, List, Tuple
+
+
+from .international import NConst, NFormat
 
 _HOME_ID: Final[str] = "__home__"
 

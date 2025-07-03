@@ -6,7 +6,7 @@ A Telegram bot to manage number of participants of some event.
 
 Usage: python3 TeamLimitsBot.py <YOUR BOT TOKEN>
 '''
-from aiogram import F, Bot, Dispatcher, Router
+from aiogram import Bot, Dispatcher, Router
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram_dialog import setup_dialogs
 
@@ -18,42 +18,42 @@ import logging
 import sqlalchemy
 
 
-# Setup logging
-logging.basicConfig(level=logging.DEBUG if __debug__ else logging.ERROR)
-
-
-# Disable annoying messages from the libraries
-if __debug__:
-    logging.getLogger(aiogram.__name__).setLevel(logging.ERROR)
-    logging.getLogger(asyncio.__name__).setLevel(logging.ERROR)
-    logging.getLogger(aiogram_dialog.__name__).setLevel(logging.ERROR)
-    logging.getLogger(aiosqlite.__name__).setLevel(logging.ERROR)
-    logging.getLogger(sqlalchemy.__name__).setLevel(logging.ERROR)
-
-
 # Setup localization
-from international import _, localize_router
+from .international import localize_router
 
 # Extract token and DB connection
-import config
+from . import config
 
 # Welcome screen
-import welcome
+from . import welcome
 
 # Create (and manage) team wizard
-import manage_team
+from . import manage_team
 
 # Client for members and crews
-import member_team
+from . import member_team
 
 # Create (and manage) crew wizard
-import manage_crew
+from . import manage_crew
 
 # Our data
-from repository import Repository
+from ...repository.repository import Repository
 
 
 async def main():
+
+    # Setup logging
+    logging.basicConfig(level=logging.DEBUG if __debug__ else logging.ERROR)
+
+
+    # Disable annoying messages from the libraries
+    if __debug__:
+        logging.getLogger(aiogram.__name__).setLevel(logging.ERROR)
+        logging.getLogger(asyncio.__name__).setLevel(logging.ERROR)
+        logging.getLogger(aiogram_dialog.__name__).setLevel(logging.ERROR)
+        logging.getLogger(aiosqlite.__name__).setLevel(logging.ERROR)
+        logging.getLogger(sqlalchemy.__name__).setLevel(logging.ERROR)
+
 
     # Read config
     settings = config.Config()

@@ -28,13 +28,19 @@ from aiogram_dialog.widgets.kbd import (
     SwitchTo,
 )
 
-from confirmation_dialog import make_confirmation_dialog
-from details import (
+from typing import Any, Dict, Final
+
+from ...details.even_hex import even_hex, even_hex_pattern, even_hex_parse
+from ...models.base import TeamModel
+from ...models.fields import fields
+from ...repository.repository import Repository
+from ...repository.models_view import TeamHeaderView
+
+
+from .confirmation_dialog import make_confirmation_dialog
+from .details import (
     DStart,
     dynamic_dialog_data_items,
-    even_hex,
-    even_hex_pattern,
-    even_hex_parse,
     dialog_data_getter,
     dialog_copy_start_data,
     dialog_filter_cancel,
@@ -46,17 +52,13 @@ from details import (
     zero_positive,
 )
 
-from wizard import wizard_control, wizard_preview, Preview
+from .make_person import make_person
+
+from .wizard import wizard_control, wizard_preview, Preview
 
 # Setup localization
-from international import _, localize_router, N_, NConst, NFormat, NJinja
+from .international import _, localize_router, N_, NConst, NFormat, NJinja
 
-from typing import Any, Dict, Final
-
-from repository import Repository, make_person
-from models_base import TeamModel
-from models_view import TeamHeaderView
-from model_fields import fields
 
 import logging
 

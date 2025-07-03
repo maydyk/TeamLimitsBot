@@ -1,11 +1,11 @@
 
-from models_base import MemberModel, CrewModel, TeamHeader, TeamModel
 from pydantic import ConfigDict, computed_field
-from details import even_hex
 from typing import List, Optional
 from datetime import datetime
 from functools import reduce
 
+from ..models.base import CrewModel, MemberModel, TeamHeader, TeamModel
+from ..details.even_hex import even_hex
 
 class MemberView(MemberModel):
 
