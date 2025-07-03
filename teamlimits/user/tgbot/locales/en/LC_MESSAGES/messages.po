@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-07-02 22:24+0300\n"
+"POT-Creation-Date: 2025-07-03 20:46+0300\n"
 "PO-Revision-Date: 2025-02-28 22:10+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,470 +18,470 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: manage_crew.py:65
+#: teamlimits/user/tgbot/manage_crew.py:68
 #, fuzzy
 msgid "create_crew_back"
 msgstr "Enter the team description"
 
-#: manage_crew.py:66
+#: teamlimits/user/tgbot/manage_crew.py:69
 #, fuzzy
 msgid "create_crew_home"
 msgstr "Enter the team description"
 
-#: manage_crew.py:67
+#: teamlimits/user/tgbot/manage_crew.py:70
 #, fuzzy
 msgid "create_crew_next"
 msgstr "Enter the team description"
 
-#: manage_crew.py:72
+#: teamlimits/user/tgbot/manage_crew.py:75
 #, fuzzy
 msgid "create_crew_preview{preview}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:95
+#: teamlimits/user/tgbot/manage_crew.py:98
 #, fuzzy
 msgid "create_crew_duplicated_title{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:106
+#: teamlimits/user/tgbot/manage_crew.py:109
 #, fuzzy
 msgid "create_crew_minimal_mates_error{value}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:133
+#: teamlimits/user/tgbot/manage_crew.py:136
 #, fuzzy
 msgid "create_crew_maximal_mates_invalid{minimalMates}{maximalMates}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:147
+#: teamlimits/user/tgbot/manage_crew.py:150
 #, fuzzy
 msgid "create_crew_maximal_mates_error{value}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:181
+#: teamlimits/user/tgbot/manage_crew.py:184
 #, fuzzy
 msgid "create_crew_insert_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:203
+#: teamlimits/user/tgbot/manage_crew.py:206
 #, fuzzy
 msgid "create_crew_update_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:233
+#: teamlimits/user/tgbot/manage_crew.py:236
 #, fuzzy
 msgid "delete_crew_confirmation{title}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:234
+#: teamlimits/user/tgbot/manage_crew.py:237
 #, fuzzy
 msgid "delete_crew_confirmation_no"
 msgstr "Enter the team description"
 
-#: manage_crew.py:235
+#: teamlimits/user/tgbot/manage_crew.py:238
 #, fuzzy
 msgid "delete_crew_confirmation_yes"
 msgstr "Enter the team description"
 
-#: manage_crew.py:245
+#: teamlimits/user/tgbot/manage_crew.py:248
 #, fuzzy
 msgid "create_crew_query_title"
 msgstr "Enter the team description"
 
-#: manage_crew.py:259
+#: teamlimits/user/tgbot/manage_crew.py:262
 #, fuzzy
 msgid "create_crew_minimal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:262
+#: teamlimits/user/tgbot/manage_crew.py:265
 #, fuzzy
 msgid "create_crew_reset_minimal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:280
+#: teamlimits/user/tgbot/manage_crew.py:283
 #, fuzzy
 msgid "create_crew_maximal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:284
+#: teamlimits/user/tgbot/manage_crew.py:287
 #, fuzzy
 msgid "create_crew_fixed_maximal_mates{minimalMates}"
 msgstr "Enter the team description"
 
-#: manage_crew.py:290
+#: teamlimits/user/tgbot/manage_crew.py:293
 #, fuzzy
 msgid "create_team_reset_reset_maximal_mates"
 msgstr "Enter the team description"
 
-#: manage_crew.py:309
+#: teamlimits/user/tgbot/manage_crew.py:312
 #, fuzzy
 msgid "create_crew_summary"
 msgstr "Enter the team description"
 
-#: manage_crew.py:313
+#: teamlimits/user/tgbot/manage_crew.py:316
 #, fuzzy
 msgid "create_crew_manage"
 msgstr "Enter the team description"
 
-#: manage_crew.py:319
+#: teamlimits/user/tgbot/manage_crew.py:322
 #, fuzzy
 msgid "create_crew_delete"
 msgstr "Enter the team description"
 
-#: manage_crew.py:326
+#: teamlimits/user/tgbot/manage_crew.py:329
 #, fuzzy
 msgid "create_crew_insert"
 msgstr "Enter the team description"
 
-#: manage_crew.py:332
+#: teamlimits/user/tgbot/manage_crew.py:335
 #, fuzzy
 msgid "create_crew_update"
 msgstr "Enter the team description"
 
-#: manage_crew.py:338
+#: teamlimits/user/tgbot/manage_crew.py:341
 #, fuzzy
 msgid "create_crew_finish"
 msgstr "Enter the team description"
 
-#: manage_team.py:118
+#: teamlimits/user/tgbot/manage_team.py:120
 #, fuzzy
 msgid "delete_team_confirmation{teamIdStr}{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:119
+#: teamlimits/user/tgbot/manage_team.py:121
 #, fuzzy
 msgid "delete_team_confirmation_no"
 msgstr "Enter the team description"
 
-#: manage_team.py:120
+#: teamlimits/user/tgbot/manage_team.py:122
 msgid "delete_team_confirmation_yes"
 msgstr ""
 
-#: manage_team.py:146
+#: teamlimits/user/tgbot/manage_team.py:148
 #, fuzzy
 msgid "create_team_duplicated_title{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:178
+#: teamlimits/user/tgbot/manage_team.py:180
 #, fuzzy
 msgid "create_team_minimal_members_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:197
+#: teamlimits/user/tgbot/manage_team.py:199
 #, fuzzy
 msgid "create_team_maximal_members_invalid{minimalMembers}{maximalMembers}"
 msgstr "Enter the team description"
 
-#: manage_team.py:209
+#: teamlimits/user/tgbot/manage_team.py:211
 #, fuzzy
 msgid "create_team_maximal_members_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:238
+#: teamlimits/user/tgbot/manage_team.py:240
 #, fuzzy
 msgid "create_team_minimal_crews_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:256
+#: teamlimits/user/tgbot/manage_team.py:258
 #, fuzzy
 msgid "create_team_maximal_crews_invalid{minimalCrews}{maximalCrews}"
 msgstr "Enter the team description"
 
-#: manage_team.py:268
+#: teamlimits/user/tgbot/manage_team.py:270
 #, fuzzy
 msgid "create_team_maximal_crews_error{value}"
 msgstr "Enter the team description"
 
-#: manage_team.py:300
+#: teamlimits/user/tgbot/manage_team.py:302
 #, fuzzy
 msgid "manage_team_was_cancelled{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:302
+#: teamlimits/user/tgbot/manage_team.py:304
 #, fuzzy
 msgid "create_team_was_cancelled{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:327
+#: teamlimits/user/tgbot/manage_team.py:329
 #, fuzzy
 msgid "create_team_inserted{teamIdStr}{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:337
+#: teamlimits/user/tgbot/manage_team.py:340
 #, fuzzy
 msgid "create_team_insert_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:358
+#: teamlimits/user/tgbot/manage_team.py:361
 #, fuzzy
 msgid "create_team_updated{teamIdStr}{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:366
+#: teamlimits/user/tgbot/manage_team.py:370
 #, fuzzy
 msgid "create_team_update_failed{title}"
 msgstr "Enter the team description"
 
-#: manage_team.py:396
+#: teamlimits/user/tgbot/manage_team.py:400
 #, fuzzy
 msgid "create_team_back"
 msgstr "Enter the team description"
 
-#: manage_team.py:397
+#: teamlimits/user/tgbot/manage_team.py:401
 #, fuzzy
 msgid "create_team_home"
 msgstr "Enter the team description"
 
-#: manage_team.py:398
+#: teamlimits/user/tgbot/manage_team.py:402
 #, fuzzy
 msgid "create_team_next"
 msgstr "Enter the team description"
 
-#: manage_team.py:403
+#: teamlimits/user/tgbot/manage_team.py:407
 #, fuzzy
 msgid "create_team_preview{preview}"
 msgstr "Enter the team description"
 
-#: manage_team.py:413
+#: teamlimits/user/tgbot/manage_team.py:417
 msgid "create_team_query_title"
 msgstr ""
 
-#: manage_team.py:416
+#: teamlimits/user/tgbot/manage_team.py:420
 #, fuzzy
 msgid "create_team_ask_description_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:417
+#: teamlimits/user/tgbot/manage_team.py:421
 #, fuzzy
 msgid "create_team_ask_description_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:433
+#: teamlimits/user/tgbot/manage_team.py:437
 #, fuzzy
 msgid "create_team_query_description"
 msgstr "Enter the team description"
 
-#: manage_team.py:441
+#: teamlimits/user/tgbot/manage_team.py:445
 #, fuzzy
 msgid "create_team_reset_description"
 msgstr "Enter the team description"
 
-#: manage_team.py:453
+#: teamlimits/user/tgbot/manage_team.py:457
 #, fuzzy
 msgid "create_team_query_minimal_members"
 msgstr "Enter the team description"
 
-#: manage_team.py:456
+#: teamlimits/user/tgbot/manage_team.py:460
 #, fuzzy
 msgid "create_team_reset_minimal_members"
 msgstr "Enter the team description"
 
-#: manage_team.py:475
+#: teamlimits/user/tgbot/manage_team.py:479
 #, fuzzy
 msgid "create_team_query_maximal_members{minimalMembers}"
 msgstr "Enter the team description"
 
-#: manage_team.py:479
+#: teamlimits/user/tgbot/manage_team.py:483
 #, fuzzy
 msgid "create_team_fix_maximal_members{minimalMembers}"
 msgstr "Enter the team description"
 
-#: manage_team.py:485
+#: teamlimits/user/tgbot/manage_team.py:489
 #, fuzzy
 msgid "create_team_skip_maximal_members"
 msgstr "Enter the team description"
 
-#: manage_team.py:504
+#: teamlimits/user/tgbot/manage_team.py:508
 msgid "create_team_crews_welcome"
 msgstr ""
 
-#: manage_team.py:506
+#: teamlimits/user/tgbot/manage_team.py:510
 #, fuzzy
 msgid "create_team_enable_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:507
+#: teamlimits/user/tgbot/manage_team.py:511
 #, fuzzy
 msgid "create_team_disable_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:512
+#: teamlimits/user/tgbot/manage_team.py:516
 msgid "create_team_setup_crews_limits"
 msgstr ""
 
-#: manage_team.py:517
+#: teamlimits/user/tgbot/manage_team.py:521
 #, fuzzy
 msgid "create_team_reset_crews_limits"
 msgstr "Enter the team description"
 
-#: manage_team.py:529
+#: teamlimits/user/tgbot/manage_team.py:533
 #, fuzzy
 msgid "create_team_query_minimal_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:539
+#: teamlimits/user/tgbot/manage_team.py:543
 #, fuzzy
 msgid "create_team_reset_minimal_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:550
+#: teamlimits/user/tgbot/manage_team.py:554
 #, fuzzy
 msgid "create_team_query_maximal_crews{minimalCrews}"
 msgstr "Enter the team description"
 
-#: manage_team.py:561
+#: teamlimits/user/tgbot/manage_team.py:565
 #, fuzzy
 msgid "create_team_fixed_maximal_crews{minimalCrews}"
 msgstr "Enter the team description"
 
-#: manage_team.py:567
+#: teamlimits/user/tgbot/manage_team.py:571
 #, fuzzy
 msgid "create_team_reset_maximal_crews"
 msgstr "Enter the team description"
 
-#: manage_team.py:579
+#: teamlimits/user/tgbot/manage_team.py:583
 #, fuzzy
 msgid "create_team_deadline_welcome"
 msgstr "Enter the team description"
 
-#: manage_team.py:587
+#: teamlimits/user/tgbot/manage_team.py:591
 #, fuzzy
 msgid "create_team_enable_deadline_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:588
+#: teamlimits/user/tgbot/manage_team.py:592
 #, fuzzy
 msgid "create_team_enable_deadline_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:593
+#: teamlimits/user/tgbot/manage_team.py:597
 #, fuzzy
 msgid "create_team_deadline_next"
 msgstr "Enter the team description"
 
-#: manage_team.py:604
+#: teamlimits/user/tgbot/manage_team.py:608
 #, fuzzy
 msgid "create_team_options_welcome{deadline}"
 msgstr "Enter the team description"
 
-#: manage_team.py:606
+#: teamlimits/user/tgbot/manage_team.py:610
 #, fuzzy
 msgid "create_team_suspend_companions_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:607
+#: teamlimits/user/tgbot/manage_team.py:611
 #, fuzzy
 msgid "create_team_suspend_companions_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:612
+#: teamlimits/user/tgbot/manage_team.py:616
 #, fuzzy
 msgid "create_team_suspend_recruitment_checked"
 msgstr "Enter the team description"
 
-#: manage_team.py:613
+#: teamlimits/user/tgbot/manage_team.py:617
 #, fuzzy
 msgid "create_team_suspend_recruitment_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:618
+#: teamlimits/user/tgbot/manage_team.py:622
 #, fuzzy
 msgid "create_team_suspend_on_deadline_queue"
 msgstr "Enter the team description"
 
-#: manage_team.py:619
+#: teamlimits/user/tgbot/manage_team.py:623
 #, fuzzy
 msgid "create_team_suspend_on_deadline_unchecked"
 msgstr "Enter the team description"
 
-#: manage_team.py:624
+#: teamlimits/user/tgbot/manage_team.py:628
 #, fuzzy
 msgid "create_team_options_next"
 msgstr "Enter the team description"
 
-#: manage_team.py:635
+#: teamlimits/user/tgbot/manage_team.py:639
 #, fuzzy
 msgid "create_team_summary"
 msgstr "Enter the team description"
 
-#: manage_team.py:639
+#: teamlimits/user/tgbot/manage_team.py:643
 #, fuzzy
 msgid "create_team_manage"
 msgstr "Enter the team description"
 
-#: manage_team.py:645
+#: teamlimits/user/tgbot/manage_team.py:649
 #, fuzzy
 msgid "create_team_delete"
 msgstr "Enter the team description"
 
-#: manage_team.py:652
+#: teamlimits/user/tgbot/manage_team.py:656
 #, fuzzy
 msgid "create_team_insert"
 msgstr "Enter the team description"
 
-#: manage_team.py:658
+#: teamlimits/user/tgbot/manage_team.py:662
 #, fuzzy
 msgid "create_team_update"
 msgstr "Enter the team description"
 
-#: manage_team.py:664
+#: teamlimits/user/tgbot/manage_team.py:668
 #, fuzzy
 msgid "create_team_cancel"
 msgstr "Enter the team description"
 
-#: manage_team.py:709
+#: teamlimits/user/tgbot/manage_team.py:713
 #, fuzzy
 msgid "msg_manage_teams"
 msgstr "Enter the team description"
 
-#: manage_team.py:737
+#: teamlimits/user/tgbot/manage_team.py:741
 msgid "msg_team_not_found{teamIdStr}"
 msgstr ""
 
-#: member_team.py:64
+#: teamlimits/user/tgbot/member_team.py:65
 msgid "member_team_add_member_failed{teamIdStr}{userName}"
 msgstr ""
 
-#: member_team.py:104
+#: teamlimits/user/tgbot/member_team.py:105
 msgid "msg_crew_not_found{crewIdStr}"
 msgstr ""
 
-#: member_team.py:123
+#: teamlimits/user/tgbot/member_team.py:124
 #, fuzzy
 msgid "member_team_summary"
 msgstr "Enter the team description"
 
-#: member_team.py:125
+#: teamlimits/user/tgbot/member_team.py:126
 msgid "member_team_add"
 msgstr ""
 
-#: member_team.py:131
+#: teamlimits/user/tgbot/member_team.py:132
 #, fuzzy
 msgid "member_team_remove"
 msgstr "Enter the team description"
 
-#: member_team.py:137
+#: teamlimits/user/tgbot/member_team.py:138
 msgid "add_member_crew"
 msgstr ""
 
-#: member_team.py:175
+#: teamlimits/user/tgbot/member_team.py:176
 msgid "msg_member_team_disallow"
 msgstr ""
 
-#: member_team.py:188
+#: teamlimits/user/tgbot/member_team.py:189
 #, fuzzy
 msgid "msg_member_list_head"
 msgstr "Enter the team description"
 
-#: member_team.py:191
+#: teamlimits/user/tgbot/member_team.py:192
 msgid "msg_member_list_item{teamIdStr}{title}{description}"
 msgstr ""
 
-#: welcome.py:23
+#: teamlimits/user/tgbot/welcome.py:22
 msgid "msg_start_welcome{bot_name}"
 msgstr "Welcome to Bot <b>{{bot_name}}</b>"
 
-#: welcome.py:37
+#: teamlimits/user/tgbot/welcome.py:36
 #, fuzzy
 msgid "msg_start_select_action"
 msgstr ""
@@ -489,21 +489,21 @@ msgstr ""
 "/create to initialize a new event or\n"
 "/manage to manage an existing event."
 
-#: welcome.py:48
+#: teamlimits/user/tgbot/welcome.py:47
 msgid "menu_cancel_anywhere"
 msgstr ""
 
-#: welcome.py:49
+#: teamlimits/user/tgbot/welcome.py:48
 #, fuzzy
 msgid "menu_create_team"
 msgstr "Enter the team description"
 
-#: welcome.py:50
+#: teamlimits/user/tgbot/welcome.py:49
 #, fuzzy
 msgid "menu_manage_team"
 msgstr "Enter the team description"
 
-#: welcome.py:51
+#: teamlimits/user/tgbot/welcome.py:50
 #, fuzzy
 msgid "menu_member_team"
 msgstr "Enter the team description"
