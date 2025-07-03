@@ -10,8 +10,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BotCommand, Message
 from aiogram_dialog import Dialog, DialogManager, Window
 
-from .details import dialog_start_getter
-from .international import _, N_, localize_router, NConst, NJinja
+from teamlimits.user.tg_bot.details import dialog_start_getter
+from teamlimits.user.tg_bot.international import _, N_, localize_router, NConst, NJinja
 
 # Shows the first welcome message.
 class Welcome(StatesGroup):

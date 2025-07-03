@@ -19,25 +19,25 @@ import sqlalchemy
 
 
 # Setup localization
-from .international import localize_router
+from teamlimits.user.tg_bot.international import localize_router
 
 # Extract token and DB connection
-from . import config
+import teamlimits.user.tg_bot.config as config
 
 # Welcome screen
-from . import welcome
+import teamlimits.user.tg_bot.welcome as welcome
 
 # Create (and manage) team wizard
-from . import manage_team
+import teamlimits.user.tg_bot.manage_team as manage_team
 
 # Client for members and crews
-from . import member_team
+import teamlimits.user.tg_bot.member_team as member_team
 
 # Create (and manage) crew wizard
-from . import manage_crew
+import teamlimits.user.tg_bot.manage_crew as manage_crew
 
 # Our data
-from ...repository.repository import Repository
+from teamlimits.repository.repository import Repository
 
 
 async def main():

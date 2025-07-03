@@ -4,8 +4,8 @@ from typing import List, Optional
 from datetime import datetime
 from functools import reduce
 
-from ..models.base import CrewModel, MemberModel, TeamHeader, TeamModel
-from ..details.even_hex import even_hex
+from teamlimits.models.base import CrewModel, MemberModel, TeamHeader, TeamModel
+from teamlimits.details.even_hex import even_hex
 
 class MemberView(MemberModel):
 

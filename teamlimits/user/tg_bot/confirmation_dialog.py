@@ -17,8 +17,8 @@ from aiogram_dialog.widgets.utils import GetterVariant, ensure_data_getter
 
 from typing import Any, Final
 
-from .details import DStart, dialog_start_getter
-from .international import NConst, NFormat
+from teamlimits.user.tg_bot.details import DStart, dialog_start_getter
+from teamlimits.user.tg_bot.international import NConst, NFormat
 
 _CONFIRM_YES: Final[str] = "__confirm_yes__"
 

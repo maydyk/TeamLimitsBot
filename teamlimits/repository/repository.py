@@ -12,16 +12,16 @@ from functools import wraps
 from itertools import chain
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
-from ..database.database import Database, DatabaseError
-from ..details.coerce_list import coerce_first
-from ..details.list_difference import list_difference
-from ..details.singleton import Singleton
+from teamlimits.database.database import Database, DatabaseError
+from teamlimits.details.coerce_list import coerce_first
+from teamlimits.details.list_difference import list_difference
+from teamlimits.details.singleton import Singleton
 
-from ..models.fields import fields
-from ..models.base import CrewModel, PersonModel, MemberModel, TeamHeader, TeamModel
-from ..models.common import CrewSpecial
-from ..database.models_data import CrewData, MemberData, TeamData
-from .models_view import CrewView, MemberView, TeamView
+from teamlimits.models.fields import fields
+from teamlimits.models.base import CrewModel, PersonModel, MemberModel, TeamHeader, TeamModel
+from teamlimits.models.common import CrewSpecial
+from teamlimits.database.models_data import CrewData, MemberData, TeamData
+from teamlimits.repository.models_view import CrewView, MemberView, TeamView
 
 _logger = logging.getLogger(__name__)
 

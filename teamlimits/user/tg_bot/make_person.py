@@ -1,8 +1,8 @@
 from aiogram.types import User
 from typing import Any, Dict, Tuple
 
-from ...models.base import PersonModel, MemberModel
-from ...models.fields import fields
+from teamlimits.models.base import PersonModel, MemberModel
+from teamlimits.models.fields import fields
 
 def make_person(user: User) -> PersonModel:
     """

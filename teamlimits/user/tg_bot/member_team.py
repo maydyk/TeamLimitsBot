@@ -14,20 +14,20 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input import MessageInput
 from typing import Any, Dict, Final, Tuple
 
-from ...details.even_hex import even_hex, even_hex_pattern, even_hex_parse
-from ...models.base import CrewModel, PersonModel
-from ...models.fields import fields
-from ...repository.models_view import TeamView
-from ...repository.repository import Repository, RepositoryError
+from teamlimits.details.even_hex import even_hex, even_hex_pattern, even_hex_parse
+from teamlimits.models.base import CrewModel, PersonModel
+from teamlimits.models.fields import fields
+from teamlimits.repository.models_view import TeamView
+from teamlimits.repository.repository import Repository, RepositoryError
 
-from .details import (
+from teamlimits.user.tg_bot.details import (
     DStart,
     filter_command,
     parse_command,
 )
-from .international import _, localize_router, N_, NConst, NJinja
-from .make_person import make_person, make_person_team, get_person_team
-from .manage_crew import CreateCrew
+from teamlimits.user.tg_bot.international import _, localize_router, N_, NConst, NJinja
+from teamlimits.user.tg_bot.make_person import make_person, make_person_team, get_person_team
+from teamlimits.user.tg_bot.manage_crew import CreateCrew
 
 
 class MemberTeam(StatesGroup):

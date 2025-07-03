@@ -5,6 +5,7 @@ Contains a dialog wizard to create or manage a new team.
 
 @Author: Denis Maydykovsky
 """
+import logging
 
 from aiogram import F, Dispatcher, Router
 from aiogram.filters import Command
@@ -30,15 +31,15 @@ from aiogram_dialog.widgets.kbd import (
 
 from typing import Any, Dict, Final
 
-from ...details.even_hex import even_hex, even_hex_pattern, even_hex_parse
-from ...models.base import TeamModel
-from ...models.fields import fields
-from ...repository.repository import Repository
-from ...repository.models_view import TeamHeaderView
+from teamlimits.details.even_hex import even_hex, even_hex_pattern, even_hex_parse
+from teamlimits.models.base import TeamModel
+from teamlimits.models.fields import fields
+from teamlimits.repository.repository import Repository
+from teamlimits.repository.models_view import TeamHeaderView
 
 
-from .confirmation_dialog import make_confirmation_dialog
-from .details import (
+from teamlimits.user.tg_bot.confirmation_dialog import make_confirmation_dialog
+from teamlimits.user.tg_bot.details import (
     DStart,
     dynamic_dialog_data_items,
     dialog_data_getter,
@@ -52,15 +53,12 @@ from .details import (
     zero_positive,
 )
 
-from .make_person import make_person
+from teamlimits.user.tg_bot.make_person import make_person
 
-from .wizard import wizard_control, wizard_preview, Preview
+from teamlimits.user.tg_bot.wizard import wizard_control, wizard_preview, Preview
 
 # Setup localization
-from .international import _, localize_router, N_, NConst, NFormat, NJinja
-
-
-import logging
+from teamlimits.user.tg_bot.international import _, localize_router, N_, NConst, NFormat, NJinja
 
 _logger = logging.getLogger(__name__)
 

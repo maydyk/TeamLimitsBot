@@ -6,9 +6,9 @@ from pydantic import ConfigDict, computed_field
 from typing import List, Optional
 
 
-from ..details.coerce_list import coerce_first, coerce_last
-from ..models.base import CrewModel, MemberModel, TeamModel
-from ..models.common import CrewSpecial
+from teamlimits.details.coerce_list import coerce_first, coerce_last
+from teamlimits.models.base import CrewModel, MemberModel, TeamModel
+from teamlimits.models.common import CrewSpecial
 
 class MemberData(MemberModel, frozen=True):
     model_config = ConfigDict(from_attributes=True)

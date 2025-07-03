@@ -8,7 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
 from typing import Optional
 
-from .common import CrewSpecial
+from teamlimits.models.common import CrewSpecial
 
 class TeamHeader(BaseModel):
     """

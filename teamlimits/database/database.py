@@ -13,11 +13,11 @@ from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from typing import Any, Awaitable, Callable, Final, Iterable, List, Optional
 
-from ..models.base import AdminModel, CrewModel, LeaderModel, MemberModel, PersonModel, TeamHeader, TeamModel
-from ..models.common import CrewSpecial
-from ..models.fields import fields
-from .entities import Admin, Crew, Leader, Member, Outcast, Person, Team
-from .models_data import CrewData, MemberData, TeamData
+from teamlimits.models.base import AdminModel, CrewModel, LeaderModel, MemberModel, PersonModel, TeamHeader, TeamModel
+from teamlimits.models.common import CrewSpecial
+from teamlimits.models.fields import fields
+from teamlimits.database.entities import Admin, Crew, Leader, Member, Outcast, Person, Team
+from teamlimits.database.models_data import CrewData, MemberData, TeamData
 
 
 # The module logger

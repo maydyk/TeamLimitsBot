@@ -11,7 +11,7 @@ from aiogram_dialog.widgets.common import Whenable, WhenCondition
 from typing import Final, List, Tuple
 
 
-from .international import NConst, NFormat
+from teamlimits.user.tg_bot.international import NConst, NFormat
 
 _HOME_ID: Final[str] = "__home__"
 

@@ -15,7 +15,7 @@ class Config(BaseSettings):
     TOKEN: str
     SQLITE_DB_PATH: Optional[str] = None
 
-    model_config = SettingsConfigDict(env_prefix="TEAMLIMITSBOT_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="TEAMLIMITSBOT_", env_file="config/.env")
 
     def make_db_url(self) -> str:
         if self.SQLITE_DB_PATH :

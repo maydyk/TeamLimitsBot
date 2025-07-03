@@ -23,8 +23,9 @@ if config.config_file_name is not None:
 target_metadata = None
 
 import sys
-sys.path.insert(0, "../../teamlimits")
-from database.entities import Entity
+sys.path.append("../../../teamlimits")
+
+from teamlimits.database.entities import Entity
 target_metadata = Entity.metadata
 
 # other values from the config, defined by the needs of env.py,

@@ -2,7 +2,7 @@
 Define database entities
 
 1) Change working directory
-data/sqlite/
+cd data/sqlite/
 2) Update database schema:
 ../../.venv/bin/alembic revision --autogenerate -m "Revision name"
 3) Apply changes:
@@ -28,11 +28,7 @@ from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from typing import Final, List, Optional
 
-if __package__ is None:
-    # NOTE: non-package import for alembic
-    from models.common import CrewSpecial
-else:
-    from ..models.common import CrewSpecial
+from teamlimits.models.common import CrewSpecial
 
 def _camel_to_snake(text: str) -> str:
     """

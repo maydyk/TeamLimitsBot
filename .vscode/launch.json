@@ -9,7 +9,7 @@
             "name": "Debug TeamLimitsBot",
             "type": "debugpy",
             "request": "launch",
-            "module": "teamlimits.user.tgbot.main",
+            "module": "teamlimits.user.tg_bot.main",
             "console": "integratedTerminal",
             "justMyCode": false,
             "cwd": "${workspaceFolder}"
