@@ -22,7 +22,9 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = None
 
-from ....teamlimits.database.entities import Entity
+import sys
+sys.path.insert(0, "../../teamlimits")
+from database.entities import Entity
 target_metadata = Entity.metadata
 
 # other values from the config, defined by the needs of env.py,

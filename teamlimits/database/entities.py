@@ -1,10 +1,12 @@
 """
 Define database entities
 
-1) Update database schema:
-.venv/bin/alembic revision --autogenerate -m "Revision name"
-2) Apply changes:
-.venv/bin/alembic upgrade head
+1) Change working directory
+data/sqlite/
+2) Update database schema:
+../../.venv/bin/alembic revision --autogenerate -m "Revision name"
+3) Apply changes:
+../../.venv/bin/alembic upgrade head
 
 @Author: Denis Maydykovsky
 """
@@ -13,22 +15,24 @@ import re
 
 from datetime import datetime
 from sqlalchemy import (
-    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
-    ForeignKeyConstraint,
     Integer,
     func,
     PrimaryKeyConstraint,
     String,
     UniqueConstraint,
 )
-from sqlalchemy.orm import DeclarativeBase, declared_attr, declarative_base, Mapped, mapped_column, class_mapper
+from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column, class_mapper
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from typing import Final, List, Optional
 
-from ..models.common import CrewSpecial
+if __package__ is None:
+    # NOTE: non-package import for alembic
+    from models.common import CrewSpecial
+else:
+    from ..models.common import CrewSpecial
 
 def _camel_to_snake(text: str) -> str:
     """
