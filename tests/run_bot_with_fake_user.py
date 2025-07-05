@@ -26,7 +26,7 @@ class FakePersonContainer(containers.DeclarativeContainer):
 
 if __name__ == "__main__":
     personContainer = make_person.PersonContainer()
+    personContainer.override(FakePersonContainer())
     personContainer.wire(modules=[make_person.__name__])
 
-    with (personContainer.personService.override(providers.Singleton(FakePersonService))):
-        asyncio.run(main())
+    asyncio.run(main())
