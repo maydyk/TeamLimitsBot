@@ -6,10 +6,6 @@ A Telegram bot to manage number of participants of some event.
 
 Usage: python3 TeamLimitsBot.py <YOUR BOT TOKEN>
 '''
-from aiogram import Bot, Dispatcher, Router
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram_dialog import setup_dialogs
-
 import aiogram
 import aiogram_dialog
 import aiosqlite
@@ -17,6 +13,9 @@ import asyncio
 import logging
 import sqlalchemy
 
+from aiogram import Bot, Dispatcher, Router
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram_dialog import setup_dialogs
 
 # Setup localization
 from teamlimits.user.tg_bot.international import localize_router
@@ -39,6 +38,7 @@ import teamlimits.user.tg_bot.manage_crew as manage_crew
 # Our data
 from teamlimits.repository.repository import Repository
 
+import teamlimits.user.tg_bot.make_person as make_person
 
 async def main():
 
@@ -82,6 +82,10 @@ async def main():
 
 
 if __name__ == "__main__":
+    # Setup DI
+    personContainer = make_person.PersonContainer()
+    personContainer.wire(modules=[make_person.__name__])
+
     asyncio.run(main())
 
 

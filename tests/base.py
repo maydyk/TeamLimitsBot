@@ -2,7 +2,9 @@
 import sys
 import subprocess
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
+
+module_dir = Path(__file__).parent
+sys.path.append(str(module_dir.parent))
 
 
 if __name__ == "__main__":
@@ -13,9 +15,7 @@ if __name__ == "__main__":
         "test_even_hex.py"
     ]
 
-    current_dir = Path(__file__).parent
-
     for test_file in nested_tests:
-        subprocess.run([sys.executable, test_file], cwd=current_dir)
+        subprocess.run([sys.executable, test_file], cwd=module_dir)
 
 

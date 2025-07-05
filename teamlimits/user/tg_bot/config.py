@@ -22,11 +22,4 @@ class Config(BaseSettings):
             return f"sqlite+aiosqlite:///{self.SQLITE_DB_PATH}"
         else:
             raise RuntimeError("Database path or connection is not specified.")
-
-
-
-# Self testing
-if __name__ == "__main__":
-    settings = Config()
-    print("Config settings\n", settings.model_dump())
     
