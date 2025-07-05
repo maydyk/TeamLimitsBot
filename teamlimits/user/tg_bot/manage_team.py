@@ -715,14 +715,14 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
 
 
 # /m04, /m2F4H etc
-manage_pattern = even_hex_pattern("m")
+_manage_pattern = even_hex_pattern("m")
 
-@create_team_router.message(Command(manage_pattern))
+@create_team_router.message(Command(_manage_pattern))
 async def handle_manage_team(message: Message, dialog_manager: DialogManager, **kwargs) -> None:
     """
     Start to manage team from command
     """
-    teamId = even_hex_parse(manage_pattern, message.text.lstrip('/'))
+    teamId = even_hex_parse(_manage_pattern, message.text.lstrip('/'))
     if teamId is not None:
         teamIdStr = even_hex(teamId)
         teamModel = await Repository().queryAdminTeam(teamId, make_person(message.from_user))

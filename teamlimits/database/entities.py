@@ -30,25 +30,21 @@ from typing import Final, List, Optional
 
 from teamlimits.models.common import CrewSpecial
 
+# Precompiled pattern
+_camel_to_snake_pattern = None
+
 def _camel_to_snake(text: str) -> str:
     """
     Convert CamelCase string to snake_case string.
     """
+
+    # Lazy pattern compile.
+    global _camel_to_snake_pattern
+    if _camel_to_snake_pattern is None:
+        _camel_to_snake_pattern = re.compile(r"(?<!^)(?=[A-Z])")
     
     # See https://sky.pro/wiki/python/preobrazovanie-camel-case-v-snake-case-v-python-funktsiya/
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", text)
-
-
-# def _declarative_constructor(self, **kwargs):
-#     """Don't raise a TypeError for unknown attribute names."""
-#     cls_ = type(self)
-#     for k in kwargs:
-#         if not hasattr(cls_, k):
-#             continue
-#         setattr(self, k, kwargs[k])
-
-
-# _Base = declarative_base(constructor=_declarative_constructor)
+    return _camel_to_snake_pattern.sub("_", text)
 
 
 class Entity(AsyncAttrs, DeclarativeBase):

@@ -102,7 +102,7 @@ async def _handle_commands(message: Message, source: MessageInput, manager: Dial
                 data = crew.model_dump()
             )
         else:
-            message.answer(_("msg_crew_not_found{crewIdStr}").format(
+            message.answer(_("msg_crew_not  _found{crewIdStr}").format(
                 crewIdStr = even_hex(manage_crew),
             ))
         return
