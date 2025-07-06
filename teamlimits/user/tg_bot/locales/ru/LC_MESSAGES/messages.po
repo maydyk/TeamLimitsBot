@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-07-03 20:46+0300\n"
+"POT-Creation-Date: 2025-07-06 21:03+0300\n"
 "PO-Revision-Date: 2025-02-28 21:48+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,114 +19,114 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: teamlimits/user/tgbot/manage_crew.py:68
+#: teamlimits/user/tg_bot/manage_crew.py:68
 #, fuzzy
 msgid "create_crew_back"
 msgstr "⏪ Назад."
 
-#: teamlimits/user/tgbot/manage_crew.py:69
+#: teamlimits/user/tg_bot/manage_crew.py:69
 #, fuzzy
 msgid "create_crew_home"
 msgstr "🏠"
 
-#: teamlimits/user/tgbot/manage_crew.py:70
+#: teamlimits/user/tg_bot/manage_crew.py:70
 #, fuzzy
 msgid "create_crew_next"
 msgstr "Далее. ⏩"
 
-#: teamlimits/user/tgbot/manage_crew.py:75
+#: teamlimits/user/tg_bot/manage_crew.py:75
 #, fuzzy
 msgid "create_crew_preview{preview}"
 msgstr ""
 "\n"
 "Текущее значение: {preview}"
 
-#: teamlimits/user/tgbot/manage_crew.py:98
+#: teamlimits/user/tg_bot/manage_crew.py:98
 #, fuzzy
 msgid "create_crew_duplicated_title{title}"
 msgstr "Экипаж с именем {title} уже существует. Придумайте другое название."
 
-#: teamlimits/user/tgbot/manage_crew.py:109
+#: teamlimits/user/tg_bot/manage_crew.py:109
 #, fuzzy
 msgid "create_crew_minimal_mates_error{value}"
 msgstr ""
 "Укажите положительное число для минимального числа пассажиров (или 0) "
 "вместо {value}."
 
-#: teamlimits/user/tgbot/manage_crew.py:136
+#: teamlimits/user/tg_bot/manage_crew.py:136
 #, fuzzy
 msgid "create_crew_maximal_mates_invalid{minimalMates}{maximalMates}"
 msgstr ""
 "Минимальное число пассажиров {minimalMates} должно быть меньше или равно "
 "минимальному числу пассажиров {maximalMates}."
 
-#: teamlimits/user/tgbot/manage_crew.py:150
+#: teamlimits/user/tg_bot/manage_crew.py:150
 #, fuzzy
 msgid "create_crew_maximal_mates_error{value}"
 msgstr ""
 "Укажите положительное число для максимального числа пассажиров (или 0) "
 "вместо {value}."
 
-#: teamlimits/user/tgbot/manage_crew.py:184
+#: teamlimits/user/tg_bot/manage_crew.py:184
 #, fuzzy
 msgid "create_crew_insert_failed{title}"
 msgstr ""
 "Не удалось создать экипаж \"{title}\"\n"
 "Попробуйте изменить название."
 
-#: teamlimits/user/tgbot/manage_crew.py:206
+#: teamlimits/user/tg_bot/manage_crew.py:207
 #, fuzzy
 msgid "create_crew_update_failed{title}"
 msgstr ""
 "Не удалось обновить экипаж \"{title}\"\n"
 "Попробуйте изменить название."
 
-#: teamlimits/user/tgbot/manage_crew.py:236
+#: teamlimits/user/tg_bot/manage_crew.py:238
 #, fuzzy
 msgid "delete_crew_confirmation{title}"
 msgstr "Вы уверены что хотите удалить экипаж \"{title}\"?"
 
-#: teamlimits/user/tgbot/manage_crew.py:237
+#: teamlimits/user/tg_bot/manage_crew.py:239
 #, fuzzy
 msgid "delete_crew_confirmation_no"
 msgstr "Нет"
 
-#: teamlimits/user/tgbot/manage_crew.py:238
+#: teamlimits/user/tg_bot/manage_crew.py:240
 #, fuzzy
 msgid "delete_crew_confirmation_yes"
 msgstr "ДА!"
 
-#: teamlimits/user/tgbot/manage_crew.py:248
+#: teamlimits/user/tg_bot/manage_crew.py:250
 #, fuzzy
 msgid "create_crew_query_title"
 msgstr "Придумайте название нового Экипажа."
 
-#: teamlimits/user/tgbot/manage_crew.py:262
+#: teamlimits/user/tg_bot/manage_crew.py:264
 #, fuzzy
 msgid "create_crew_minimal_mates"
 msgstr "Укажите минимально число пассажиров."
 
-#: teamlimits/user/tgbot/manage_crew.py:265
+#: teamlimits/user/tg_bot/manage_crew.py:267
 #, fuzzy
 msgid "create_crew_reset_minimal_mates"
 msgstr "Сбросить"
 
-#: teamlimits/user/tgbot/manage_crew.py:283
+#: teamlimits/user/tg_bot/manage_crew.py:285
 #, fuzzy
 msgid "create_crew_maximal_mates"
 msgstr "Укажите максимальное число пассажиров."
 
-#: teamlimits/user/tgbot/manage_crew.py:287
+#: teamlimits/user/tg_bot/manage_crew.py:289
 #, fuzzy
 msgid "create_crew_fixed_maximal_mates{minimalMates}"
 msgstr "Фикс. {minimalMates}"
 
-#: teamlimits/user/tgbot/manage_crew.py:293
+#: teamlimits/user/tg_bot/manage_crew.py:295
 #, fuzzy
 msgid "create_team_reset_reset_maximal_mates"
 msgstr "Пропустить"
 
-#: teamlimits/user/tgbot/manage_crew.py:312
+#: teamlimits/user/tg_bot/manage_crew.py:314
 #, fuzzy
 msgid "create_crew_summary"
 msgstr ""
@@ -134,104 +134,104 @@ msgstr ""
 "<b>Минимально пассажиров</b> : {{minimalMates or \"не задано\"}}\n"
 "<b>Максимально пассажиров</b>: {{maximalMates or \"не задано\"}}\n"
 
-#: teamlimits/user/tgbot/manage_crew.py:316
+#: teamlimits/user/tg_bot/manage_crew.py:318
 #, fuzzy
 msgid "create_crew_manage"
 msgstr "Изменить"
 
-#: teamlimits/user/tgbot/manage_crew.py:322
+#: teamlimits/user/tg_bot/manage_crew.py:324
 #, fuzzy
 msgid "create_crew_delete"
 msgstr "Удалить?"
 
-#: teamlimits/user/tgbot/manage_crew.py:329
+#: teamlimits/user/tg_bot/manage_crew.py:331
 #, fuzzy
 msgid "create_crew_insert"
 msgstr "Создать!"
 
-#: teamlimits/user/tgbot/manage_crew.py:335
+#: teamlimits/user/tg_bot/manage_crew.py:337
 #, fuzzy
 msgid "create_crew_update"
 msgstr "Применить"
 
-#: teamlimits/user/tgbot/manage_crew.py:341
+#: teamlimits/user/tg_bot/manage_crew.py:343
 #, fuzzy
 msgid "create_crew_finish"
 msgstr "Вернуться"
 
-#: teamlimits/user/tgbot/manage_team.py:120
+#: teamlimits/user/tg_bot/manage_team.py:118
 #, fuzzy
 msgid "delete_team_confirmation{teamIdStr}{title}"
 msgstr "Вы уверены что хотите удалить команду {teamIdStr} \"{title}\"?"
 
-#: teamlimits/user/tgbot/manage_team.py:121
+#: teamlimits/user/tg_bot/manage_team.py:119
 #, fuzzy
 msgid "delete_team_confirmation_no"
 msgstr "Нет"
 
-#: teamlimits/user/tgbot/manage_team.py:122
+#: teamlimits/user/tg_bot/manage_team.py:120
 #, fuzzy
 msgid "delete_team_confirmation_yes"
 msgstr "ДА!"
 
-#: teamlimits/user/tgbot/manage_team.py:148
+#: teamlimits/user/tg_bot/manage_team.py:146
 #, fuzzy
 msgid "create_team_duplicated_title{title}"
 msgstr "Команда с именем {title} уже существует. Придумайте другое название."
 
-#: teamlimits/user/tgbot/manage_team.py:180
+#: teamlimits/user/tg_bot/manage_team.py:178
 #, fuzzy
 msgid "create_team_minimal_members_error{value}"
 msgstr ""
 "Укажите положительное число для минимального числа участников (или 0) "
 "вместо {value}."
 
-#: teamlimits/user/tgbot/manage_team.py:199
+#: teamlimits/user/tg_bot/manage_team.py:197
 #, fuzzy
 msgid "create_team_maximal_members_invalid{minimalMembers}{maximalMembers}"
 msgstr ""
 "Минимальное число участников {minimalMembers} должно быть меньше или "
 "равно минимальному числу участников {maximalMembers}."
 
-#: teamlimits/user/tgbot/manage_team.py:211
+#: teamlimits/user/tg_bot/manage_team.py:209
 #, fuzzy
 msgid "create_team_maximal_members_error{value}"
 msgstr ""
 "Укажите положительное число для максимального числа участников (или 0) "
 "вместо {value}."
 
-#: teamlimits/user/tgbot/manage_team.py:240
+#: teamlimits/user/tg_bot/manage_team.py:238
 #, fuzzy
 msgid "create_team_minimal_crews_error{value}"
 msgstr ""
 "Укажите положительное число для минимального числа Экипажей (или 0) "
 "вместо {value}."
 
-#: teamlimits/user/tgbot/manage_team.py:258
+#: teamlimits/user/tg_bot/manage_team.py:256
 #, fuzzy
 msgid "create_team_maximal_crews_invalid{minimalCrews}{maximalCrews}"
 msgstr ""
 "Минимальное число Экипажей {minimalCrews} должно быть меньше или равно "
 "минимальному числу Экипажей {maximalCrews}."
 
-#: teamlimits/user/tgbot/manage_team.py:270
+#: teamlimits/user/tg_bot/manage_team.py:268
 #, fuzzy
 msgid "create_team_maximal_crews_error{value}"
 msgstr ""
 "Укажите положительное число для максимального числа участников (или 0) "
 "вместо {value}."
 
-#: teamlimits/user/tgbot/manage_team.py:302
+#: teamlimits/user/tg_bot/manage_team.py:300
 #, fuzzy
 msgid "manage_team_was_cancelled{title}"
 msgstr "Изменение команды {title} было отменено."
 
-#: teamlimits/user/tgbot/manage_team.py:304
+#: teamlimits/user/tg_bot/manage_team.py:302
 #, fuzzy
 msgid "create_team_was_cancelled{title}"
 msgstr "Создание команды {title} было отменено."
 
-#: teamlimits/user/tgbot/manage_team.py:329
+#: teamlimits/user/tg_bot/manage_team.py:327
 #, fuzzy
 msgid "create_team_inserted{teamIdStr}{title}"
 msgstr ""
@@ -241,14 +241,14 @@ msgstr ""
 "Вы сможете вернуться к управлению Командой /m{teamIdStr}.\n"
 "Принять участие в Команде /t{teamIdStr}."
 
-#: teamlimits/user/tgbot/manage_team.py:340
+#: teamlimits/user/tg_bot/manage_team.py:338
 #, fuzzy
 msgid "create_team_insert_failed{title}"
 msgstr ""
 "Не удалось создать команду {title}\n"
 "Попробуйте изменить название."
 
-#: teamlimits/user/tgbot/manage_team.py:361
+#: teamlimits/user/tg_bot/manage_team.py:360
 #, fuzzy
 msgid "create_team_updated{teamIdStr}{title}"
 msgstr ""
@@ -258,64 +258,64 @@ msgstr ""
 "Вы сможете вернуться к управлению Командой /m{teamIdStr}.\n"
 "Принять участие в Команде /t{teamIdStr}."
 
-#: teamlimits/user/tgbot/manage_team.py:370
+#: teamlimits/user/tg_bot/manage_team.py:369
 #, fuzzy
 msgid "create_team_update_failed{title}"
 msgstr ""
 "Не удалось обновить команду {title}\n"
 "Попробуйте изменить название."
 
-#: teamlimits/user/tgbot/manage_team.py:400
+#: teamlimits/user/tg_bot/manage_team.py:401
 #, fuzzy
 msgid "create_team_back"
 msgstr "⏪ Назад."
 
-#: teamlimits/user/tgbot/manage_team.py:401
+#: teamlimits/user/tg_bot/manage_team.py:402
 #, fuzzy
 msgid "create_team_home"
 msgstr "🏠"
 
-#: teamlimits/user/tgbot/manage_team.py:402
+#: teamlimits/user/tg_bot/manage_team.py:403
 #, fuzzy
 msgid "create_team_next"
 msgstr "Далее. ⏩"
 
-#: teamlimits/user/tgbot/manage_team.py:407
+#: teamlimits/user/tg_bot/manage_team.py:408
 #, fuzzy
 msgid "create_team_preview{preview}"
 msgstr ""
 "\n"
 "Текущее значение: {preview}"
 
-#: teamlimits/user/tgbot/manage_team.py:417
+#: teamlimits/user/tg_bot/manage_team.py:418
 msgid "create_team_query_title"
 msgstr ""
 "Придумайте название вашей Команды. Это обязательно, иначе вы не сможете "
 "отличать одну Команду от другой."
 
-#: teamlimits/user/tgbot/manage_team.py:420
+#: teamlimits/user/tg_bot/manage_team.py:421
 #, fuzzy
 msgid "create_team_ask_description_checked"
 msgstr "✅ добавить подробное описание?"
 
-#: teamlimits/user/tgbot/manage_team.py:421
+#: teamlimits/user/tg_bot/manage_team.py:422
 #, fuzzy
 msgid "create_team_ask_description_unchecked"
 msgstr "✖ добавить подробное описание?"
 
-#: teamlimits/user/tgbot/manage_team.py:437
+#: teamlimits/user/tg_bot/manage_team.py:438
 #, fuzzy
 msgid "create_team_query_description"
 msgstr ""
 "Укажите подробное описание Команды (это не обязательно) или нажмите "
 "кнопку внизу 👇 чтобы…"
 
-#: teamlimits/user/tgbot/manage_team.py:445
+#: teamlimits/user/tg_bot/manage_team.py:446
 #, fuzzy
 msgid "create_team_reset_description"
 msgstr "Сбросить"
 
-#: teamlimits/user/tgbot/manage_team.py:457
+#: teamlimits/user/tg_bot/manage_team.py:458
 #, fuzzy
 msgid "create_team_query_minimal_members"
 msgstr ""
@@ -325,12 +325,12 @@ msgstr ""
 "минимального ограничения нет, то введите 0 или нажмите кнопку внизу 👇 "
 "чтобы…"
 
-#: teamlimits/user/tgbot/manage_team.py:460
+#: teamlimits/user/tg_bot/manage_team.py:461
 #, fuzzy
 msgid "create_team_reset_minimal_members"
 msgstr "Сбросить"
 
-#: teamlimits/user/tgbot/manage_team.py:479
+#: teamlimits/user/tg_bot/manage_team.py:480
 #, fuzzy
 msgid "create_team_query_maximal_members{minimalMembers}"
 msgstr ""
@@ -340,17 +340,17 @@ msgstr ""
 "планируете использовать Экипажи, то можно указать 0 или пропустить. Тогда"
 " предельное число участников будет определяться Экипажами."
 
-#: teamlimits/user/tgbot/manage_team.py:483
+#: teamlimits/user/tg_bot/manage_team.py:484
 #, fuzzy
 msgid "create_team_fix_maximal_members{minimalMembers}"
 msgstr "Фикс. {minimalMembers}"
 
-#: teamlimits/user/tgbot/manage_team.py:489
+#: teamlimits/user/tg_bot/manage_team.py:490
 #, fuzzy
 msgid "create_team_skip_maximal_members"
 msgstr "Сбросить"
 
-#: teamlimits/user/tgbot/manage_team.py:508
+#: teamlimits/user/tg_bot/manage_team.py:509
 msgid "create_team_crews_welcome"
 msgstr ""
 "Экипажи это группы участников, в которые они смогут добавиться "
@@ -358,27 +358,27 @@ msgstr ""
 "можете задействовать Экипажи и Если число Экипажей не ограничено, нажмите"
 " кнопку пропустить 👇"
 
-#: teamlimits/user/tgbot/manage_team.py:510
+#: teamlimits/user/tg_bot/manage_team.py:511
 #, fuzzy
 msgid "create_team_enable_crews"
 msgstr "✅ Задействовать Экипажи"
 
-#: teamlimits/user/tgbot/manage_team.py:511
+#: teamlimits/user/tg_bot/manage_team.py:512
 #, fuzzy
 msgid "create_team_disable_crews"
 msgstr "✖ Задействовать Экипажи"
 
-#: teamlimits/user/tgbot/manage_team.py:516
+#: teamlimits/user/tg_bot/manage_team.py:517
 #, fuzzy
 msgid "create_team_setup_crews_limits"
 msgstr "Настроить ограничения Экипажей."
 
-#: teamlimits/user/tgbot/manage_team.py:521
+#: teamlimits/user/tg_bot/manage_team.py:522
 #, fuzzy
 msgid "create_team_reset_crews_limits"
 msgstr "Сбросить"
 
-#: teamlimits/user/tgbot/manage_team.py:533
+#: teamlimits/user/tg_bot/manage_team.py:534
 #, fuzzy
 msgid "create_team_query_minimal_crews"
 msgstr ""
@@ -386,12 +386,12 @@ msgstr ""
 "числа будет отображаться предупреждение. Если минимального ограничения "
 "нет, то введите 0 или нажмите кнопку внизу 👇 чтобы…"
 
-#: teamlimits/user/tgbot/manage_team.py:543
+#: teamlimits/user/tg_bot/manage_team.py:544
 #, fuzzy
 msgid "create_team_reset_minimal_crews"
 msgstr "Сбросить"
 
-#: teamlimits/user/tgbot/manage_team.py:554
+#: teamlimits/user/tg_bot/manage_team.py:555
 #, fuzzy
 msgid "create_team_query_maximal_crews{minimalCrews}"
 msgstr ""
@@ -400,17 +400,17 @@ msgstr ""
 " ожидания. Если вы не хотите ограничивать число Экипажей, укажите 0 или "
 "нажмите кнопку Сбросить."
 
-#: teamlimits/user/tgbot/manage_team.py:565
+#: teamlimits/user/tg_bot/manage_team.py:566
 #, fuzzy
 msgid "create_team_fixed_maximal_crews{minimalCrews}"
 msgstr "Фикс. {minimalCrews}"
 
-#: teamlimits/user/tgbot/manage_team.py:571
+#: teamlimits/user/tg_bot/manage_team.py:572
 #, fuzzy
 msgid "create_team_reset_maximal_crews"
 msgstr "Пропустить"
 
-#: teamlimits/user/tgbot/manage_team.py:583
+#: teamlimits/user/tg_bot/manage_team.py:584
 #, fuzzy
 msgid "create_team_deadline_welcome"
 msgstr ""
@@ -418,22 +418,22 @@ msgstr ""
 "новых участников будет закончен. Это может пригодиться, если вы "
 "бронируете  гостиницу на фактическое число Участников."
 
-#: teamlimits/user/tgbot/manage_team.py:591
+#: teamlimits/user/tg_bot/manage_team.py:592
 #, fuzzy
 msgid "create_team_enable_deadline_checked"
 msgstr "✅ Установить Крайний Срок"
 
-#: teamlimits/user/tgbot/manage_team.py:592
+#: teamlimits/user/tg_bot/manage_team.py:593
 #, fuzzy
 msgid "create_team_enable_deadline_unchecked"
 msgstr "✖ Установить Крайний Срок"
 
-#: teamlimits/user/tgbot/manage_team.py:597
+#: teamlimits/user/tg_bot/manage_team.py:598
 #, fuzzy
 msgid "create_team_deadline_next"
 msgstr "Пропустить"
 
-#: teamlimits/user/tgbot/manage_team.py:608
+#: teamlimits/user/tg_bot/manage_team.py:609
 #, fuzzy
 msgid "create_team_options_welcome{deadline}"
 msgstr ""
@@ -446,42 +446,42 @@ msgstr ""
 "<b>Очистить после Крайнего Срока</b> после достижения Крайнего Срока "
 "{{deadline}} список ожидающих будет автоматически очищен."
 
-#: teamlimits/user/tgbot/manage_team.py:610
+#: teamlimits/user/tg_bot/manage_team.py:611
 #, fuzzy
 msgid "create_team_suspend_companions_checked"
 msgstr "✅ Приостановить набор домочадцев"
 
-#: teamlimits/user/tgbot/manage_team.py:611
+#: teamlimits/user/tg_bot/manage_team.py:612
 #, fuzzy
 msgid "create_team_suspend_companions_unchecked"
 msgstr "✖ Приостановить набор домочадцев"
 
-#: teamlimits/user/tgbot/manage_team.py:616
+#: teamlimits/user/tg_bot/manage_team.py:617
 #, fuzzy
 msgid "create_team_suspend_recruitment_checked"
 msgstr "✅ Приостановить набор участников"
 
-#: teamlimits/user/tgbot/manage_team.py:617
+#: teamlimits/user/tg_bot/manage_team.py:618
 #, fuzzy
 msgid "create_team_suspend_recruitment_unchecked"
 msgstr "✖ Приостановить набор участников"
 
-#: teamlimits/user/tgbot/manage_team.py:622
+#: teamlimits/user/tg_bot/manage_team.py:623
 #, fuzzy
 msgid "create_team_suspend_on_deadline_queue"
 msgstr "✖ Приостановить после Крайнего Срока"
 
-#: teamlimits/user/tgbot/manage_team.py:623
+#: teamlimits/user/tg_bot/manage_team.py:624
 #, fuzzy
 msgid "create_team_suspend_on_deadline_unchecked"
 msgstr "✖ Приостановить после Крайнего Срока"
 
-#: teamlimits/user/tgbot/manage_team.py:628
+#: teamlimits/user/tg_bot/manage_team.py:629
 #, fuzzy
 msgid "create_team_options_next"
 msgstr "Пропустить"
 
-#: teamlimits/user/tgbot/manage_team.py:639
+#: teamlimits/user/tg_bot/manage_team.py:640
 #, fuzzy
 msgid "create_team_summary"
 msgstr ""
@@ -508,32 +508,32 @@ msgstr ""
 "<b>Останов. после Крайнего Ср.</b>: {{ \"Да!\" if suspendDeadlineQueue "
 "else \"Нет\" }}\n"
 
-#: teamlimits/user/tgbot/manage_team.py:643
+#: teamlimits/user/tg_bot/manage_team.py:644
 #, fuzzy
 msgid "create_team_manage"
 msgstr "Изменить"
 
-#: teamlimits/user/tgbot/manage_team.py:649
+#: teamlimits/user/tg_bot/manage_team.py:650
 #, fuzzy
 msgid "create_team_delete"
 msgstr "Удалить?"
 
-#: teamlimits/user/tgbot/manage_team.py:656
+#: teamlimits/user/tg_bot/manage_team.py:657
 #, fuzzy
 msgid "create_team_insert"
 msgstr "Создать!"
 
-#: teamlimits/user/tgbot/manage_team.py:662
+#: teamlimits/user/tg_bot/manage_team.py:663
 #, fuzzy
 msgid "create_team_update"
 msgstr "Применить"
 
-#: teamlimits/user/tgbot/manage_team.py:668
+#: teamlimits/user/tg_bot/manage_team.py:669
 #, fuzzy
 msgid "create_team_cancel"
 msgstr "Отменить"
 
-#: teamlimits/user/tgbot/manage_team.py:713
+#: teamlimits/user/tg_bot/manage_team.py:714
 #, fuzzy
 msgid "msg_manage_teams"
 msgstr ""
@@ -542,99 +542,128 @@ msgstr ""
 "team.description %}(<i>{{team.description}}</i>){% endif +%}\n"
 "{% endfor %}"
 
-#: teamlimits/user/tgbot/manage_team.py:741
+#: teamlimits/user/tg_bot/manage_team.py:739
 msgid "msg_team_not_found{teamIdStr}"
 msgstr "Команда {teamIdStr} не найдена."
 
-#: teamlimits/user/tgbot/member_team.py:65
+#: teamlimits/user/tg_bot/member_team.py:71
 msgid "member_team_add_member_failed{teamIdStr}{userName}"
 msgstr "Не удалось добавить участника {userName} в команду {teamIdStr}."
 
-#: teamlimits/user/tgbot/member_team.py:105
+#: teamlimits/user/tg_bot/member_team.py:111
 #, fuzzy
-msgid "msg_crew_not_found{crewIdStr}"
+msgid "msg_crew_not  _found{crewIdStr}"
 msgstr "Экипаж {crewIdStr} не найден."
 
-#: teamlimits/user/tgbot/member_team.py:124
+#: teamlimits/user/tg_bot/member_team.py:130
 #, fuzzy
-msgid "member_team_summary"
+msgid "member_team_summary_header"
 msgstr ""
-"<b>Команда {{title}}</b> {{memberIdStr}}\n"
+"Команда <b>{{title}}</b> {{memberIdStr}}\n"
 "<i>{{description or \"не задано\"}}</i>\n"
-"Заявлено Участников: {{totalMembers}}\n"
-"{% if membersLeft %}Необходимо набрать ещё <b>{{ membersLeft }}</b> "
-"участников\n"
-"{% endif %}{% if teamIsFull %}<b>Команда набрана!</b> {% if not "
-"suspendWaitingQueue %}Но вы можете вступить в список ожидания.{% endif "
-"+%}\n"
-"{% endif %}{% if deadline %}{% if deadlineDaysLeft >= 0 %}До крайнего "
-"срока {{deadline.date()}} осталось <b>{{ deadlineDaysLeft }} дн.</b>!\n"
-"{% else +%}<b>Крайний срок пропущен {{ -deadlineDaysLeft }} дн. "
-"назад.</b>{% endif %}{% endif +%}\n"
-"\n"
-"{% if hasCrews %}<b>Экипажи Команды:</b>\n"
-"{% for crew in activeCrews %}{{crew.title}} {{ crew.mateIdStr }}\n"
-"{% for mate in crew.activeMates %}{{loop.index}} : {{mate.userIdStr}}\n"
-"{% endfor %}\n"
-"{% if crew.queuedCrews %} Ожидающие:\n"
-"{% for mate in crew.queuedMates %}{{crew.activeMates|length + "
-"loop.index}} : {mate.userIdStr}{% endfor %}{% endif %}Вступить в Экипаж "
-"/c{{crew.crewIdStr}}\n"
-"\n"
-"{% endfor %}\n"
-"\n"
-"<i><b>Ожидающие Экипажи:</b>\n"
-"{% for crew in queuedCrews %}{{crew.title}} {{ crew.mateIdStr }}\n"
-"{% for mate in crew.activeMates %}{{loop.index}} : {{mate.userIdStr}}\n"
-"{% endfor %}\n"
-"{% if crew.queuedMates %} Ожидающие:\n"
-"{% for mate in crew.queuedMates %}{{crew.activeCrews|length + "
-"loop.index}} : {{mate.userIdStr}}{% endfor %}{% endif %}Вступить в Экипаж"
-" /c{{crew.crewIdStr}}\n"
-"\n"
-"{% endfor %}\n"
-"</i>\n"
-"{% endif %}{% if outboards %}<b>Участники команды:</b>\n"
-"{% for member in outboards %}{{member.position + 1}}: "
-"{{member.userIdStr}}\n"
-"{% endfor +%}\n"
-"\n"
-"{% endif %}{% if defaultCrew.activeMates %}<b>Ожидающие места в "
-"экипажах:</b>\n"
-"{% for mate in defaultCrew.activeMates %}{{loop.index}} : "
-"{{mate.userName}} {% if mate.number > 0 %} (+{{mate.number}}) {% endif "
-"+%}\n"
-"{% endfor %}---------------\n"
-"{% endif %}<b>Список ожидающих:</b>---------------\n"
 
-#: teamlimits/user/tgbot/member_team.py:126
+#: teamlimits/user/tg_bot/member_team.py:131
+#, fuzzy
+msgid "member_team_summary_total"
+msgstr ""
+"\n"
+"Заявлено Участников: {{totalMembers}}{% if membersLeft +%}\n"
+"Необходимо набрать ещё <b>{{ membersLeft }}</b> участников{% endif %}{% "
+"if teamIsFull +%}\n"
+"<b>Команда набрана!</b>{% if not suspendWaitingQueue %}Но вы можете "
+"вступить в список ожидания.{% endif %}{% endif %}"
+
+#: teamlimits/user/tg_bot/member_team.py:132
+#, fuzzy
+msgid "member_team_summary_deadline"
+msgstr ""
+"\n"
+"{% if deadlineDaysLeft >= 0 %}До крайнего срока {{deadline.date()}} "
+"осталось <b>{{ deadlineDaysLeft }} дн.</b>.{% else %}<b>Крайний срок "
+"пропущен {{ -deadlineDaysLeft }} дн. назад!</b>{% endif %}"
+
+#: teamlimits/user/tg_bot/member_team.py:133
+#, fuzzy
+msgid "member_team_summary_active_crews"
+msgstr ""
+"\n"
+"<b>Экипажи Команды:</b>{% for crew in activeCrews +%}\n"
+"{{crew.title}} {{ crew.mateIdStr }}{% for mate in crew.activeMates +%}\n"
+"{{loop.index + 1}} : {{mate.userDisplay}}\n"
+"{% endfor %}{% if crew.queuedCrews +%}\n"
+"\"Ожидающие:{% for mate in crew.queuedMates +%}\n"
+"{{crew.activeMates|length + loop.index + 1}} : {mate.userDisplay}"
+"{% endfor %}{% endif +%}\n"
+"Вступить в Экипаж /c{{crew.crewIdStr}}\n"
+"{% endfor %}"
+
+#: teamlimits/user/tg_bot/member_team.py:134
+#, fuzzy
+msgid "member_team_summary_queued_crews"
+msgstr ""
+"\n"
+"<i><b>Ожидающие Экипажи:</b>{% for crew in queuedCrews +%}\n"
+"{{crew.title}} {{ crew.mateIdStr }}{% for mate in crew.activeMates +%}\n"
+"{{loop.index + 1}} : {{mate.userDisplay}}{% endfor %}{% if crew.queuedMates"
+" %}\n"
+"Ожидающие:{% for mate in crew.queuedMates %}{{crew.activeCrews|length + "
+"loop.index}} : {{mate.userDisplay}} {% endfor %}"
+
+#: teamlimits/user/tg_bot/member_team.py:135
+#, fuzzy
+msgid "member_team_summary_active_members"
+msgstr ""
+"\n"
+"<b>Участники команды (<i>вне экипажей</i>):</b>{% for member in "
+"activeOutboards +%}\n"
+"{{member.position + 1}}: {{member.userDisplay}}{% endfor %}"
+
+#: teamlimits/user/tg_bot/member_team.py:136
+#, fuzzy
+msgid "member_team_summary_queued_members"
+msgstr ""
+"\n"
+"<i>Ожидающие:{% for member in queuedOutboards +%}\n"
+"{{member.position + 1}}: {{member.userDisplay}}{% endfor %}"
+"</i>"
+
+#: teamlimits/user/tg_bot/member_team.py:137
+#, fuzzy
+msgid "member_team_summary_default_crew"
+msgstr ""
+"\n"
+"Ожидающие места в экипажах:{% for member in defaultCrew.activeMembers +%}"
+"\n"
+"{{loop.index + 1}} : {{mate.userDisplay}}{% endfor %}"
+
+#: teamlimits/user/tg_bot/member_team.py:139
 msgid "member_team_add"
 msgstr "Вступить в Команду"
 
-#: teamlimits/user/tgbot/member_team.py:132
+#: teamlimits/user/tg_bot/member_team.py:145
 #, fuzzy
 msgid "member_team_remove"
 msgstr "Выйти из Команды"
 
-#: teamlimits/user/tgbot/member_team.py:138
+#: teamlimits/user/tg_bot/member_team.py:151
 msgid "add_member_crew"
 msgstr "Добавить Экипаж"
 
-#: teamlimits/user/tgbot/member_team.py:176
+#: teamlimits/user/tg_bot/member_team.py:189
 msgid "msg_member_team_disallow"
 msgstr "Вы не можете принять участие в этой Команде."
 
-#: teamlimits/user/tgbot/member_team.py:189
+#: teamlimits/user/tg_bot/member_team.py:202
 #, fuzzy
 msgid "msg_member_list_head"
 msgstr "Вы участвуете в Командах:\n"
 
-#: teamlimits/user/tgbot/member_team.py:192
+#: teamlimits/user/tg_bot/member_team.py:205
 #, fuzzy
 msgid "msg_member_list_item{teamIdStr}{title}{description}"
 msgstr "/t{teamIdStr}: {title} ({description})\n"
 
-#: teamlimits/user/tgbot/welcome.py:22
+#: teamlimits/user/tg_bot/welcome.py:22
 msgid "msg_start_welcome{bot_name}"
 msgstr ""
 "<b>В добрый час!</b>\n"
@@ -652,7 +681,7 @@ msgstr ""
 "Всех участников мы будем называть <i>Командой</i>, а группу участников мы"
 " будем называть <i>Экипажем</i>."
 
-#: teamlimits/user/tgbot/welcome.py:36
+#: teamlimits/user/tg_bot/welcome.py:36
 msgid "msg_start_select_action"
 msgstr ""
 "Теперь выберете действие\n"
@@ -660,21 +689,21 @@ msgstr ""
 "/manage чтобы изменить существующую Команду.\n"
 "/member чтобы показать список Команд в которых вы участвуете\n"
 
-#: teamlimits/user/tgbot/welcome.py:47
+#: teamlimits/user/tg_bot/welcome.py:47
 msgid "menu_cancel_anywhere"
 msgstr "Отменить"
 
-#: teamlimits/user/tgbot/welcome.py:48
+#: teamlimits/user/tg_bot/welcome.py:48
 #, fuzzy
 msgid "menu_create_team"
 msgstr "Создать новую Команду"
 
-#: teamlimits/user/tgbot/welcome.py:49
+#: teamlimits/user/tg_bot/welcome.py:49
 #, fuzzy
 msgid "menu_manage_team"
 msgstr "Управлять Командами"
 
-#: teamlimits/user/tgbot/welcome.py:50
+#: teamlimits/user/tg_bot/welcome.py:50
 #, fuzzy
 msgid "menu_member_team"
 msgstr "Участвовать в Команде"

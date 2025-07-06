@@ -1,4 +1,7 @@
-from . import base
+if __package__:
+    from . import base
+else:
+    import base
 
 import asyncio
 import teamlimits.user.tg_bot.make_person as make_person

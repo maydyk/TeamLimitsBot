@@ -5,10 +5,11 @@ Module models contains a set of base Models
 """
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, NonNegativeInt, computed_field, model_validator
+from typing import Any, Optional, Type, TypeVar
 
 from teamlimits.models.common import CrewSpecial
+from teamlimits.models.fields import fields
 
 class TeamHeader(BaseModel):
     """
@@ -73,6 +74,14 @@ class CrewModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    def isDefaultCrew(self) -> bool:
+        return self.special == CrewSpecial.CREW_SPECIAL_DEFAULT
+    
+
+    def isRegularCrew(self) -> bool:
+        return self.special == CrewSpecial.CREW_SPECIAL_UNSET
+
+
     @model_validator(mode="after")
     def checkMates(self):
         if self.maximalMates and self.maximalMates < self.minimalMates:
@@ -86,13 +95,35 @@ class CrewModel(BaseModel):
 
     @model_validator(mode="after")
     def checkPosition(self):
-        if self.special == CrewSpecial.CREW_SPECIAL_UNSET and self.position < 0:
+        if self.isRegularCrew() and self.position < 0:
             raise ValueError(
                 f"Non-special crew {self.special} has negative position {self.position}"
             )
         else:
             return self
             
+    
+_TPerson = TypeVar("TPerson")
+
+def _find_id_field(modelType: Type[_TPerson]) -> str:
+    match modelType:
+        case t if t is MemberModel:
+            field = fields(MemberModel).teamId
+
+        case t if t is OutcastModel:
+            field = fields(OutcastModel).teamId
+
+        case t if t is AdminModel:
+            field = fields(AdminModel).teamId
+
+        case t if t is LeaderModel:
+            field = fields(LeaderModel).crewId
+        
+        case _:
+            assert False, f"Unknown Model class: {modelType}."
+    
+    return field
+
 
 class PersonModel(BaseModel):
     """
@@ -105,21 +136,40 @@ class PersonModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    _display_user_name: Optional[str] = None
+
     def display_user_name(self) -> str:
         """
         Build user name or id to display. 
         """
-        return self.userName or str(self.userId)
+        if self._display_user_name is None:
+            humanName = f"{self.firstName} {self.lastName}"
+            tgId = f"@{str(self.userName)}"
+            if humanName.strip():
+                # TODO: Make Telegram link to the user
+                # mention = f"tg://user?id={self.userId}"
+                # self._display_user_name = f"<a href=\"{mention}\">{humanName}</a>"
+                self._display_user_name = f"{humanName} {tgId}"
+            else:
+                # Worst case: We don't known human names
+                self._display_user_name = tgId
+        return self._display_user_name
     
+
+
+    def combineId(self, modelType: Type[_TPerson], id: int, field: str = None) -> _TPerson:
+        # Smart select field name
+        if field is None:
+            field = _find_id_field(modelType)
+
+        return modelType(**(self.model_dump() | { field: id }))
+
 
 class MemberModel(PersonModel):
     """
-    Team member.
+    A member: a PersonModel with team id
     """
-    number: NonNegativeInt
     teamId: int
-    crewId: Optional[int]
-    position: NonNegativeInt
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -142,10 +192,6 @@ class LeaderModel(PersonModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @classmethod
-    def createFromPerson(cls, person: PersonModel, crewId: int):
-        return LeaderModel(crewId=crewId, **person.model_dump())
-
 
 class AdminModel(PersonModel):
     """
@@ -155,9 +201,19 @@ class AdminModel(PersonModel):
     teamId: int
 
     model_config = ConfigDict(from_attributes=True)
-
-    @classmethod
-    def createFromPerson(cls, person: PersonModel, teamId: int):
-        return AdminModel(teamId=teamId, **person.model_dump())
     
+
+
+class TeamMember(MemberModel):
+    """
+    A team member.
+    """
+    number: NonNegativeInt
+    crewId: Optional[int]
+    position: NonNegativeInt
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
 

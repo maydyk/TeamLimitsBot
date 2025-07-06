@@ -15,7 +15,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from typing import Any, Dict, Final, Tuple
 
 from teamlimits.details.even_hex import even_hex, even_hex_pattern, even_hex_parse
-from teamlimits.models.base import CrewModel, PersonModel
+from teamlimits.models.base import CrewModel, OutcastModel, MemberModel
 from teamlimits.models.fields import fields
 from teamlimits.repository.models_view import TeamView
 from teamlimits.repository.repository import Repository, RepositoryError
@@ -26,7 +26,7 @@ from teamlimits.user.tg_bot.details import (
     parse_command,
 )
 from teamlimits.user.tg_bot.international import _, localize_router, N_, NConst, NJinja
-from teamlimits.user.tg_bot.make_person import make_person, make_person_team, get_person_team
+from teamlimits.user.tg_bot.make_person import make_person, get_member, set_person_team
 from teamlimits.user.tg_bot.manage_crew import CreateCrew
 
 
@@ -37,16 +37,22 @@ class MemberTeam(StatesGroup):
 _ADD_MEMBER: Final[str] = fields(TeamView).canAddMember
 _REMOVE_MEMBER: Final[str] = fields(TeamView).canRemoveMember
 _ADD_MEMBER_CREW: Final[str] = fields(TeamView).canAddMemberCrew
+_HAS_DEADLINE: Final[str] = fields(TeamView).deadline
+_HAS_ACTIVE_CREWS: Final[str] = fields(TeamView).hasActiveCrews
+_HAS_QUEUED_CREWS: Final[str] = fields(TeamView).hasQueuedCrews
+_HAS_ACTIVE_MEMBERS: Final[str] = fields(TeamView).hasActiveMembers
+_HAS_QUEUED_MEMBERS: Final[str] = fields(TeamView).hasQueuedMembers
+_HAS_DEFAULT_CREW: Final[str] = fields(TeamView).hasDefaultCrew
 
 
-def _get_member(dialog_manager: DialogManager) -> Tuple[int, PersonModel]:
-    return make_person_team(dialog_manager.start_data)
+def _get_member(dialog_manager: DialogManager) -> MemberModel:
+    return get_member(dialog_manager.start_data)
 
 
 async def _member_team_getter(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
-    teamId, userPerson = _get_member(dialog_manager)
+    member = _get_member(dialog_manager)
 
-    teamSummary = await Repository().queryTeamView(teamId=teamId, member=userPerson)
+    teamSummary = await Repository().queryTeamView(member)
 
     data = teamSummary.model_dump()
     return data
@@ -57,14 +63,14 @@ async def _on_add_member(
         button: Button,
         manager: DialogManager,
         ) -> None:    
-    teamId, userPerson = _get_member(manager)
+    member = _get_member(manager)
     try:
         # NOTE: Team configuration can be changed until a member is trying to add itself.
-        await Repository().addTeamMember(teamId=teamId, crewId=None, member=userPerson)
+        await Repository().addTeamMember(member=member, crewId=None)
     except RepositoryError as e:
         callback.answer(_("member_team_add_member_failed{teamIdStr}{userName}").format(
-            teamIdStr = even_hex(teamId),
-            userName=userPerson.display_user_name(),
+            teamIdStr = even_hex(member.teamId),
+            userName=member.display_user_name(),
         ))
 
 
@@ -73,14 +79,14 @@ async def _on_remove_member(
         button: Button,
         manager: DialogManager
 ) -> None:
-    teamId, userPerson = _get_member(manager)
-    await Repository().removeTeamMember(teamId=teamId, member=userPerson)    
+    member = _get_member(manager)
+    await Repository().removeTeamMember(member)    
 
 
 async def _create_crew_start_data(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
-    teamId, *_ = _get_member(dialog_manager)
+    member = _get_member(dialog_manager)
     return {
-        fields(CrewModel).teamId : teamId
+        fields(CrewModel).teamId : member.teamId
     }
 
 
@@ -90,7 +96,7 @@ _take_crew_pattern: Final[re.Pattern] = even_hex_pattern("c")
 
 async def _handle_commands(message: Message, source: MessageInput, manager: DialogManager) -> None:
 
-    teamId, userPerson = _get_member(manager)
+    member = _get_member(manager)
 
     cmd: Final[str] = await parse_command(message, _manage_crew_pattern, _take_crew_pattern)
     
@@ -108,7 +114,7 @@ async def _handle_commands(message: Message, source: MessageInput, manager: Dial
         return
 
     if take_crew := even_hex_parse(_take_crew_pattern, cmd):
-        await Repository().setCrewMate(teamId = teamId, crewId = take_crew, mate = userPerson)
+        await Repository().setCrewMate(mate=member, crewId = take_crew)
         return
 
 
@@ -121,7 +127,14 @@ async def _filter_commands(event: ChatEvent, **kwargs) -> bool:
 
 member_team_dialog = Dialog(
     Window(
-        NJinja(N_("member_team_summary")),
+        NJinja(N_("member_team_summary_header")),
+        NJinja(N_("member_team_summary_total")),
+        NJinja(N_("member_team_summary_deadline"), when=F[_HAS_DEADLINE]),
+        NJinja(N_("member_team_summary_active_crews"), when=F[_HAS_ACTIVE_CREWS]),
+        NJinja(N_("member_team_summary_queued_crews"), when=F[_HAS_QUEUED_CREWS]),
+        NJinja(N_("member_team_summary_active_members"), when=F[_HAS_ACTIVE_MEMBERS]),
+        NJinja(N_("member_team_summary_queued_members"), when=F[_HAS_QUEUED_MEMBERS]),
+        NJinja(N_("member_team_summary_default_crew"), when=F[_HAS_DEFAULT_CREW]),
         Button(
             text = NConst(text = N_("member_team_add")),
             id=_ADD_MEMBER,
@@ -166,10 +179,10 @@ async def handle_member_team(message: Message, dialog_manager: DialogManager, **
     teamId = even_hex_parse(_member_pattern, message.text.lstrip('/'))
     if teamId is not None:
         person = make_person(message.from_user)
-        if await Repository().checkOutcastMember(teamId, person):
+        if not await Repository().checkOutcastMember(person.combineId(OutcastModel, teamId)):
             await dialog_manager.start(
                 state=MemberTeam.summary,
-                data=get_person_team(teamId, person),
+                data=set_person_team(teamId, person),
                 mode=StartMode.RESET_STACK
             )
         else:

@@ -7,10 +7,9 @@ from typing import List, Optional
 
 
 from teamlimits.details.coerce_list import coerce_first, coerce_last
-from teamlimits.models.base import CrewModel, MemberModel, TeamModel
-from teamlimits.models.common import CrewSpecial
+from teamlimits.models.base import CrewModel, TeamMember, TeamModel
 
-class MemberData(MemberModel, frozen=True):
+class MemberData(TeamMember, frozen=True):
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -85,7 +84,7 @@ class TeamData(TeamModel):
         if self._defaultCrew is None:
             self._defaultCrew = next(
                 filter(
-                    lambda crew: crew.special == CrewSpecial.CREW_SPECIAL_DEFAULT,
+                    lambda crew: crew.isDefaultCrew(),
                     self.crews
                     )
                 )
@@ -101,7 +100,7 @@ class TeamData(TeamModel):
         if self._regularCrews is None:
             self._regularCrews = list(
                 filter(
-                    lambda crew: crew.special == CrewSpecial.CREW_SPECIAL_UNSET,
+                    lambda crew: crew.isRegularCrew(),
                     self.crews
                     )
             )

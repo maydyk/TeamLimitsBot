@@ -54,16 +54,20 @@ def make_person(user: User, personService: PersonService = Provide[PersonContain
     return personService.make_person(user)
 
 
-def make_person_team(data: Dict[str, Any]) -> Tuple[int, PersonModel]:
+def get_person(data: Dict[str, Any]) -> PersonModel:
+    return PersonModel.model_validate(data)
+
+
+def get_member(data: Dict[str, Any]) -> MemberModel:
     """
     Extracts team id and person data from specifies dictionary.
     """
     teamId = data[fields(MemberModel).teamId]
-    person = PersonModel.model_validate(data)
-    return (teamId, person)
+    person = get_person(data)
+    return person.combineId(MemberModel, teamId)
 
 
-def get_person_team(teamId: int, person: PersonModel) -> Dict[str, Any]:
+def set_person_team(teamId: int, person: PersonModel) -> Dict[str, Any]:
     """
     Combine person with teamId
     """

@@ -1,61 +1,121 @@
 [
     {
         "userId": 6683415395,
-        "userName": "Gendalf",
-        "firstName": "",
-        "lastName": ""
+        "userName": "mitrandir",
+        "firstName": "Gendalf",
+        "lastName": "White"
     },
     {
         "userId": 6789718412,
-        "userName": "Saruman",
-        "firstName": "",
-        "lastName": ""
+        "userName": "saruman",
+        "firstName": "Saruman",
+        "lastName": "Rainbow"
     },
     {
         "userId": 4875964625,
-        "userName": "Frodo",
-        "firstName": "",
-        "lastName": ""
+        "userName": "frodo",
+        "firstName": "Frodo",
+        "lastName": "Baggins"
     },
     {
         "userId": 5803903573,
-        "userName": "Legolas",
-        "firstName": "",
-        "lastName": ""
+        "userName": "legolas",
+        "firstName": "Legolas",
+        "lastName": "Elf"
     },
     {
         "userId": 1550459851,
         "userName": "Gimli",
-        "firstName": "",
-        "lastName": ""
+        "firstName": "Gimli",
+        "lastName": "Dwarf"
     },
     {
         "userId": 2301627751,
-        "userName": "Sam",
+        "userName": "sam",
         "firstName": "",
-        "lastName": ""
+        "lastName": "Sam"
     },
     {
         "userId": 9646717836,
-        "userName": "Sauron",
-        "firstName": "",
+        "userName": "sauron",
+        "firstName": "Melcor",
         "lastName": ""
     },
     {
         "userId": 7375930485,
-        "userName": "Faramir",
-        "firstName": "",
+        "userName": "faramir",
+        "firstName": "Faramir",
         "lastName": ""
     },
     {
         "userId": 9028255224,
-        "userName": "Theoden",
-        "firstName": "",
-        "lastName": ""
+        "userName": "theoden",
+        "firstName": "King",
+        "lastName": "Theoden"
     },
     {
         "userId": 9045046846,
-        "userName": "Boromir",
+        "userName": "boromir",
+        "firstName": "Boromir",
+        "lastName": ""
+    },
+    {
+        "userId": 9394176883,
+        "userName": "hpotter",
+        "firstName": "Harry",
+        "lastName": "Potter"
+    },
+    {
+        "userId": 5332777522,
+        "userName": "jsnow",
+        "firstName": "John",
+        "lastName": "Snow"
+    },
+    {
+        "userId": 4201531132,
+        "userName": "mmonro",
+        "firstName": "Marilyn",
+        "lastName": "Monroe"
+    },
+    {
+        "userId": 4001464117,
+        "userName": "cchaplin",
+        "firstName": "Charles",
+        "lastName": "Chaplin"
+    },
+    {
+        "userId": 7610279199,
+        "userName": "rcrusoe",
+        "firstName": "Robinson",
+        "lastName": "Crusoe"
+    },
+    {
+        "userId": 3434827752,
+        "userName": "hlovecraft",
+        "firstName": "Howard",
+        "lastName": "Lovecraft"
+    },
+    {
+        "userId": 5072497444,
+        "userName": "rhat",
+        "firstName": "Red",
+        "lastName": "Hat"
+    },
+    {
+        "userId": 7250624411,
+        "userName": "jjoyce",
+        "firstName": "James",
+        "lastName": "Joyce"
+    },
+    {
+        "userId": 595974957,
+        "userName": "alavelyes",
+        "firstName": "Ada",
+        "lastName": "Lovelace"
+    },
+    {
+        "userId": 476780114,
+        "userName": "bstraustrup",
         "firstName": "",
         "lastName": ""
     }

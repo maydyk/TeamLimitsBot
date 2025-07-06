@@ -319,7 +319,7 @@ async def _insert_team(
 
     try:
         person = make_person(callback.from_user)
-        team = TeamModel(**team_values)
+        team = TeamModel.model_validate(team_values)
         teamId = await Repository().insertTeam(person=person, team=team)
 
         await manager.done()
@@ -352,8 +352,9 @@ async def _update_team(
     assert(_ID in team_values)
 
     try:
-        team = TeamModel(**team_values)
-        teamId = await Repository().updateTeam(team=team)
+        person = make_person(callback.from_user)
+        team = TeamModel.model_validate(team_values)
+        teamId = await Repository().updateTeam(admin = person, team=team)
 
         await manager.done()
         await callback.message.answer(_("create_team_updated{teamIdStr}{title}").format(
@@ -378,7 +379,9 @@ async def _team_summary_result(data: Data, result: Any, dialog_manager: DialogMa
         teamId = data[_ID]
         _logger.debug(f"Delete the team {even_hex(teamId)}")
         try:
-            await Repository().deleteTeam(teamId)
+            breakpoint() # TODO make data contain person
+            person = make_person(data)
+            await Repository().deleteTeam(person, teamId)
 
             # Remove ID from dictionary
             # Now we are being in state as a new team was created
@@ -725,13 +728,10 @@ async def handle_manage_team(message: Message, dialog_manager: DialogManager, **
     teamId = even_hex_parse(_manage_pattern, message.text.lstrip('/'))
     if teamId is not None:
         teamIdStr = even_hex(teamId)
-        teamModel = await Repository().queryAdminTeam(teamId, make_person(message.from_user))
+        teamModel = await Repository().queryAdminTeam(make_person(message.from_user), teamId)
         if teamModel:
             # Add the text representation of team ID
-            team_values = dict(
-                teamModel.model_dump(),
-                **{_TEAM_ID_STR : teamIdStr }
-            )
+            team_values = teamModel.model_dump() | {_TEAM_ID_STR : teamIdStr }
 
             await dialog_manager.start(CreateTeam.summary, data = team_values, mode = StartMode.RESET_STACK)
         else:

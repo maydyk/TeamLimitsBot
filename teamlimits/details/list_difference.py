@@ -11,3 +11,8 @@ def list_difference(minuend: List[_LD], subtrahend: List[_LD]) -> List[_LD]:
     # inverse filtering
     return list(filterfalse(s.__contains__, minuend))
 
+
+def list_intersection(source: List[_LD], examination: List[_LD]) -> List[_LD]:
+    ex = set(examination)
+    return list(filter(ex.__contains__, source))
+

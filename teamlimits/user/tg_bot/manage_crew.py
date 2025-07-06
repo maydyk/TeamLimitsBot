@@ -18,7 +18,7 @@ from aiogram_dialog.widgets.input import ManagedTextInput, TextInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, Next, Row
 from typing import Any, Final, Tuple
 
-from teamlimits.models.base import CrewModel, PersonModel
+from teamlimits.models.base import CrewModel, MemberModel
 from teamlimits.models.fields import fields
 from teamlimits.repository.repository import Repository
 from teamlimits.user.tg_bot.confirmation_dialog import make_confirmation_dialog
@@ -33,7 +33,7 @@ from teamlimits.user.tg_bot.details import (
     zero_positive,
 )
 from teamlimits.user.tg_bot.international import N_, NConst, NFormat, NJinja, _, localize_router
-from teamlimits.user.tg_bot.make_person import make_person_team
+from teamlimits.user.tg_bot.make_person import make_person, get_person, get_member
 from teamlimits.user.tg_bot.wizard import wizard_control, wizard_preview, Preview
 
 
@@ -77,8 +77,8 @@ def _preview(key: str) -> Preview:
         key_source=key
     )
 
-def _get_member(dialog_manager: DialogManager) -> Tuple[int, PersonModel]:
-    return make_person_team(dialog_manager.start_data)
+def _get_member(dialog_manager: DialogManager) -> MemberModel:
+    return get_member(dialog_manager.start_data)
 
 
 async def _on_query_title(
@@ -90,8 +90,8 @@ async def _on_query_title(
     """
     Handle crew title
     """
-    teamId, *_ = _get_member(manager)
-    if await Repository().checkCrewTitleIsUnique(teamId, data):
+    member = _get_member(manager)
+    if await Repository().checkCrewTitleIsUnique(member.teamId, data):
         manager.dialog_data[_TITLE] = data
         await manager.next()
     else:
@@ -171,10 +171,10 @@ async def _insert_crew(
     crew_values = manager.dialog_data
     assert(not _ID in crew_values)
 
-    teamId, member = _get_member(manager)
+    member = _get_member(manager)
 
     try:
-        crew = CrewModel(**crew_values)
+        crew = CrewModel.model_validate(crew_values)
         crewId = await Repository().insertCrew(person = member, crew=crew)
         manager.dialog_data[_ID] = crewId
     except Exception as e:
@@ -197,8 +197,9 @@ async def _update_crew(
     assert(_ID in crew_values)
 
     try:
-        crew = CrewModel(**crew_values)
-        crewId = await Repository().updateCrew(crew=crew)
+        leader = make_person(callback.from_user)
+        crew = CrewModel.model_validate(crew_values)
+        crewId = await Repository().updateCrew(leader = leader, crew=crew)
     except Exception as e:
         _logger.exception(e)
         breakpoint()
@@ -218,6 +219,7 @@ async def _crew_summary_result(
     if result == _DELETE_CREW:
         crewId = data[_ID]
         try:
+            leader = get_person(data)
             await Repository().deleteCrew(crewId=crewId)
 
             dialog_manager.dialog_data.pop(_ID, "")

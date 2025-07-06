@@ -4,23 +4,19 @@ from typing import List, Optional
 from datetime import datetime
 from functools import reduce
 
-from teamlimits.models.base import CrewModel, MemberModel, TeamHeader, TeamModel
+from teamlimits.models.base import CrewModel, TeamHeader, TeamMember, TeamModel
 from teamlimits.details.even_hex import even_hex
 
-class MemberView(MemberModel):
+class MemberView(TeamMember):
 
     @computed_field
     @property
-    def userStrId(self) -> str:
-        if self.userName:
-            nameStr = self.userName
-        else:
-            nameStr = str(self.userId)
-        
+    def userDisplay(self) -> str:
         if self.number:
-            nameStr = nameStr + f" (+{self.number})"
-        
-        return nameStr
+            return f"{self.display_user_name()} (+{self.number})"
+        else:
+            return self.display_user_name()
+
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -79,7 +75,8 @@ class TeamView(TeamModel):
     activeCrews: List[CrewView]
     queuedCrews: List[CrewView]
     defaultCrew: CrewView
-    outboards: List[MemberView]
+    activeOutboards: List[MemberView]
+    queuedOutboards: List[MemberView]
 
     @computed_field
     @property
@@ -116,9 +113,11 @@ class TeamView(TeamModel):
     @property
     def totalMembers(self) -> int:
         if self._totalMembers is None:
-            self._totalMembers = len(self.outboards) 
-            + TeamView.compute_total_mates(self.activeCrews) 
-            + TeamView.compute_total_mates(self.queuedCrews)
+            self._totalMembers = \
+                len(self.activeOutboards) + \
+                len(self.queuedOutboards) + \
+                TeamView.compute_total_mates(self.activeCrews) + \
+                TeamView.compute_total_mates(self.queuedCrews)
         return self._totalMembers
                 
             
@@ -145,6 +144,7 @@ class TeamView(TeamModel):
     def canAddMember(self) -> bool:
         return not (self.suspendCompanions and self.as_member)
     
+
     @computed_field
     @property
     def canRemoveMember(self) -> bool:
@@ -156,11 +156,36 @@ class TeamView(TeamModel):
     def canAddMemberCrew(self) -> bool:
         return self.enableCrews or self.as_admin
     
+    
     @computed_field
     @property
-    def hasCrews(self) -> bool:
-        return len(self.activeCrews) + len(self.queuedCrews) > 0
+    def hasActiveCrews(self) -> bool:
+        return bool(self.activeCrews)
+    
+
+    @computed_field
+    @property
+    def hasQueuedCrews(self) -> bool:
+        return bool(self.queuedCrews) 
     
     
+    @computed_field
+    @property
+    def hasActiveMembers(self) -> bool:
+        return bool(self.activeOutboards)
+    
+
+    @computed_field
+    @property
+    def hasQueuedMembers(self) -> bool:
+        return bool(self.queuedOutboards)
+    
+
+    @computed_field
+    @property
+    def hasDefaultCrew(self) -> bool:
+        return bool(self.defaultCrew.activeMates)
+
+
     model_config = ConfigDict(from_attributes=True)
 

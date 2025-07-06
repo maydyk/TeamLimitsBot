@@ -10,17 +10,17 @@ import logging
 from contextlib import asynccontextmanager
 from functools import wraps
 from itertools import chain
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, List, Optional
 
 from teamlimits.database.database import Database, DatabaseError
 from teamlimits.details.coerce_list import coerce_first
-from teamlimits.details.list_difference import list_difference
+from teamlimits.details.list_difference import list_difference, list_intersection
 from teamlimits.details.singleton import Singleton
 
 from teamlimits.models.fields import fields
-from teamlimits.models.base import CrewModel, PersonModel, MemberModel, TeamHeader, TeamModel
+from teamlimits.models.base import AdminModel, CrewModel, OutcastModel, PersonModel, MemberModel, TeamHeader, TeamModel
 from teamlimits.models.common import CrewSpecial
-from teamlimits.database.models_data import CrewData, MemberData, TeamData
+from teamlimits.database.models_data import MemberData, TeamData
 from teamlimits.repository.models_view import CrewView, MemberView, TeamView
 
 _logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ class Repository(metaclass = Singleton):
         """
         repository = cls.create(database)
         try:
-            yield
+            yield repository
         except Exception as ex:
             _logger.exception("A SQL exception", ex)
             raise
@@ -85,43 +85,43 @@ class Repository(metaclass = Singleton):
 
     @database_error
     async def insertTeam(self, person: PersonModel, team: TeamModel) -> int:
-        return await self.database.insertTeam(personModel=person, teamModel=team)
+        return await self.database.insertTeam(person=person, teamModel=team)
     
 
     @database_error
-    async def updateTeam(self, team: TeamModel) -> int:
-        return await self.database.updateTeam(teamModel=team)
+    async def updateTeam(self, person: PersonModel, team: TeamModel) -> int:
+        return await self.database.updateTeam(person=person, teamModel=team)
     
 
     @database_error
-    async def deleteTeam(self, teamId: int) -> None:    
-        await self.database.deleteTeam(teamId=teamId)
+    async def deleteTeam(self, admin: PersonModel, teamId: int) -> None:    
+        await self.database.deleteTeam(admin = admin, teamId=teamId)
 
 
     @database_error
-    async def queryAdminTeam(self, teamId: int, admin: PersonModel) -> TeamModel:
-        return await self.database.queryAdminTeam(teamId=teamId, adminModel=admin)
+    async def queryAdminTeam(self, admin: PersonModel, teamId: int) -> TeamModel:
+        return await self.database.queryAdminTeam(admin=admin, teamId=teamId)
 
 
     @database_error
     async def queryAdminTeamHeaders(self, admin: PersonModel) -> List[TeamHeader]:
-        return await self.database.queryAdminTeamHeaders(adminModel=admin)
+        return await self.database.queryAdminTeamHeaders(admin=admin)
     
 
     @database_error
-    async def checkAdminTeam(self, teamId: int, admin: PersonModel) -> bool:
-        return await self.database.checkAdminTeam(teamId = teamId, adminModel = admin)
+    async def checkAdminTeam(self, admin: AdminModel) -> bool:
+        return await self.database.checkAdminTeam(admin)
 
     
     @database_error
-    async def checkOutcastMember(self, teamId: int, member: PersonModel) -> bool:
-        return await self.database.checkOutcastMember(teamId=teamId, memberModel=member)
+    async def checkOutcastMember(self, outcast: OutcastModel) -> bool:
+        return await self.database.checkOutcastMember(outcast)
     
     
     @database_error
-    async def queryTeamView(self, teamId: int, member: PersonModel) -> TeamView:
+    async def queryTeamView(self, member: MemberModel) -> TeamView:
         # Query all team data
-        teamData: TeamData = await self.database.queryTeamData(teamId=teamId, memberModel=member)
+        teamData: TeamData = await self.database.queryTeamData(member)
 
         defaultCrew = teamData.defaultCrew
 
@@ -151,10 +151,11 @@ class Repository(metaclass = Singleton):
             validDefaultCrewMembers = crew.acceptMates(validDefaultCrewMembers)
 
         # Update default crew members
-        teamData.defaultCrew.mates  = list_difference(teamData.defaultCrew.mates, validDefaultCrewMembers)
+        teamData.defaultCrew.mates = list_difference(teamData.defaultCrew.mates, validDefaultCrewMembers)
 
         # Update outboards
-        teamData.outboards = list_difference(teamData.outboards, validMembers)
+        activeOutboards = list_intersection(teamData.outboards, validMembers)
+        queuedOutboards = list_difference(teamData.outboards, validMembers)
 
         # Transform CrewData to CrewView
         activeCrews = list(
@@ -175,35 +176,35 @@ class Repository(metaclass = Singleton):
             return list(map(
                 lambda memberData: MemberView.model_validate(memberData.model_dump()),
                 memberDataList
-            ))
+                )
+            )
 
         
         # Build TeamSummary
-        return TeamView.model_validate(
-            teamData.model_dump() |
-            {
-                fields(TeamView).as_admin : teamData.as_admin,
-                fields(TeamView).as_member : teamData.as_member,
-                fields(TeamView).activeCrews : activeCrews,
-                fields(TeamView).queuedCrews : queuedCrews,
-                fields(TeamView).defaultCrew : CrewView.model_validate(defaultCrew.model_dump()),
-                fields(TeamView).outboards : make_member_view_list(teamData.outboards),
-            }
+        return TeamView(
+            as_admin=teamData.as_admin,
+            as_member=teamData.as_member,
+            activeCrews=activeCrews,
+            queuedCrews=queuedCrews,
+            defaultCrew=CrewView.model_validate(defaultCrew.model_dump()),
+            activeOutboards=make_member_view_list(activeOutboards),
+            queuedOutboards=make_member_view_list(queuedOutboards),
+            **TeamModel.model_validate(teamData.model_dump()).model_dump()
         )
 
     
     @database_error
-    async def canAddTeamMember(self, teamId: int, member: PersonModel) -> bool:
-        return await self.database.canAddTeamMember(teamId = teamId, memberModel = member)
+    async def canAddTeamMember(self, member: MemberModel) -> bool:
+        return await self.database.canAddTeamMember(member)
     
     @database_error
-    async def addTeamMember(self, teamId: int, crewId: Optional[int], member: PersonModel) -> None:
-        await self.database.addTeamMember(teamId = teamId, crewId=crewId, memberModel = member)
+    async def addTeamMember(self, member: MemberModel, crewId: Optional[int]) -> None:
+        await self.database.addTeamMember(member = member, crewId=crewId)
 
     
     @database_error
-    async def removeTeamMember(self, teamId: int, member: PersonModel) -> None:
-        await self.database.removeTeamMember(teamId = teamId, memberModel = member)
+    async def removeTeamMember(self, member: MemberModel) -> None:
+        await self.database.removeTeamMember(member)
 
 
     @database_error
@@ -217,25 +218,25 @@ class Repository(metaclass = Singleton):
 
 
     @database_error
-    async def updateCrew(self, crew: CrewModel) -> int:
-        return await self.database.updateCrew(crewModel = crew)
+    async def updateCrew(self, leader: PersonModel, crew: CrewModel) -> int:
+        return await self.database.updateCrew(leader = leader, crew = crew)
 
 
     @database_error
-    async def deleteCrew(self, crewId: int) -> None:
-        await self.database.deleteCrew(crewId=crewId)
+    async def deleteCrew(self, leader: PersonModel, crewId: int) -> None:
+        await self.database.deleteCrew(leader = leader, crewId=crewId)
 
 
     @database_error
     async def queryMemberTeams(self, member: PersonModel) -> List[TeamModel]:
-        return await self.database.queryMemberTeams(memberModel = member)
+        return await self.database.queryMemberTeams(member = member)
     
     
     @database_error
-    async def setCrewMate(self, teamId: int, crewId: int, mate: PersonModel) -> None:
-        return await self.database.setCrewMate(teamId=teamId, crewId=crewId, mateModel=mate)
+    async def setCrewMate(self, mate: MemberModel, crewId: int, ) -> None:
+        return await self.database.setCrewMate(mate=mate, crewId=crewId)
     
 
     @database_error
-    async def queryLeaderCrew(self, crewId: int, person: PersonModel) -> CrewModel:
-        return await self.database.queryLeaderCrew(crewId = crewId, personModel=person)
+    async def queryLeaderCrew(self, leader: PersonModel, crewId: int, ) -> CrewModel:
+        return await self.database.queryLeaderCrew(leader=leader, crewId = crewId)

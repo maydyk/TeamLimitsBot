@@ -4,18 +4,18 @@ Load and setup localization files for aiogram.
 NOTE: Don't change module location!
 
 To process messages run in the shell:
-1. extract messages from code to generate template .teamlimits/user/tgbot/locales/messages.pot
-pybabel extract --input-dirs=teamlimits/user/tgbot -o teamlimits/user/tgbot/locales/messages.pot
+1. extract messages from code to generate template .teamlimits/user/tg_bot/locales/messages.pot
+pybabel extract --input-dirs=teamlimits/user/tg_bot -o teamlimits/user/tg_bot/locales/messages.pot
 
 2. update po files:
-pybabel update -d teamlimits/user/tgbot/locales -D messages -i teamlimits/user/tgbot/locales/messages.pot
+pybabel update -d teamlimits/user/tg_bot/locales -D messages -i teamlimits/user/tg_bot/locales/messages.pot
 
 3: Manually edit files ./locales/**/LC_MESSAGES/messages.po
 Useful unicode symbols can be found there:
 https://apps.timwhitlock.info/emoji/tables/unicode
 
 4: compile mo files:
-pybabel compile -f -d teamlimits/user/tgbot/locales -D messages
+pybabel compile -f -d teamlimits/user/tg_bot/locales -D messages
 
 @Author: Denis Maydykovsky
 """
