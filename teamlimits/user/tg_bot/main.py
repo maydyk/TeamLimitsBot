@@ -83,9 +83,9 @@ async def main():
 
 if __name__ == "__main__":
     # Setup DI
-    personContainer = make_person.PersonContainer()
-    personContainer.wire(modules=[make_person.__name__])
+    make_person.setup()
 
+    # Main routine
     asyncio.run(main())
 
 

@@ -20,9 +20,13 @@ def readFakePersons(filePath = FILE_NAME) -> List[PersonModel]:
     try:
         with open(FILE_NAME, encoding="utf-8") as f:
             json = f.read()
-            return ta.validate_json(json)
+            persons = ta.validate_json(json)
+            # Check unique
+            assert len(set(map(lambda person: person.userId, persons))) == len(persons)
+            assert len(set(map(lambda person: person.userName, persons))) == len(persons)
+            return persons
     except IOError:
-        print("Cannot read existing users")
+        # File not found etc
         return []
 
 

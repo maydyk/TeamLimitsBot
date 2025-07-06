@@ -4,7 +4,7 @@ from dependency_injector import containers, providers
 from dependency_injector.wiring import Provide, inject
 
 from aiogram.types import User
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from teamlimits.models.base import PersonModel, MemberModel
 from teamlimits.models.fields import fields
@@ -26,6 +26,18 @@ class PersonUserService(PersonService):
 
 class PersonContainer(containers.DeclarativeContainer):
     personService = providers.Singleton(PersonUserService)
+
+
+_personContainer: PersonContainer =  PersonContainer()
+
+
+def setup(container: Optional[PersonContainer] = None):
+    """
+    Call from main to setup DI
+    """
+    if container is not None and container != _personContainer:
+        _personContainer.override(container)
+    _personContainer.wire([__name__])
 
 
 @inject
