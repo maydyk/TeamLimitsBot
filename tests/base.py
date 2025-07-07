@@ -12,7 +12,8 @@ if __name__ == "__main__":
     nested_tests = [
         "test_camel_to_snake.py",
         "test_coerce_list.py",
-        "test_even_hex.py"
+        "test_even_hex.py",
+        "test_list_difference.py"
     ]
 
     for test_file in nested_tests:
