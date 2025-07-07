@@ -32,7 +32,7 @@ from aiogram_dialog.widgets.kbd import (
 from typing import Any, Dict, Final
 
 from teamlimits.details.even_hex import even_hex, even_hex_pattern, even_hex_parse
-from teamlimits.models.base import TeamModel
+from teamlimits.models.base import AdminModel, TeamModel
 from teamlimits.models.fields import fields
 from teamlimits.repository.repository import Repository
 from teamlimits.repository.models_view import TeamHeaderView
@@ -380,8 +380,8 @@ async def _team_summary_result(data: Data, result: Any, dialog_manager: DialogMa
         _logger.debug(f"Delete the team {even_hex(teamId)}")
         try:
             breakpoint() # TODO make data contain person
-            person = make_person(data)
-            await Repository().deleteTeam(person, teamId)
+            admin = make_person(data).combineId(AdminModel, teamId)
+            await Repository().deleteTeam(admin)
 
             # Remove ID from dictionary
             # Now we are being in state as a new team was created
@@ -728,7 +728,7 @@ async def handle_manage_team(message: Message, dialog_manager: DialogManager, **
     teamId = even_hex_parse(_manage_pattern, message.text.lstrip('/'))
     if teamId is not None:
         teamIdStr = even_hex(teamId)
-        teamModel = await Repository().queryAdminTeam(make_person(message.from_user), teamId)
+        teamModel = await Repository().queryAdminTeam(make_person(message.from_user).combineId(AdminModel, teamId))
         if teamModel:
             # Add the text representation of team ID
             team_values = teamModel.model_dump() | {_TEAM_ID_STR : teamIdStr }

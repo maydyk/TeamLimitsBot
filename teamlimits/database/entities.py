@@ -159,6 +159,12 @@ class Member(Person):
     )
 
 
+class Admin(Person):
+    teamId: Mapped[int] = mapped_column(ForeignKey(Team.id, ondelete="CASCADE"))
+
+    __table_args__ = (PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, teamId), )
+
+
 class Outcast(Person):
     teamId: Mapped[int] = mapped_column(ForeignKey(Team.id, ondelete="CASCADE"))
 
@@ -170,11 +176,6 @@ class Leader(Person):
 
     __table_args__ = (PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, crewId), )
 
-
-class Admin(Person):
-    teamId: Mapped[int] = mapped_column(ForeignKey(Team.id, ondelete="CASCADE"))
-
-    __table_args__ = (PrimaryKeyConstraint(Person.USER_ID, Person.USER_NAME, teamId), )
 
 
 # Self testing

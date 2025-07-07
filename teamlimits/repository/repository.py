@@ -8,17 +8,19 @@ An intermediate layer between database.Repository() and Telegram UI
 import logging
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 from functools import wraps
 from itertools import chain
-from typing import Any, Awaitable, Callable, List, Optional
+from typeguard import typechecked
+from typing import Awaitable, Callable, List, Optional, TypeVar, Union
 
-from teamlimits.database.database import Database, DatabaseError
+from teamlimits.database.database import Database, DatabaseError, DatabasePermissionError
 from teamlimits.details.coerce_list import coerce_first
 from teamlimits.details.list_difference import list_difference, list_intersection
 from teamlimits.details.singleton import Singleton
 
 from teamlimits.models.fields import fields
-from teamlimits.models.base import AdminModel, CrewModel, OutcastModel, PersonModel, MemberModel, TeamHeader, TeamModel
+from teamlimits.models.base import AdminModel, CrewModel, LeaderModel, PersonModel, MemberModel, TeamHeader, TeamModel
 from teamlimits.models.common import CrewSpecial
 from teamlimits.database.models_data import MemberData, TeamData
 from teamlimits.repository.models_view import CrewView, MemberView, TeamView
@@ -29,15 +31,24 @@ _logger = logging.getLogger(__name__)
 class RepositoryError(Exception):
     pass
 
+class RepositoryPermissionError(RepositoryError):
+    pass
 
-def database_error(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
+
+_T = TypeVar("T")
+
+def database_error(method: Callable[..., Awaitable[_T]]) -> Callable[..., Awaitable[_T]]:
     """
     Decorator to translate 'DatabaseError' to 'RepositoryError'
     """
     @wraps(method)
-    async def wrapper(self, *args, **kwargs) -> Any:
+    async def wrapper(self, *args, **kwargs) -> _T:
         try:
             return await method(self, *args, **kwargs)
+        except DatabasePermissionError as db_permission_error:
+            # Translate Permission error
+            breakpoint()
+            raise RepositoryPermissionError(*db_permission_error.args)
         except DatabaseError as db_error:
             breakpoint()
             raise RepositoryError(*db_error.args)
@@ -79,46 +90,55 @@ class Repository(metaclass = Singleton):
     
 
     @database_error
+    @typechecked
     async def checkTeamTitleIsUnique(self, title) -> bool:
         return await self.database.checkTeamTitleIsUnique(title=title)
     
 
     @database_error
+    @typechecked
     async def insertTeam(self, person: PersonModel, team: TeamModel) -> int:
-        return await self.database.insertTeam(person=person, teamModel=team)
+        return await self.database.insertTeam(person=person, team=team)
     
 
     @database_error
-    async def updateTeam(self, person: PersonModel, team: TeamModel) -> int:
-        return await self.database.updateTeam(person=person, teamModel=team)
+    @typechecked
+    async def updateTeam(self, admin: AdminModel, team: TeamModel) -> int:
+        return await self.database.updateTeam(admin=admin, team=team)
     
 
     @database_error
-    async def deleteTeam(self, admin: PersonModel, teamId: int) -> None:    
-        await self.database.deleteTeam(admin = admin, teamId=teamId)
+    @typechecked
+    async def deleteTeam(self, admin: AdminModel) -> None:
+        await self.database.deleteTeam(admin = admin)
 
 
     @database_error
-    async def queryAdminTeam(self, admin: PersonModel, teamId: int) -> TeamModel:
+    @typechecked
+    async def queryAdminTeam(self, admin: AdminModel, teamId: int) -> TeamModel:
         return await self.database.queryAdminTeam(admin=admin, teamId=teamId)
 
 
     @database_error
-    async def queryAdminTeamHeaders(self, admin: PersonModel) -> List[TeamHeader]:
-        return await self.database.queryAdminTeamHeaders(admin=admin)
+    @typechecked
+    async def queryAdminTeamHeaders(self, person: PersonModel) -> List[TeamHeader]:
+        return await self.database.queryAdminTeamHeaders(person)
+    
+    
+    @database_error
+    @typechecked
+    async def queryMemberTeamHeaders(self, person: PersonModel) -> List[TeamHeader]:
+        return await self.database.queryMemberTeamHeaders(member = member)
     
 
     @database_error
-    async def checkAdminTeam(self, admin: AdminModel) -> bool:
-        return await self.database.checkAdminTeam(admin)
-
-    
-    @database_error
-    async def checkOutcastMember(self, outcast: OutcastModel) -> bool:
-        return await self.database.checkOutcastMember(outcast)
+    @typechecked
+    async def canViewTeam(self, member: MemberModel) -> bool:
+        return await self.database.canViewTeam(member)
     
     
     @database_error
+    @typechecked
     async def queryTeamView(self, member: MemberModel) -> TeamView:
         # Query all team data
         teamData: TeamData = await self.database.queryTeamData(member)
@@ -182,8 +202,8 @@ class Repository(metaclass = Singleton):
         
         # Build TeamSummary
         return TeamView(
-            as_admin=teamData.as_admin,
-            as_member=teamData.as_member,
+            is_admin=teamData.is_admin,
+            is_member=teamData.is_member,
             activeCrews=activeCrews,
             queuedCrews=queuedCrews,
             defaultCrew=CrewView.model_validate(defaultCrew.model_dump()),
@@ -194,49 +214,77 @@ class Repository(metaclass = Singleton):
 
     
     @database_error
-    async def canAddTeamMember(self, member: MemberModel) -> bool:
-        return await self.database.canAddTeamMember(member)
+    @typechecked
+    async def canAddTeamMember(self, member: MemberModel, date: datetime) -> bool:
+        return await self.database.canAddTeamMember(member, date)
     
     @database_error
-    async def addTeamMember(self, member: MemberModel, crewId: Optional[int]) -> None:
-        await self.database.addTeamMember(member = member, crewId=crewId)
+    @typechecked
+    async def addTeamMember(self, member: MemberModel, crewId: Optional[int], date: datetime) -> None:
+        await self.database.addTeamMember(member, crewId, date)
 
+
+    @database_error
+    @typechecked
+    async def canRemoveTeamMember(self, member: MemberModel, date: datetime) -> bool:
+        return await self.database.canRemoveTeamMember(member, date)
     
+
     @database_error
-    async def removeTeamMember(self, member: MemberModel) -> None:
-        await self.database.removeTeamMember(member)
+    @typechecked
+    async def removeTeamMember(self, member: MemberModel, date: datetime) -> None:
+        await self.database.removeTeamMember(member, date)
 
 
     @database_error
+    @typechecked
     async def checkCrewTitleIsUnique(self, teamId: int, title: str) -> bool:
         return await self.database.checkCrewTitleIsUnique(teamId = teamId, title = title)
 
 
     @database_error
-    async def insertCrew(self, person: PersonModel, crew: CrewModel) -> int:
-        return await self.database.insertCrew(personModel = person, crewModel = crew)
+    @typechecked
+    async def canInsertCrew(self, person: Union[MemberModel, AdminModel], date: datetime) -> bool:
+        return await self.database.canInsertCrew(person, date)
 
 
     @database_error
-    async def updateCrew(self, leader: PersonModel, crew: CrewModel) -> int:
-        return await self.database.updateCrew(leader = leader, crew = crew)
+    @typechecked
+    async def insertCrew(self, person: Union[MemberModel, AdminModel], crew: CrewModel, date: datetime) -> int:
+        return await self.database.insertCrew(person, crew, date)
 
 
     @database_error
-    async def deleteCrew(self, leader: PersonModel, crewId: int) -> None:
-        await self.database.deleteCrew(leader = leader, crewId=crewId)
-
-
-    @database_error
-    async def queryMemberTeams(self, member: PersonModel) -> List[TeamModel]:
-        return await self.database.queryMemberTeams(member = member)
+    @typechecked
+    async def canUpdateCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime) -> bool:
+        return await self.database.canUpdateCrew(leader, date)
     
     
     @database_error
+    @typechecked
+    async def updateCrew(self, leader: Union[LeaderModel, AdminModel], crew: CrewModel, date: datetime) -> int:
+        return await self.database.updateCrew(leader, crew, date)
+
+
+    @database_error
+    @typechecked
+    async def canDeleteCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime) -> bool:
+        return await self.database.canDeleteCrew(leader, date)
+
+
+    @database_error
+    @typechecked
+    async def deleteCrew(self, leader: Union[MemberModel, AdminModel], crewId: int, date: datetime) -> None:
+        await self.database.deleteCrew(leader, crewId, date)
+
+    
+    @database_error
+    @typechecked
     async def setCrewMate(self, mate: MemberModel, crewId: int, ) -> None:
         return await self.database.setCrewMate(mate=mate, crewId=crewId)
     
 
     @database_error
+    @typechecked
     async def queryLeaderCrew(self, leader: PersonModel, crewId: int, ) -> CrewModel:
         return await self.database.queryLeaderCrew(leader=leader, crewId = crewId)

@@ -8,6 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, computed_field, model_validator
 from typing import Any, Optional, Type, TypeVar
 
+from teamlimits.details.even_hex import even_hex
 from teamlimits.models.common import CrewSpecial
 from teamlimits.models.fields import fields
 
@@ -20,6 +21,12 @@ class TeamHeader(BaseModel):
     description: str = ""
 
     model_config = ConfigDict(from_attributes=True)
+
+    def teamIdStr(self) -> str:
+        """
+        Present team is as even hex string.
+        """
+        return even_hex(id)
 
 
 class TeamModel(TeamHeader):
@@ -136,26 +143,12 @@ class PersonModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    _display_user_name: Optional[str] = None
-
     def display_user_name(self) -> str:
         """
         Build user name or id to display. 
         """
-        if self._display_user_name is None:
-            humanName = f"{self.firstName} {self.lastName}"
-            tgId = f"@{str(self.userName)}"
-            if humanName.strip():
-                # TODO: Make Telegram link to the user
-                # mention = f"tg://user?id={self.userId}"
-                # self._display_user_name = f"<a href=\"{mention}\">{humanName}</a>"
-                self._display_user_name = f"{humanName} {tgId}"
-            else:
-                # Worst case: We don't known human names
-                self._display_user_name = tgId
-        return self._display_user_name
+        return self.userName or str(self.userId)
     
-
 
     def combineId(self, modelType: Type[_TPerson], id: int, field: str = None) -> _TPerson:
         # Smart select field name

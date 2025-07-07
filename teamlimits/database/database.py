@@ -7,12 +7,14 @@ Database handler
 import logging
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 from functools import wraps
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, AsyncSessionTransaction, async_sessionmaker, create_async_engine
-from typing import Any, AsyncIterator, Awaitable, Callable, Final, Iterable, List, Optional
+from typeguard import typechecked
+from typing import AsyncIterator, Awaitable, Callable, Final, Iterable, List, Optional, TypeVar, Union
 
 from teamlimits.models.base import AdminModel, CrewModel, LeaderModel, MemberModel, PersonModel, OutcastModel, TeamMember, TeamHeader, TeamModel
 from teamlimits.models.common import CrewSpecial
@@ -50,25 +52,23 @@ class DatabaseError(Exception):
     pass
 
 
-class DatabaseErrorDuplicatedTitle(DatabaseError):
+class DatabaseDuplicatedTitleError(DatabaseError):
     pass
 
 
-class DatabaseErrorPermission(DatabaseError):
+class DatabasePermissionError(DatabaseError):
     pass
 
 
-class DatabaseErrorSuspendedCompanions(DatabaseError):
-    pass
+_T = TypeVar("T")
 
-
-def connection(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]: 
+def connection(method: Callable[..., Awaitable[_T]]) -> Callable[..., Awaitable[_T]]: 
     """
     Decorator to wrap the session without commit.
     Use it with the query without modifications.
     """
     @wraps(method)
-    async def wrapper(self, *args, **kwargs) -> Any:
+    async def wrapper(self, *args, **kwargs) -> _T:
         if "session" in kwargs:
             return method(self, *args, *kwargs)
         else:
@@ -77,14 +77,16 @@ def connection(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable
     return wrapper
 
 
-def transaction(method: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
+def transaction(method: Callable[..., Awaitable[_T]]) -> Callable[..., Awaitable[_T]]:
     """
     Decorator to wrap the session with commit.
     Use it to modify data.
     """
     @wraps(method)
-    async def wrapper(self, *args, **kwargs) -> Any:
-        if "session" in kwargs:
+    async def wrapper(self, *args, **kwargs) -> _T:
+        # Check do call already contain session
+        hasSession = any(arg is AsyncSession for arg in args) or "session" in kwargs
+        if hasSession in kwargs:
             return await method(self, *args, **kwargs)
         else:
             async with self.session_maker.begin() as session:
@@ -143,37 +145,92 @@ class Database:
 
 
     @connection
+    @typechecked
     async def __queryTeam(self, teamId: int, session: AsyncSession) -> Team:
         """
         Helper method to get the team by id
         """
-
         query = select(Team).where(Team.id == teamId)
         _logger.query(query)
         return (await session.execute(query)).scalar_one()
     
 
     @connection
+    @typechecked
+    async def __checkAdminTeam(self, admin: AdminModel, session: AsyncSession) -> bool:
+        """
+        Check if specified person is administrator of the team.
+        """
+        query = (
+            select(func.count(Admin.userId))
+            .where(
+                (Admin.teamId == admin.teamId) &
+                (
+                    (Admin.userId == admin.userId) |
+                    (Admin.userName == admin.userName)
+                )
+            )
+        )
+        _logger.query(query)
+        
+        res = (await session.execute(query)).scalar_one_or_none()
+
+        # The person is a team administrator!
+        return bool(res)
+    
+
+    @connection
+    @typechecked
+    async def __checkMemberTeam(self, member: MemberModel, session: AsyncSession) -> bool:
+        """
+        Check the person is already member of specified team.
+        """
+        
+        query = select(func.count(Member.teamId)).where(
+            (Member.teamId ==member.teamId) &
+            (
+                (Member.userId == member.userId) |
+                (Member.userName == member.userName)
+            )
+        )
+        _logger.query(query)
+
+        res = (await session.execute(query)).scalar_one_or_none()
+
+        # The person is a team member.
+        return bool(res)
+
+
+    @connection
+    @typechecked
+    async def __checkLeaderCrew(self, leader: LeaderModel, session: AsyncSession) -> bool:
+        query = (
+            select(func.count(Leader.crewId))
+            .where(
+                (Leader.crewId == leader.crewId) &
+                (
+                    (Leader.userId == leader.userId) |
+                    (Leader.userName == leader.userName) 
+                )
+            )
+        )
+        _logger.query(query)
+
+        res = (await session.execute(query)).scalar_one_or_none()
+
+        # The person is a leader of the crew!
+        return bool(res)
+
+
+    @connection
+    @typechecked
     async def queryCrewTeamId(self, crewId: int, session: AsyncSession) -> int:
         """
         Get team for specified crew.
         """
-
         query = select(Crew.teamId).where(Crew.id == crewId)
         _logger.query(query)
         return (await session.execute(query)).scalar_one()
-
-
-    @connection
-    async def checkCrewsAreEnabled(self, teamId: int, session: AsyncSession) -> bool:
-        """
-        Are custom crews is enabled for the team?
-        """
-    
-        query = select(Team.enableCrews).where(Team.id == teamId)
-        _logger.query(query)
-        return (await session.execute(query)).scalar_one()
-
 
     
     @connection
@@ -189,24 +246,25 @@ class Database:
     
     
     @transaction
-    async def insertTeam(self, person: PersonModel, teamModel: TeamModel, session: AsyncSession) -> int:
+    @typechecked
+    async def insertTeam(self, person: PersonModel, team: TeamModel, session: AsyncSession) -> int:
         """
         Insert a new team
         """
         
         # Disable to insert team with defined ID
-        assert teamModel.id is None, "TeamInfo.id for the new model must be None."
+        assert team.id is None, "TeamInfo.id for the new model must be None."
 
         # Build a new team
-        if teamModel.title == "" or not await self.checkTeamTitleIsUnique(teamModel.title):
-            raise DatabaseErrorDuplicatedTitle(f"The title for a new team {teamModel.title} is empty or already exists.")
+        if team.title == "" or not await self.checkTeamTitleIsUnique(team.title):
+            raise DatabaseDuplicatedTitleError(f"The title for a new team {team.title} is empty or already exists.")
             
         # Insert the new team
         async with nested_transaction(session):
-            team = Team(**teamModel.model_dump())
-            session.add(team)
+            teamEntity = Team(**teamModel.model_dump())
+            session.add(teamEntity)
             await session.flush()
-            teamId = team.id
+            teamId = teamEntity.id
 
         # Add current user as administrator
         # NOTE: Before inserting default crew!
@@ -229,21 +287,26 @@ class Database:
                     ),
                 session=session,
                 )
-
         
         return teamId
 
 
     @transaction
+    @typechecked
+    async def canUpdateTeam(self, admin: AdminModel, session: AsyncSession) -> bool:
+        return await self.__checkAdminTeam(self, admin, session=session)
+
+
+    @transaction
+    @typechecked
     async def updateTeam(self, admin: AdminModel, team: TeamModel, session: AsyncSession) -> int:
         """
         Update specified team
         """
 
-
         # Check person is administrator
-        if not await self.checkAdminTeam(admin, session=session):
-            raise DatabaseErrorPermission(f"{admin.display_user_name()} cannot update team {team.id} ({team.title})")
+        if not await self.canUpdateTeam(admin, session=session):
+            raise DatabasePermissionError(f"{admin.display_user_name()} cannot update team {team.id} ({team.title})")
 
 
         # Need to know Team ID
@@ -256,16 +319,23 @@ class Database:
         await session.execute(query)
         return teamId
 
+    
+    @connection
+    @typechecked
+    async def canDeleteTeam(self, admin: AdminModel, session: AsyncSession) -> bool:
+        return await self.__checkAdminTeam(admin, session = session)
+    
 
     @transaction
+    @typechecked
     async def deleteTeam(self, admin: AdminModel, session: AsyncSession) -> None:
         """
         delete specified team
         """
         
         # Check person is administrator
-        if not await self.checkAdminTeam(admin, session=session):
-            raise DatabaseErrorPermission(f"{admin.display_user_name()} cannot delete team {admin.teamId}")
+        if not await self.canDeleteTeam(admin, session=session):
+            raise DatabasePermissionError(f"{admin.display_user_name()} cannot delete team {admin.teamId}")
 
         query = delete(Team).where(Team.id == admin.teamId)
         _logger.query(query)
@@ -273,6 +343,7 @@ class Database:
 
 
     @connection
+    @typechecked
     async def queryAdminTeam(self, admin: AdminModel, session: AsyncSession) -> Optional[TeamModel]:
         """
         Return specified team only if person is an administrator of it.
@@ -297,16 +368,20 @@ class Database:
         
     
     @connection
-    async def queryAdminTeamHeaders(self, admin: PersonModel, session: AsyncSession) ->List[TeamHeader]:
-        query = (
-            select(Admin.teamId, Team.title, Team.description)
-            .join(Team, Team.id == Admin.teamId)
-            .where(
-                (Admin.userId == admin.userId) |
-                (Admin.userName == admin.userName)
-            )
-            .order_by(Team.id)
-        )
+    @typechecked
+    async def queryAdminTeamHeaders(self, person: PersonModel, session: AsyncSession) ->List[TeamHeader]:
+        query = select(
+            Admin.teamId,
+            Team.title,
+            Team.description,
+            ).join(
+                Team,
+                Team.id == Admin.teamId
+            ).where(
+                (Admin.userId == person.userId) |
+                (Admin.userName == person.userName)
+            ).order_by(Team.id)
+    
         _logger.query(query)
 
         res = await session.execute(query)
@@ -315,98 +390,58 @@ class Database:
     
 
     @connection
-    async def checkAdminTeam(self, admin: AdminModel, session: AsyncSession) -> bool:
-        """
-        Check if specified person is administrator of team.
-        """
-        
-        query = (
-            select(func.count(Admin.userId))
-            .where(
-                (Admin.teamId == admin.teamId) &
-                (
-                    (Admin.userId == admin.userId) |
-                    (Admin.userName == admin.userName)
-                )
-            )
-        )
-        _logger.query(query)
-        
-        res = (await session.execute(query)).scalar_one_or_none()
+    @typechecked
+    async def queryMemberTeamHeaders(self, person: PersonModel, session: AsyncSession) -> List[TeamHeader]:
 
-        # The person is a team administrator!
-        return bool(res)
+        query = select(
+            Member.teamId,
+            Team.title,
+            Team.description
+            ).join(
+                Team,
+                Team.id == Member.teamId
+            ).where(
+                (Member.userId == person.userId) |
+                (Member.userName == person.userName)
+            ).order_by(Team.id)
+        _logger.query(query)
+
+        res = await session.execute(query)
+        return [TeamHeader(id=teamId, title=title, description=description)
+                for teamId, title, description in res]
     
 
     @connection
-    async def checkMemberTeam(self, member: MemberModel, session: AsyncSession) -> bool:
-        """
-        Check the person is already member of specified team.
-        """
+    @typechecked
+    async def canViewTeam(self, member: MemberModel, session: AsyncSession) -> bool:
         
-        query = select(func.count(Member.teamId)).where(
-            (Member.teamId ==member.teamId) &
-            (
-                (Member.userId == member.userId) |
-                (Member.userName == member.userName)
-            )
-        )
-        _logger.query(query)
-
-        res = (await session.execute(query)).scalar_one_or_none()
-
-        # The person is a team member.
-        return bool(res)
-
-
-    @connection
-    async def checkOutcastMember(self, outcast: OutcastModel, session: AsyncSession) -> bool:
-
-        query = (select(func.count(Outcast.userId))
-                .where(
-                    (Outcast.teamId == outcast.teamId) & 
-                    (
-                        (Outcast.userId == outcast.userId) |
-                        (Outcast.userName == outcast.userName)
-                    )
+        query = select(
+            func.count(Outcast.userId)
+            ).where(
+                (Outcast.teamId == member.teamId) &
+                ( 
+                    (Outcast.userId == member.userId) |
+                    (Outcast.userName == member.userName)
                 )
-        )
+            )
+
         _logger.query(query)
 
-        res = (await session.execute(query)).scalar_one_or_none()
+        isOutcast = (await session.execute(query)).scalar_one_or_none()
 
-        # The person is an outcast!
-        return bool(res)
+        # The person is not an outcast!
+        return not isOutcast
     
 
     @connection
-    async def checkLeaderCrew(self, leader: LeaderModel, session: AsyncSession) -> bool:
-        query = (
-            select(func.count(Leader.crewId))
-            .where(
-                (Leader.crewId == leader.crewId) &
-                (
-                    (Leader.userId == leader.userId) |
-                    (Leader.userName == leader.userName) 
-                )
-            )
-        )
-        _logger.query(query)
-
-        res = (await session.execute(query)).scalar_one_or_none()
-
-        # The person is a leader of the crew!
-        return bool(res)
-
-
-    @connection
+    @typechecked
     async def queryTeamData(self, member: MemberModel, session: AsyncSession) -> TeamData:
 
         teamId: Final[int] = member.teamId
 
         # Detect member status
-        as_member: Final[bool] = await self.checkMemberTeam(member)
-        as_admin: Final[bool] = await self.checkAdminTeam(member.combineId(AdminModel, teamId))
+        is_member: Final[bool] = await self.__checkMemberTeam(member)
+        is_admin: Final[bool] = await self.__checkAdminTeam(member.combineId(AdminModel, teamId))
 
         # Query team definition
         team: Final[Team] = await self.__queryTeam(teamId)
@@ -418,14 +453,14 @@ class Database:
 
         async def make_crew_data(crew: Crew) -> CrewData:
             # Query crew leader
-            as_leader = await self.checkLeaderCrew(member.combineId(LeaderModel, crew.id))
+            as_leader = await self.__checkLeaderCrew(member.combineId(LeaderModel, crew.id))
 
             # Query mates of crew
             query = select(Member).where(Member.crewId == crew.id).order_by(Member.position)
             mates = make_mate_data_list((await session.execute(query)).scalars())
 
             return CrewData(
-                as_admin=as_admin,
+                is_admin=is_admin,
                 as_leader=as_leader,
                 mates=mates,
                 **CrewModel.model_validate(crew).model_dump(),
@@ -449,36 +484,91 @@ class Database:
 
         # build team summary
         return TeamData(
-            as_admin=as_admin,
-            as_member=as_member,
+            is_admin=is_admin,
+            is_member=is_member,
             crews=await make_crew_data_list(crews),
             outboards=make_mate_data_list(outboards),
             **TeamModel.model_validate(team).model_dump()
            )
     
+    
+    @connection
+    @typechecked
+    async def checkSuspending(self, member: MemberModel, date: datetime, session: AsyncSession) -> bool:        
+        query = select(
+            func.count(Member.userId)
+            ).join_from(
+                Team,
+                Member,
+                Member.teamId == Team.id
+            ).join(
+                Admin, 
+                Admin.teamId == Team.id
+            ).where(
+                # An admin can do all.
+                (Admin.userId == member.userId) |
+                (Admin.userName == member.userName) |
+                # Stop when recruitment is suspended  
+                (not Team.suspendRecruitment) &
+                # Stop id deadline is set and is reached.
+                (not Team.suspendOnDeadline | (Team.deadline is None) | (Team.deadline <= date))
+            )
+        _logger.query(query)
+
+        res = (await session.execute(query)).scalar_one_or_none()
+        return bool(res)
+
+        
+    @connection
+    @typechecked
+    async def canAddTeamMember(self, member: MemberModel, date: datetime, session: AsyncSession) -> bool:
+        """
+        Check the member can be added to specified team:
+        member can be an administrator, be single if companions are disabled and not be an outcast 
+        """
+
+        query = select(
+            func.count(Member.userId)
+            ).join_from(
+                Team,
+                Member,
+                Member.teamId == Team.id
+            ).join(
+                Admin, 
+                Admin.teamId == Team.id
+            ).join(
+                Outcast,
+                Outcast.teamId == Team.id                
+            ).where(
+                # An admin can do all.
+                (Admin.userId == member.userId) |
+                (Admin.userName == member.userName) |
+                # Stop when recruitment is suspended  
+                (not Team.suspendRecruitment) &
+                # Stop id deadline is set and is reached.
+                (not Team.suspendOnDeadline | (Team.deadline is None) | (Team.deadline <= date)) &
+                # Stop if companions are suspended and the member is already in the team.
+                (not Team.suspendCompanions | Member.userId == member.userId) | (Member.userName == member.userName) &
+                # Stop if member is NOT an outcast
+                ((Outcast.userId != member.userId) & (Outcast.userName != member.userName))
+                )
+        _logger.query(query)
+    
+        res = (await session.execute(query)).scalar_one_or_none()
+
+        return bool(res) 
+
         
     @transaction
-    async def canAddTeamMember(self, member: MemberModel, session: AsyncSession) -> bool:
-        """
-        Check the member can be added to specified team
-        """
-
-        team: Final[TeamModel] = await self.__queryTeam(teamId=member.teamId)
-
-        # Check member is already in the team
-        return not (
-            team.suspendCompanions and await self.checkMemberTeam(member)
-            ) and not await self.checkOutcastMember(member.combineId(OutcastModel, member.teamId))
-
-
-        
-    @transaction
-    async def addTeamMember(self, member: MemberModel, crewId: Optional[int], session: AsyncSession) -> None:
+    @typechecked
+    async def addTeamMember(self, member: MemberModel, crewId: Optional[int], date: datetime, session: AsyncSession) -> None:
         """
         Add member to the team
         """
-        if await self.checkOutcastMember(member.combineId(OutcastModel, member.teamId)):
-            raise DatabaseErrorPermission(f"{member.display_user_name()} is an outcast for the team {member.teamId}")
+
+        # Check permission
+        if not await self.canAddTeamMember(member, date, session=session):
+            raise DatabasePermissionError(f"{member.display_user_name()} cannot be added to the team {member.teamId}")
 
         # Get maximal member number (companion)
         query = select(func.coalesce(func.max(Member.number), -1)).where(
@@ -490,13 +580,6 @@ class Database:
         )
         _logger.query(query)
         number = (await session.execute(query)).scalar_one()
-
-        # Check team enables companions
-        team = await self.__queryTeam(teamId=member.teamId)
-        if team.suspendCompanions and number >= 0:
-            raise DatabaseErrorSuspendedCompanions(
-                "Cannot insert companion for user "
-                f"{member.userId}, {member.userName}")
         
         # Generate the next number (will be zero for the first time)
         number += 1
@@ -522,34 +605,50 @@ class Database:
         session.add(memberEntity)
             
 
+    @connection
+    @typechecked
+    async def canRemoveTeamMember(self, member: MemberModel, date: datetime, session: AsyncSession) -> bool:
+        return await self.checkSuspending(member, date, session=session)
+    
+
     @transaction
-    async def removeTeamMember(self, member: MemberModel, session: AsyncSession) -> None:
+    @typechecked
+    async def removeTeamMember(self, member: MemberModel, date: datetime, session: AsyncSession) -> None:
         """
         Remove member from the team.
         """
 
-        # Check team enables companions
-        team = await self.__queryTeam(teamId=member.teamId)
-        if team.suspendCompanions:
-            # Delete all entities with companions
-            query = delete(Member).where(
-                (Member.teamId == member.teamId) & 
-                ((Member.userId == member.userId) | (Member.userName == member.userName)))
-        else:
+        if not await self.canRemoveTeamMember(member, date, session=session):
+            raise DatabasePermissionError(f"{member.display_user_name()} cannot be removed from the team {member.teamId}")
+
+        subquerySuspendCompanions = select(
+            Team.suspendCompanions
+        ).where(
+            Team.id == member.teamId
+        ).subquery()
+        
+        subqueryMaximalNumber = select(
+            func.max(Member.number)
+        ).where(
+            (Member.teamId == member.teamId) &
+            ((Member.userId == member.userId) | (Member.userName == member.userName))
+        )
+        
+        query = delete(Member).where(
+            # Delete all entities with companions. See below.
+            (Member.teamId == member.teamId) &
+            ((Member.userId == member.userId) | (Member.userName == member.userName)) &
+            
             # Delete only last added companion
-            query = delete(Member).where(
-                (Member.teamId == member.teamId) &
-                ((Member.userId == member.userId) | (Member.userName == member.userName)) &
-                (Member.number.in_(select(func.max(Member.number)).where(
-                    (Member.teamId == member.teamId) &
-                    ((Member.userId == member.userId) | (Member.userName == member.userName))
-                )))
-            )
+            (subquerySuspendCompanions | (Member.number.in_(subqueryMaximalNumber)))
+        )
+
         _logger.query(query)
         await session.execute(query)
 
 
     @transaction
+    @typechecked
     async def checkCrewTitleIsUnique(self, teamId: int, title: str, session: AsyncSession) -> bool:
         query = select(func.count(Crew.id)).where(
             (Crew.teamId == teamId) &
@@ -561,21 +660,48 @@ class Database:
         return not res
         
 
+    @connection
+    @typechecked
+    async def canInsertCrew(self, person: Union[MemberModel, AdminModel], date: datetime, session: AsyncSession) -> bool:
+
+        query = select(
+            func.count(Team.id)
+        ).join_from(
+            Team,
+            Admin,
+            Team.id == Admin.teamId
+        ).where(
+            # An admin can do all.
+            (Admin.userId == person.userId) |
+            (Admin.userName == person.userName) |
+            # Stop if custom crews are disabled
+            (Team.enableCrews) &
+            # Stop when recruitment is suspended  
+            (not Team.suspendRecruitment) &
+            # Stop id deadline is set and is reached.
+            (not Team.suspendOnDeadline | (Team.deadline is None) | (Team.deadline <= date))
+        )
+
+        _logger.query(query)
+
+        res = (await session.execute(query)).scalar_one_or_none()
+        return bool(res)
+
+
     @transaction
-    async def insertCrew(self, person: PersonModel, crew: CrewModel, session: AsyncSession) -> int:
+    @typechecked
+    async def insertCrew(self, person: Union[MemberModel, AdminModel], crew: CrewModel, date: datetime, session: AsyncSession) -> int:
+
         # Disable to insert team with defined ID
         assert crew.id is None, "CrewModel.id for the new created model must be None."
 
         # Check permissions
-        if not (await self.checkAdminTeam(person.combineId(AdminModel, crew.teamId)) or
-            await self.checkCrewsAreEnabled(crew.teamId)
-            ):
-            raise DatabaseErrorPermission(f"{person.display_user_name()} is not able to add a crew.")
-        
+        if not await self.canInsertCrew(person, date, session = session):
+            raise DatabasePermissionError(f"{person.display_user_name()} is not able to add a crew.")
 
         # Build a new crew
         if crew.isRegularCrew() and crew.title == "" or not await self.checkCrewTitleIsUnique(teamId=crew.teamId, title=crew.title):
-            raise DatabaseErrorDuplicatedTitle(f"The title for a new crew {crew.title} is already exists.")
+            raise DatabaseDuplicatedTitleError(f"The title for a new crew {crew.title} is already exists.")
 
         # Insert the new crew
         crewEntity = Crew(**crew.model_dump())
@@ -591,26 +717,67 @@ class Database:
             # Generate next position
             crewEntity.position = position + 1
 
+        async with nested_transaction(session=session):
+            session.add(crewEntity)
+            await session.flush()
+            crewId = crewEntity.id
 
-        session.add(crewEntity)
-        await session.flush()
-        crewId = crewEntity.id
-
-        # Mark the person as a crew leader
-        leaderEntity = Leader(**person.combineId(LeaderModel, crewId).model_dump())
-        session.add(leaderEntity)
+        # Mark the person as the crew leader
+        async with nested_transaction(session=session):
+            leaderEntity = Leader(**person.combineId(LeaderModel, crewId).model_dump())
+            session.add(leaderEntity)
 
         return crewId
 
-    
+
+    @connection
+    @typechecked
+    async def canUpdateCrew(leader: Union[LeaderModel, AdminModel], date: datetime, session: AsyncSession) -> bool:
+
+        crewId: Final[Optional[int]] = leader.crewId if leader is LeaderModel else None
+        
+        subqueryLeaderCrew = select(
+            func.coalesce(func.count(Leader.crewId), 0)
+            ).where(
+                (crewId is not None) & (Leader.crewId == crewId) &
+                (
+                    Leader.userId == leader.userId |
+                    Leader.userName == leader.userName
+                )
+            ).subquery()
+
+        query = select(
+            func.count(Team.id)
+        ).join_from(
+            Team,
+            Admin,
+            Team.id == Admin.teamId
+        ).where(
+            # An admin can do all.
+            (Admin.userId == leader.userId) |
+            (Admin.userName == leader.userName) |
+            # Stop if person is not leader or specified crew
+            (subqueryLeaderCrew) &
+            # Stop if custom crews are disabled
+            (Team.enableCrews) &
+            # Stop when recruitment is suspended  
+            (not Team.suspendRecruitment) &
+            # Stop id deadline is set and is reached.
+            (not Team.suspendOnDeadline | (Team.deadline is None) | (Team.deadline <= date))
+        )
+
+        res = (await session.execute(query)).scalar_one_or_none()
+        return bool(res)
+
+
     @transaction
-    async def updateCrew(self, leader: PersonModel, crew: CrewModel, session: AsyncSession) -> int:
+    @typechecked
+    async def updateCrew(self, leader: Union[LeaderModel, AdminModel], crew: CrewModel, date: datetime, session: AsyncSession) -> int:
+
         assert crew.id is not None, "CrewModel.id on updating cannot be None"
 
-        if not (await self.checkAdminTeam(leader.combineId(AdminModel, crew.teamId)) or
-                await self.checkLeaderCrew(leader)
-            ): 
-            raise DatabaseErrorPermission(f"{leader.display_user_name()} is not able to update crew {crew.title}")
+        if not await self.canUpdateCrew(leader, date, session=session): 
+            raise DatabasePermissionError(f"{leader.display_user_name()} is not able to update crew {crew.title}")
 
         crewId = crew.id
         query = update(Crew).where(Crew.id == crewId).values(crew.model_dump())
@@ -618,37 +785,29 @@ class Database:
 
         await session.execute(query)
         return crewId
+
+
+    @connection
+    @typechecked
+    async def canDeleteCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime) -> bool:
+        # NOTE: The same condition as on update
+        return await self.canUpdateCrew(leader, date)
     
 
     @transaction
-    async def deleteCrew(self, leader: LeaderModel, session: AsyncSession) -> None:
-        teamId = self.queryCrewTeamId(leader.crewId)
+    @typechecked
+    async def deleteCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime, session: AsyncSession) -> None:
 
-        if not (await self.checkAdminTeam(leader.combineId(AdminModel, teamId)) or
-                await self.checkLeaderCrew(leader)
-            ): 
-            raise DatabaseErrorPermission(f"{leader.display_user_name()} is not able to update crew {leader.crewId}")
+        if not await self.canDeleteCrew(leader, date, session=session): 
+            raise DatabasePermissionError(f"{leader.display_user_name()} is not able to update crew {leader.crewId}")
 
         query = delete(Crew).where(Crew.id == leader.crewId)
         _logger.query(query)
         await session.execute(query)
 
 
-    @connection
-    async def queryMemberTeams(self, member: PersonModel, session: AsyncSession) -> List[TeamModel]:
-        query = select(Team).where(Team.id.in_(
-            select(Member.teamId).where(
-                (Member.userId == member.userId) |
-                (Member.userName == member.userName)
-            )
-        )).order_by(Team.id)
-        _logger.query(query)
-
-        teams = (await session.execute(query)).scalars().all()
-        return list(teams)
-    
-
     @transaction
+    @typechecked
     async def setCrewMate(self, mate: MemberModel, crewId: Optional[int], session: AsyncSession) -> None:
         query = update(Member).where(
             (Member.teamId == mate.teamId) &
@@ -672,6 +831,7 @@ class Database:
 
 
     @connection
+    @typechecked
     async def queryLeaderCrew(self, leader: PersonModel, crewId: int, session: AsyncSession) -> Optional[CrewModel]:
         query = (
             select(Crew)
@@ -690,21 +850,4 @@ class Database:
 
         crew = (await session.execute(query)).scalar_one_or_none()
         return CrewModel.model_validate(crew) if crew else None
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    

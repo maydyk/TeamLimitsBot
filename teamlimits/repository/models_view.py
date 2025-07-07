@@ -12,11 +12,14 @@ class MemberView(TeamMember):
     @computed_field
     @property
     def userDisplay(self) -> str:
-        if self.number:
-            return f"{self.display_user_name()} (+{self.number})"
+        humanName = f"{self.firstName} {self.lastName}"
+        numberStr = f" (+{self.number})" if self.number else ""
+        if humanName.strip():
+            nickName = f" @{self.userName}" if self.userName else ""
+            return humanName + nickName + numberStr
         else:
-            return self.display_user_name()
-
+            nickName = f"@{self.userName}" if self.userName else str(self.userId)
+            return nickName + numberStr
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -70,8 +73,8 @@ class TeamHeaderView(TeamHeader):
 
 
 class TeamView(TeamModel):
-    as_member: bool
-    as_admin: bool
+    is_member: bool
+    is_admin: bool
     activeCrews: List[CrewView]
     queuedCrews: List[CrewView]
     defaultCrew: CrewView
@@ -92,7 +95,7 @@ class TeamView(TeamModel):
         """
         Format id as admin
         """
-        if self.as_admin:
+        if self.is_admin:
             return f"/m{self.idStr}"
         else:
             return self.idStr
@@ -142,19 +145,19 @@ class TeamView(TeamModel):
     @computed_field
     @property
     def canAddMember(self) -> bool:
-        return not (self.suspendCompanions and self.as_member)
+        return not (self.suspendCompanions and self.is_member)
     
 
     @computed_field
     @property
     def canRemoveMember(self) -> bool:
-        return self.as_member
+        return self.is_member
     
 
     @computed_field
     @property
     def canAddMemberCrew(self) -> bool:
-        return self.enableCrews or self.as_admin
+        return self.enableCrews or self.is_admin
     
     
     @computed_field

@@ -14,7 +14,7 @@ class MemberData(TeamMember, frozen=True):
 
 
 class CrewData(CrewModel):
-    as_admin: bool
+    is_admin: bool
     as_leader: bool
     mates: List[MemberData]
 
@@ -64,8 +64,8 @@ class CrewData(CrewModel):
 
 # Raw team data from database
 class TeamData(TeamModel):
-    as_admin: bool
-    as_member: bool
+    is_admin: bool
+    is_member: bool
     crews: List[CrewData]
     outboards: List[MemberData]
 

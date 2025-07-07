@@ -179,7 +179,7 @@ async def handle_member_team(message: Message, dialog_manager: DialogManager, **
     teamId = even_hex_parse(_member_pattern, message.text.lstrip('/'))
     if teamId is not None:
         person = make_person(message.from_user)
-        if not await Repository().checkOutcastMember(person.combineId(OutcastModel, teamId)):
+        if await Repository().canViewTeam(person.combineId(MemberModel, teamId)):
             await dialog_manager.start(
                 state=MemberTeam.summary,
                 data=set_person_team(teamId, person),
@@ -196,16 +196,15 @@ async def handle_team_list(message: Message, dialog_manager: DialogManager, **kw
     """
 
     person = make_person(message.from_user)
-    teams = await Repository().queryMemberTeams(member=person)
+    headers = await Repository().queryMemberTeamHeaders(person)
     
     # Build text
     msg = _("msg_member_list_head")
-    for team in teams:
-        teamIdStr = even_hex(team.id)
+    for header in headers:
         msg += _("msg_member_list_item{teamIdStr}{title}{description}").format(
-            teamIdStr=teamIdStr,
-            title=team.title,
-            description=team.description,
+            teamIdStr=header.teamIdStr(),
+            title=header.title,
+            description=header.description,
         )
     await message.answer(msg)
 
