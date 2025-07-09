@@ -16,9 +16,12 @@ from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.api.entities import Data
 from aiogram_dialog.widgets.input import ManagedTextInput, TextInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, Next, Row
-from typing import Any, Final, Tuple
+from datetime import datetime
+from dependency_injector.wiring import Provide, inject
+from typing import Any, Final
 
-from teamlimits.models.base import CrewModel, MemberModel
+from teamlimits.application import Application
+from teamlimits.models.base import CrewModel, LeaderModel, MemberModel
 from teamlimits.models.fields import fields
 from teamlimits.repository.repository import Repository
 from teamlimits.user.tg_bot.confirmation_dialog import make_confirmation_dialog
@@ -80,18 +83,19 @@ def _preview(key: str) -> Preview:
 def _get_member(dialog_manager: DialogManager) -> MemberModel:
     return get_member(dialog_manager.start_data)
 
-
+@inject
 async def _on_query_title(
         callback: CallbackQuery,
         source: ManagedTextInput,
         manager: DialogManager,
         data: Any,
+        repository: Repository = Provide[Application.repository]
         ) -> None:
     """
     Handle crew title
     """
     member = _get_member(manager)
-    if await Repository().checkCrewTitleIsUnique(member.teamId, data):
+    if await repository.checkCrewTitleIsUnique(member.teamId, data):
         manager.dialog_data[_TITLE] = data
         await manager.next()
     else:
@@ -161,11 +165,12 @@ async def _manage_crew(
         ) -> None:
     manager.dialog_data[_MANAGE_CREW] = True
 
-
+@inject
 async def _insert_crew(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
+        repository: Repository = Provide[Application.repository]
         ) -> None:
     
     crew_values = manager.dialog_data
@@ -175,7 +180,7 @@ async def _insert_crew(
 
     try:
         crew = CrewModel.model_validate(crew_values)
-        crewId = await Repository().insertCrew(person = member, crew=crew)
+        crewId = repository.insertCrew(person = member, crew=crew, date=datetime.now())
         manager.dialog_data[_ID] = crewId
     except Exception as e:
         
@@ -187,10 +192,12 @@ async def _insert_crew(
             ))
 
 
+@inject
 async def _update_crew(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
+        repository: Repository = Provide[Application.repository]
         ) -> None:
     
     crew_values = manager.dialog_data
@@ -199,7 +206,7 @@ async def _update_crew(
     try:
         leader = make_person(callback.from_user)
         crew = CrewModel.model_validate(crew_values)
-        crewId = await Repository().updateCrew(leader = leader, crew=crew)
+        crewId = await repository.updateCrew(leader = leader, crew=crew, date=datetime.now())
     except Exception as e:
         _logger.exception(e)
         breakpoint()
@@ -211,16 +218,18 @@ async def _update_crew(
         )
 
 
+@inject
 async def _crew_summary_result(
         data: Data,
         result: Any,
         dialog_manager: DialogManager,
+        repository: Repository = Provide[Application.repository]
         ) -> None:
     if result == _DELETE_CREW:
         crewId = data[_ID]
         try:
-            leader = get_person(data)
-            await Repository().deleteCrew(crewId=crewId)
+            leader = get_person(data).combineId(LeaderModel, crewId)
+            await repository.deleteCrew(leader, date=datetime.now())
 
             dialog_manager.dialog_data.pop(_ID, "")
             dialog_manager.dialog_data.pop(_CREW_ID_STR, "")

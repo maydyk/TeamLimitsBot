@@ -5,12 +5,11 @@ Module models contains a set of base Models
 """
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, NonNegativeInt, computed_field, model_validator
+from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
 from typing import Any, Optional, Type, TypeVar
 
-from teamlimits.details.even_hex import even_hex
-from teamlimits.models.common import CrewSpecial
-from teamlimits.models.fields import fields
+from teamlimits.details import even_hex
+from teamlimits.models import CrewSpecial, fields
 
 class TeamHeader(BaseModel):
     """

@@ -401,7 +401,7 @@ msgstr "Enter the team description"
 
 #: teamlimits/user/tg_bot/manage_team.py:640
 #, fuzzy
-msgid "create_team_summary"
+msgid "manage_team_summary"
 msgstr "Enter the team description"
 
 #: teamlimits/user/tg_bot/manage_team.py:644

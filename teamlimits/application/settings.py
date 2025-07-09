@@ -1,5 +1,5 @@
 """
-module config
+Module settings
 Extract settings from the file .env or environment.
 NOTE: Don't save the TOKEN in the code!
 
@@ -7,17 +7,20 @@ NOTE: Don't save the TOKEN in the code!
 """
 
 
-from typing import Optional
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 
-class Config(BaseSettings):
+class Settings(BaseSettings):
     TOKEN: str
     SQLITE_DB_PATH: Optional[str] = None
 
     model_config = SettingsConfigDict(env_prefix="TEAMLIMITSBOT_", env_file="config/.env")
 
-    def make_db_url(self) -> str:
+    @computed_field
+    @property
+    def db_url(self) -> str:
         if self.SQLITE_DB_PATH :
             return f"sqlite+aiosqlite:///{self.SQLITE_DB_PATH}"
         else:

@@ -1,11 +1,13 @@
 
-from pydantic import ConfigDict, computed_field
-from typing import List, Optional
 from datetime import datetime
+from itertools import chain
 from functools import reduce
+from pydantic import ConfigDict, computed_field
+from typeguard import typechecked
+from typing import List, Optional
 
-from teamlimits.models.base import CrewModel, TeamHeader, TeamMember, TeamModel
-from teamlimits.details.even_hex import even_hex
+from teamlimits.models import CrewModel, CrewSpecial, TeamHeader, TeamMember, TeamModel, TeamData, MemberData
+from teamlimits.details import coerce_first, even_hex, list_difference, list_intersection
 
 class MemberView(TeamMember):
 
@@ -37,12 +39,12 @@ class CrewView(CrewModel):
     @computed_field
     @property
     def mateIdStr(self) -> str:
-        if self.as_leader:
+        if self.is_leader:
             return f"/mc{self.idStr}"
         else:
             return self.idStr
 
-    as_leader: bool
+    is_leader: bool
     activeMates: List[MemberView]
     queuedMates: List[MemberView]
 
@@ -71,10 +73,13 @@ class TeamHeaderView(TeamHeader):
     model_config = ConfigDict(from_attributes=True)
 
 
-
 class TeamView(TeamModel):
     is_member: bool
     is_admin: bool
+    can_insert_member: bool
+    can_remove_member: bool
+    can_insert_crew: bool
+    deadline_days_left: Optional[int]
     activeCrews: List[CrewView]
     queuedCrews: List[CrewView]
     defaultCrew: CrewView
@@ -134,31 +139,7 @@ class TeamView(TeamModel):
     @property
     def teamIsFull(self) -> bool:
         return self.maximalMembers == None or self.totalMembers <= self.maximalMembers
-            
-
-    @computed_field
-    @property
-    def deadlineDaysLeft(self) -> Optional[int]:
-        return (self.deadline - datetime.now()).days if self.deadline is not None else None
-    
-
-    @computed_field
-    @property
-    def canAddMember(self) -> bool:
-        return not (self.suspendCompanions and self.is_member)
-    
-
-    @computed_field
-    @property
-    def canRemoveMember(self) -> bool:
-        return self.is_member
-    
-
-    @computed_field
-    @property
-    def canAddMemberCrew(self) -> bool:
-        return self.enableCrews or self.is_admin
-    
+                    
     
     @computed_field
     @property
@@ -192,3 +173,79 @@ class TeamView(TeamModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+@typechecked
+def make_team_view(teamData: TeamData) -> TeamView:
+    """
+    Build a view for the given team data.
+    """
+    defaultCrew = teamData.defaultCrew
+
+    # Build member list: sorted by position of outboards and crew mates
+    # and attached default crew members
+    totalMembers = sorted(
+        chain(
+            teamData.outboards, 
+            chain.from_iterable([crew.activeMates for crew in teamData.activeCrews]),
+        ),
+        key = lambda member: member.position
+    ) + defaultCrew.mates
+
+    # Get first maximal members
+    validMembers = coerce_first(totalMembers, teamData.maximalMembers)
+
+    # Extract default crew members from valid list.
+    validDefaultCrewMembers = list(
+        filter(
+            lambda member: member.crewId == CrewSpecial.CREW_SPECIAL_DEFAULT,
+            validMembers
+        )
+    )
+
+    # Distribute default mates per free places in the crews
+    for crew in teamData.activeCrews:
+        validDefaultCrewMembers = crew.acceptMates(validDefaultCrewMembers)
+
+    # Update default crew members
+    teamData.defaultCrew.mates = list_difference(teamData.defaultCrew.mates, validDefaultCrewMembers)
+
+    # Update outboards
+    activeOutboards = list_intersection(teamData.outboards, validMembers)
+    queuedOutboards = list_difference(teamData.outboards, validMembers)
+
+    # Transform CrewData to CrewView
+    activeCrews = list(
+        map(
+            lambda crewData: CrewView.model_validate(crewData.model_dump()),
+            teamData.activeCrews
+        )
+    )
+
+    queuedCrews = list(
+        map(
+            lambda crewData: CrewView.model_validate(crewData.model_dump()),
+            teamData.queuedCrews
+        )
+    )
+
+    def make_member_view_list(memberDataList: List[MemberData]) -> List[MemberView]:
+        return list(map(
+            lambda memberData: MemberView.model_validate(memberData.model_dump()),
+            memberDataList
+            )
+        )
+    
+    # Build TeamSummary
+    return TeamView(
+        is_admin=teamData.is_admin,
+        is_member=teamData.is_member,
+        can_insert_member=teamData.can_insert_member,
+        can_remove_member=teamData.can_remove_member,
+        can_insert_crew=teamData.can_insert_crew,
+        deadline_days_left=teamData.deadline_days_left,
+        activeCrews=activeCrews,
+        queuedCrews=queuedCrews,
+        defaultCrew=CrewView.model_validate(defaultCrew.model_dump()),
+        activeOutboards=make_member_view_list(activeOutboards),
+        queuedOutboards=make_member_view_list(queuedOutboards),
+        **TeamModel.model_validate(teamData.model_dump()).model_dump()
+    )

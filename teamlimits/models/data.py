@@ -6,8 +6,8 @@ from pydantic import ConfigDict, computed_field
 from typing import List, Optional
 
 
-from teamlimits.details.coerce_list import coerce_first, coerce_last
-from teamlimits.models.base import CrewModel, TeamMember, TeamModel
+from teamlimits.details import coerce_first, coerce_last
+from teamlimits.models import CrewModel, TeamMember, TeamModel
 
 class MemberData(TeamMember, frozen=True):
     model_config = ConfigDict(from_attributes=True)
@@ -15,7 +15,7 @@ class MemberData(TeamMember, frozen=True):
 
 class CrewData(CrewModel):
     is_admin: bool
-    as_leader: bool
+    is_leader: bool
     mates: List[MemberData]
 
     # Cache computed fields
@@ -66,6 +66,10 @@ class CrewData(CrewModel):
 class TeamData(TeamModel):
     is_admin: bool
     is_member: bool
+    can_insert_member: bool
+    can_remove_member: bool
+    can_insert_crew: bool
+    deadline_days_left: Optional[int]
     crews: List[CrewData]
     outboards: List[MemberData]
 

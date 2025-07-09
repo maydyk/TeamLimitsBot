@@ -45,12 +45,6 @@ def make_person(user: User, personService: PersonService = Provide[PersonContain
     """
     Make a [PersonModel] from Telegram User.
     """
-    # return PersonModel(
-    #     userId=user.id,
-    #     userName=user.username,
-    #     firstName=user.first_name,
-    #     lastName=user.last_name,
-    # )
     return personService.make_person(user)
 
 

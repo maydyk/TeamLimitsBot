@@ -29,13 +29,13 @@ from aiogram_dialog.widgets.kbd import (
     SwitchTo,
 )
 
-from typing import Any, Dict, Final
+from dependency_injector.wiring import Provide, inject
+from typing import Any, Dict, Final, Optional
 
+from teamlimits.application import Application
 from teamlimits.details.even_hex import even_hex, even_hex_pattern, even_hex_parse
-from teamlimits.models.base import AdminModel, TeamModel
-from teamlimits.models.fields import fields
-from teamlimits.repository.repository import Repository
-from teamlimits.repository.models_view import TeamHeaderView
+from teamlimits.models import AdminModel, TeamHeaderView, TeamModel, fields
+from teamlimits.repository import Repository
 
 
 from teamlimits.user.tg_bot.confirmation_dialog import make_confirmation_dialog
@@ -122,12 +122,13 @@ _delete_team_confirmation = make_confirmation_dialog(
     state=ConfirmDeleteTeam.confirm
 )
 
-
+@inject
 async def _on_query_title(
         callback: CallbackQuery,
         source: ManagedTextInput,
         manager: DialogManager,
         data: Any,
+        repository: Repository = Provide[Application.repository],
     ) -> None:
     """
     Team title success handler:
@@ -135,7 +136,7 @@ async def _on_query_title(
         or switch directly to maximumMembers
     """
     
-    if await Repository().checkTeamTitleIsUnique(data):
+    if await repository.checkTeamTitleIsUnique(data):
         manager.dialog_data[_TITLE] = data
 
         if manager.dialog_data.get(_ASK_DESCRIPTION):
@@ -148,7 +149,7 @@ async def _on_query_title(
         ))
 
 
-async def _start_create_team(start_data: Dict|None, dialog_manager: DialogManager) -> None:
+async def _start_create_team(start_data: Optional[Dict], dialog_manager: DialogManager) -> None:
     # Get data from start
     await dialog_copy_start_data(start_data, dialog_manager)
 
@@ -308,10 +309,12 @@ async def _cancel_team(
     await callback.message.delete()
 
 
+@inject
 async def _insert_team(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
+        repository: Repository = Provide[Application.repository]
         ) -> None:
     
     team_values = manager.dialog_data
@@ -320,7 +323,7 @@ async def _insert_team(
     try:
         person = make_person(callback.from_user)
         team = TeamModel.model_validate(team_values)
-        teamId = await Repository().insertTeam(person=person, team=team)
+        teamId = await repository.insertTeam(person=person, team=team)
 
         await manager.done()
         callback.answer
@@ -342,19 +345,21 @@ async def _insert_team(
         )
 
 
+@inject
 async def _update_team(
         callback: CallbackQuery,
         button: Button,
         manager: DialogManager,
+        repository: Repository = Provide[Application.repository],
         ) -> None:
 
     team_values = manager.dialog_data.copy()
     assert(_ID in team_values)
 
     try:
-        person = make_person(callback.from_user)
         team = TeamModel.model_validate(team_values)
-        teamId = await Repository().updateTeam(admin = person, team=team)
+        admin = make_person(callback.from_user).combineId(AdminModel, team.id)
+        teamId = await repository.updateTeam(admin=admin, team=team)
 
         await manager.done()
         await callback.message.answer(_("create_team_updated{teamIdStr}{title}").format(
@@ -373,15 +378,19 @@ async def _update_team(
         pass
 
 
-async def _team_summary_result(data: Data, result: Any, dialog_manager: DialogManager) -> None:
+@inject
+async def _team_summary_result(
+    data: Data,
+    result: Any,
+    dialog_manager: DialogManager,
+    repository: Repository = Provide[Application.repository]) -> None:
     _logger.debug("_team_summary_result", data, result)
     if result == _DELETE_TEAM:
         teamId = data[_ID]
         _logger.debug(f"Delete the team {even_hex(teamId)}")
         try:
-            breakpoint() # TODO make data contain person
             admin = make_person(data).combineId(AdminModel, teamId)
-            await Repository().deleteTeam(admin)
+            await repository.deleteTeam(admin)
 
             # Remove ID from dictionary
             # Now we are being in state as a new team was created
@@ -637,7 +646,7 @@ _create_team_dialog = Dialog(
 
     # Summary
     Window(
-        NJinja(text = N_("create_team_summary")),
+        NJinja(text = N_("manage_team_summary")),
         Row(
             _manage_team_wizard,
             Button(
@@ -701,13 +710,19 @@ async def handle_create_team(message: Message, state: FSMContext, dialog_manager
 
 
 @create_team_router.message(Command("manage"))
-async def handle_manage_list(message: Message, state: FSMContext, dialog_manager: DialogManager) -> None:
+@inject
+async def handle_manage_list(
+    message: Message,
+    state: FSMContext,
+    dialog_manager: DialogManager,
+    repository: Repository = Provide[Application.repository]
+    ) -> None:
     """
     Show list of managed teams
     """
     teams = map(
         lambda header: TeamHeaderView(header),
-        await Repository().queryAdminTeamHeaders(make_person(message.from_user)),
+        await repository.queryAdminTeamHeaders(make_person(message.from_user)),
         )
 
 
@@ -721,14 +736,19 @@ async def handle_manage_list(message: Message, state: FSMContext, dialog_manager
 _manage_pattern = even_hex_pattern("m")
 
 @create_team_router.message(Command(_manage_pattern))
-async def handle_manage_team(message: Message, dialog_manager: DialogManager, **kwargs) -> None:
+@inject
+async def handle_manage_team(
+    message: Message,
+    dialog_manager: DialogManager,
+    repository: Repository = Provide[Application.repository],
+    **kwargs) -> None:
     """
     Start to manage team from command
     """
     teamId = even_hex_parse(_manage_pattern, message.text.lstrip('/'))
     if teamId is not None:
         teamIdStr = even_hex(teamId)
-        teamModel = await Repository().queryAdminTeam(make_person(message.from_user).combineId(AdminModel, teamId))
+        teamModel = await repository.queryAdminTeam(make_person(message.from_user).combineId(AdminModel, teamId))
         if teamModel:
             # Add the text representation of team ID
             team_values = teamModel.model_dump() | {_TEAM_ID_STR : teamIdStr }

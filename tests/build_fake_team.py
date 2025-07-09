@@ -2,22 +2,24 @@ import base
 import asyncio
 import logging
 
-from teamlimits.repository.repository import Repository
+from datetime import datetime
+from dependency_injector.wiring import Provide, inject
+
+from teamlimits.application import Application, bound_resources
 from teamlimits.models.base import MemberModel, TeamModel
+from teamlimits.user.tg_bot.main import setup_application
 from tests.generate_fake_persons import readFakePersons
-# Extract token and DB connection
-import teamlimits.user.tg_bot.config as config
 
 
-async def main():
+@inject
+async def main(application: Application = Provide[Application]):
     # Setup logging
     logging.basicConfig(level=logging.DEBUG if __debug__ else logging.ERROR)
 
-    # Read config
-    settings = config.Config()
-
     # Prepare Repository
-    async with Repository.build(settings.make_db_url()):
+    async with bound_resources(application):
+        repository = application.repository
+
         persons = readFakePersons()
 
         # Make the team
@@ -39,11 +41,11 @@ async def main():
                 suspendRecruitment=False,
                 suspendOnDeadline=False,
             )
-            teamId = await Repository().insertTeam(admin, fellowShip)
+            teamId = await repository.insertTeam(admin, fellowShip)
 
             # Add all members
             for person in persons:
-                await Repository().addTeamMember(member = person.combineId(MemberModel, teamId), crewId = None)
+                await repository.insertTeamMember(member = person.combineId(MemberModel, teamId), crewId = None, date = datetime.now())
         
         except Exception as e:
             print(f"Exception!:\n{e}")
@@ -54,4 +56,7 @@ async def main():
 
 
 if __name__ == "__main__":
+    application = Application()
+    setup_application(application)
+
     asyncio.run(main())
