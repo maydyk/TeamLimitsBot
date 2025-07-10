@@ -11,7 +11,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from functools import wraps
 from itertools import filterfalse
-from sqlalchemy import case, delete, func, literal, not_, select, select, update
+from pprint import pprint
+from sqlalchemy import Select, case, delete, func, literal, not_, select, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from typeguard import typechecked
 from typing import Any, Awaitable, AsyncIterator, Callable, Dict, Iterable, Final, List, Optional, ParamSpec, Self, Tuple, TypeVar, Union, cast
@@ -117,7 +118,7 @@ class SessionHandler:
 
 
     @typechecked
-    def has_session(self) -> bool:
+    def has_session(self: Self) -> bool:
         kwSession = self.kwargs.get("session")
         assert kwSession is None or isinstance(kwSession, AsyncSession), "session= must be an AsyncSession."
 
@@ -135,7 +136,7 @@ class SessionHandler:
             return bool(session)
 
     @typechecked
-    async def invoke(self, method: Callable[_P, Awaitable[_R]]) -> _R:
+    async def invoke(self: Self, method: Callable[_P, Awaitable[_R]]) -> _R:
         return await method(self.owner, *self.args, **self.kwargs)  
 
 
@@ -176,7 +177,7 @@ class Repository:
             handler = SessionHandler(self, args, kwargs)
 
             if handler.has_session():
-                return handler.invoke(self, method)
+                return handler.invoke(method)
             else:
                 # Perform call with session
                 async with self.connection.make_session(True) as session:
@@ -185,10 +186,16 @@ class Repository:
         
         return wrapper
 
+    @session
+    @typechecked
+    async def __print_select_result(self: Self, query: Select[Tuple], session: AsyncSession):
+        res = (await session.execute(query)).mappings().all()
+        pprint(res)
+
 
     @session
     @typechecked
-    async def __queryTeam(self, teamId: int, session: AsyncSession) -> Team:
+    async def __queryTeam(self: Self, teamId: int, session: AsyncSession) -> Team:
         """
         Helper method to get the team by id
         """
@@ -491,11 +498,24 @@ class Repository:
             Team.id == member.teamId
         ).subquery().alias("selected_team")
 
+        teamAdmins = select(
+            Admin
+        ).where(
+            Admin.teamId == member.teamId
+        ).subquery().alias("team_admins")
+
         teamMembers = select(
             Member.userId, Member.userName, Member.teamId,
         ).where(
             Member.teamId == member.teamId
         ).subquery().alias("team_members")
+
+        isMemberOnTeam = select(
+            func.coalesce(func.count(teamMembers.c.teamId), 0)
+        ).where(
+            (teamMembers.c.userId == member.userId) |
+            (teamMembers.c.userName == member.userName)
+        ).subquery().alias("member_in_team")
 
         teamOutcasts = select(
             Outcast.userId, Outcast.userName, Outcast.teamId,
@@ -503,23 +523,35 @@ class Repository:
             Outcast.teamId == member.teamId
         ).subquery().alias("team_outcasts")
 
+        isMemberOutcast = select(
+            func.coalesce(func.count(teamOutcasts.c.teamId), 0)
+        ).where(
+            (teamOutcasts.c.userId == member.userId) |
+            (teamOutcasts.c.userName == member.userName)
+        ).subquery().alias("member_is_outcast")
+
         query = select(
-            func.count(selectedTeam.c.id)
+            # func.count(selectedTeam.c.id),
+            selectedTeam,
+            teamAdmins,
+            teamMembers,
+            teamOutcasts,
             ).join(
-                Admin, 
-                Admin.teamId == selectedTeam.c.id,
+                teamAdmins, 
+                teamAdmins.c.teamId == selectedTeam.c.id,
+                isouter=True
             ).join(
                 teamMembers,
                 teamMembers.c.teamId == selectedTeam.c.id,
-                isouter=True,
+                isouter=True
             ).join(
                 teamOutcasts,
                 teamOutcasts.c.teamId == selectedTeam.c.id,
                 isouter=True,             
             ).where(
                 # An admin can do all.
-                (Admin.userId == member.userId) |
-                (Admin.userName == member.userName) |
+                (not_(teamAdmins.c.userId.is_(None)) & (teamAdmins.c.userId == member.userId)) |
+                (not_(teamAdmins.c.userName.is_(None)) & (teamAdmins.c.userName == member.userName)) |
                 # Stop when recruitment is suspended  
                 not_(selectedTeam.c.suspendRecruitment) &
                 # Stop id deadline is set and is reached.
@@ -531,18 +563,18 @@ class Repository:
                 # Stop if companions are suspended and the member is already in the team.
                 (
                     not_(selectedTeam.c.suspendCompanions) | 
-                    teamMembers.c.userId.is_(None) | (teamMembers.c.userId != member.userId) |
-                    teamMembers.c.userName.is_(None) | (teamMembers.c.userName != member.userName)
+                    # We can be inserted to an empty team
+                    teamMembers.c.teamId.is_(None) | literal(0).in_(isMemberOnTeam)
                 ) & 
                 # Stop if member is NOT an outcast
-                (
-                   (teamOutcasts.c.userId.is_(None) | (teamOutcasts.c.userId != member.userId)) & 
-                   (teamOutcasts.c.userName.is_(None) | teamOutcasts.c.userName != member.userName)
-                )
+                literal(0).in_(isMemberOutcast)
             )
+        
         _logger.query(query)
     
-        res = (await session.execute(query)).scalar_one_or_none()
+        # await self.__print_select_result(query, session=session)
+
+        res = (await session.execute(query)).fetchall() #.scalar_one_or_none()
 
         return bool(res) 
 
@@ -649,16 +681,25 @@ class Repository:
     @typechecked
     async def removeTeamMember(self, member: MemberModel, date: datetime, session: AsyncSession) -> None:
         """
-        Remove member from the team.
+        Remove the member from the team.
         """
 
         if not await self.canRemoveTeamMember(member, date, session=session):
             raise RepositoryPermissionError(f"{member.display_user_name()} cannot be removed from the team {member.teamId}")
 
         suspendCompanions = select(
-            func.coalesce(func.sum(Team.suspendCompanions), 0)
+            case(
+                (Team.suspendCompanions, 1),
+                else_= 0,
+            )
+        ).join(
+            Admin,
+            Admin.teamId == Team.id
         ).where(
-            Team.id == member.teamId
+            (Team.id == member.teamId) &
+            # Exclude an Admin from the suspendCompanions restriction.
+            (Admin.userId != member.userId) &
+            (Admin.userName != member.userName)
         ).subquery().alias("suspended_companions")
         
         maximalNumber = select(
@@ -674,7 +715,7 @@ class Repository:
             ((Member.userId == member.userId) | (Member.userName == member.userName)) &
             
             # Delete only last added companion
-            (literal(0).in_(suspendCompanions) | (Member.number.in_(maximalNumber)))
+            (literal(1).in_(suspendCompanions) | (Member.number.in_(maximalNumber)))
         )
 
         _logger.query(query)

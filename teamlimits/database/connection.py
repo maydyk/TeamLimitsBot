@@ -53,8 +53,8 @@ class Connection:
             return self.session_maker.begin()
         else:
             return self.session_maker()
-        
     
+        
 @asynccontextmanager
 async def create_connection(db_path: str) -> AsyncIterator[Connection]:
     connection = Connection(db_path)

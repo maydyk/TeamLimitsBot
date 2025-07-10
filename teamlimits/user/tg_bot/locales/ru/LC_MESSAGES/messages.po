@@ -554,7 +554,7 @@ msgstr "Экипаж {crewIdStr} не найден."
 #, fuzzy
 msgid "member_team_summary_header"
 msgstr ""
-"Команда <b>{{title}}</b> {{memberIdStr}}\n"
+"Команда {{memberIdStr}} <b>{{title}}</b>\n"
 "<i>{{description or \"не задано\"}}</i>\n"
 
 #: teamlimits/user/tg_bot/member_team.py:131
