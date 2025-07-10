@@ -6,8 +6,9 @@ from pydantic import ConfigDict, computed_field
 from typeguard import typechecked
 from typing import List, Optional
 
-from teamlimits.models import CrewModel, CrewSpecial, TeamHeader, TeamMember, TeamModel, TeamData, MemberData
-from teamlimits.details import coerce_first, even_hex, list_difference, list_intersection
+from teamlimits.details import coerce_first, list_difference, list_intersection
+from teamlimits.models import CrewModel, CrewSpecial, TeamHeader, TeamModel, TeamData, MemberData, TeamMember
+from teamlimits.user.tg_bot.commands import CommandPattern, manage_crew_command, manage_team_command, take_a_crew_command
 
 class MemberView(TeamMember):
 
@@ -27,22 +28,19 @@ class MemberView(TeamMember):
 
 
 class CrewView(CrewModel):
-
-    @computed_field
-    @property
-    def idStr(self) -> str:
-        """
-        A computed field represents id as string
-        """
-        return even_hex(self.id)
     
     @computed_field
     @property
     def mateIdStr(self) -> str:
         if self.is_leader:
-            return f"/mc{self.idStr}"
+            return manage_crew_command.make_command(self.id).numbered_command
         else:
-            return self.idStr
+            return CommandPattern.format_number(self.id)
+        
+    @computed_field
+    @property
+    def takeACrew(self) -> str:
+        return take_a_crew_command.make_command(self.id).numbered_command
 
     is_leader: bool
     activeMates: List[MemberView]
@@ -63,12 +61,11 @@ class TeamHeaderView(TeamHeader):
     
     @computed_field
     @property
-    def idStr(self) -> str:
+    def manage(self) -> str:
         """
         A computed field represents id as string
         """
-        return even_hex(self.id)
-
+        return manage_team_command.make_command(self.id).numbered_command
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -85,14 +82,6 @@ class TeamView(TeamModel):
     defaultCrew: CrewView
     activeOutboards: List[MemberView]
     queuedOutboards: List[MemberView]
-
-    @computed_field
-    @property
-    def idStr(self) -> str:
-        """
-        Format is as hex.
-        """
-        return even_hex(self.id)
     
     @computed_field
     @property
@@ -101,9 +90,9 @@ class TeamView(TeamModel):
         Format id as admin
         """
         if self.is_admin:
-            return f"/m{self.idStr}"
+            return manage_team_command.make_command(self.id).numbered_command
         else:
-            return self.idStr
+            return CommandPattern.format_number(self.id)
     
 
     @staticmethod
@@ -173,6 +162,8 @@ class TeamView(TeamModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+# TODO: Move to separated file
 @typechecked
 def make_team_view(teamData: TeamData) -> TeamView:
     """

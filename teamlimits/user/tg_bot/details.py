@@ -13,16 +13,14 @@ from aiogram_dialog import DialogManager, ChatEvent, StartMode
 from aiogram_dialog.api.entities import ShowMode, Data
 from aiogram_dialog.api.exceptions import InvalidWidgetType
 from aiogram_dialog.widgets.common import Whenable, WhenCondition
-from aiogram_dialog.widgets.kbd import Back, Button, Calendar, ManagedCheckbox, Next, Start, SwitchTo, Row
+from aiogram_dialog.widgets.kbd import Button, Calendar, ManagedCheckbox, Start
 from aiogram_dialog.widgets.kbd.button import OnClick
 from aiogram_dialog.widgets.kbd.calendar_kbd import OnDateSelected
 from aiogram_dialog.widgets.text import Text
 from aiogram_dialog.widgets.utils import GetterVariant, ensure_data_getter
 from datetime import date
 from operator import itemgetter
-from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, Union
-
-import re
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 
 
 async def dialog_copy_start_data(start_data: Dict|None, dialog_manager: DialogManager) ->  None:
@@ -100,6 +98,7 @@ async def write_checkbox_state(
     """
     manager.dialog_data[checkbox.widget.widget_id] = checkbox.is_checked()
 
+
 async def dialog_delete_message(
         callback: CallbackQuery,
         button: Button,
@@ -164,6 +163,7 @@ async def filter_command(message: Message, *values: CommandPatternType) -> bool:
 # DynamicData = Union[dict, list, int, str, float, None, DynamicDataProvider]
 DynamicData = Union[Data, GetterVariant]
 
+
 class DStart(Start):
     def __init__(
             self,
@@ -221,13 +221,4 @@ async def initialize_checkboxes(manager: DialogManager, *ids: List[str]) -> None
         assert(isinstance(widget, ManagedCheckbox))
         if id in data:
             await widget.set_checked(data[id])
-
-
-
-# Self testing
-if __name__ == "__main":
-
-    # Testing even_hex
-    assert(even_hex(0x5f7) == "05F7")
-    assert(even_hex(0xA679) == "A679")
 

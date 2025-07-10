@@ -33,11 +33,11 @@ from dependency_injector.wiring import Provide, inject
 from typing import Any, Dict, Final, Optional
 
 from teamlimits.application import Application
-from teamlimits.details.even_hex import even_hex, even_hex_pattern, even_hex_parse
-from teamlimits.models import AdminModel, TeamHeaderView, TeamModel, fields
+from teamlimits.models import AdminModel, TeamModel, fields
 from teamlimits.repository import Repository
 
 
+from teamlimits.user.tg_bot.commands import CommandPattern, member_team_command, manage_team_command
 from teamlimits.user.tg_bot.confirmation_dialog import make_confirmation_dialog
 from teamlimits.user.tg_bot.details import (
     DStart,
@@ -54,7 +54,7 @@ from teamlimits.user.tg_bot.details import (
 )
 
 from teamlimits.user.tg_bot.make_person import make_person
-
+from teamlimits.user.tg_bot import TeamHeaderView
 from teamlimits.user.tg_bot.wizard import wizard_control, wizard_preview, Preview
 
 # Setup localization
@@ -327,9 +327,11 @@ async def _insert_team(
 
         await manager.done()
         callback.answer
-        await callback.message.answer(_("create_team_inserted{teamIdStr}{title}").format(
-            teamIdStr=even_hex(teamId),
+        await callback.message.answer(_("create_team_inserted{title}{id}{member}{manage}").format(
+            id=CommandPattern.format_number(teamId),
             title=team.title,
+            member=member_team_command.make_command(teamId).numbered_command,
+            manage=manage_team_command.make_command(teamId).numbered_command,
             ),
             parse_mode="html",
         )
@@ -362,9 +364,11 @@ async def _update_team(
         teamId = await repository.updateTeam(admin=admin, team=team)
 
         await manager.done()
-        await callback.message.answer(_("create_team_updated{teamIdStr}{title}").format(
-            teamIdStr=even_hex(teamId),
+        await callback.message.answer(_("create_team_updated{title}{id}{member}{manage}").format(
             title=team_values[_TITLE],
+            id=CommandPattern.format_number(teamId),
+            member=member_team_command.make_command(teamId).numbered_command,
+            manage=manage_team_command.make_command(teamId).numbered_command,
             ),
             parse_mode="html",
         )
@@ -387,7 +391,7 @@ async def _team_summary_result(
     _logger.debug("_team_summary_result", data, result)
     if result == _DELETE_TEAM:
         teamId = data[_ID]
-        _logger.debug(f"Delete the team {even_hex(teamId)}")
+        _logger.debug(f"Delete the team {CommandPattern.format_number(teamId)}")
         try:
             admin = make_person(data).combineId(AdminModel, teamId)
             await repository.deleteTeam(admin)
@@ -732,10 +736,7 @@ async def handle_manage_list(
 
 
 
-# /m04, /m2F4H etc
-_manage_pattern = even_hex_pattern("m")
-
-@create_team_router.message(Command(_manage_pattern))
+@create_team_router.message(Command(manage_team_command.pattern))
 @inject
 async def handle_manage_team(
     message: Message,
@@ -745,19 +746,17 @@ async def handle_manage_team(
     """
     Start to manage team from command
     """
-    teamId = even_hex_parse(_manage_pattern, message.text.lstrip('/'))
-    if teamId is not None:
-        teamIdStr = even_hex(teamId)
-        teamModel = await repository.queryAdminTeam(make_person(message.from_user).combineId(AdminModel, teamId))
+    if teamCmd := manage_team_command.parse(message.text):
+        teamModel = await repository.queryAdminTeam(make_person(message.from_user).combineId(AdminModel, teamCmd.number))
         if teamModel:
             # Add the text representation of team ID
-            team_values = teamModel.model_dump() | {_TEAM_ID_STR : teamIdStr }
+            team_values = teamModel.model_dump() | {_TEAM_ID_STR : teamCmd.formatted_number }
 
             await dialog_manager.start(CreateTeam.summary, data = team_values, mode = StartMode.RESET_STACK)
         else:
             # Team is not exists
             await message.answer(_("msg_team_not_found{teamIdStr}").format(
-                teamIdStr = teamIdStr
+                teamIdStr = teamCmd.formatted_number
             ))    
 
 

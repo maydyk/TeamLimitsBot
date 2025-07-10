@@ -4,7 +4,8 @@ from dependency_injector import containers, providers
 from dependency_injector.wiring import Provide, inject
 
 from aiogram.types import User
-from typing import Any, Dict, Optional, Tuple
+from typeguard import typechecked
+from typing import Any, Dict, Optional
 
 from teamlimits.models.base import PersonModel, MemberModel
 from teamlimits.models.fields import fields
@@ -30,7 +31,7 @@ class PersonContainer(containers.DeclarativeContainer):
 
 _personContainer: PersonContainer =  PersonContainer()
 
-
+@typechecked
 def setup(container: Optional[PersonContainer] = None):
     """
     Call from main to setup DI
@@ -41,6 +42,7 @@ def setup(container: Optional[PersonContainer] = None):
 
 
 @inject
+@typechecked
 def make_person(user: User, personService: PersonService = Provide[PersonContainer.personService]) -> PersonModel:
     """
     Make a [PersonModel] from Telegram User.
@@ -48,10 +50,12 @@ def make_person(user: User, personService: PersonService = Provide[PersonContain
     return personService.make_person(user)
 
 
+@typechecked
 def get_person(data: Dict[str, Any]) -> PersonModel:
     return PersonModel.model_validate(data)
 
 
+@typechecked
 def get_member(data: Dict[str, Any]) -> MemberModel:
     """
     Extracts team id and person data from specifies dictionary.
@@ -61,6 +65,7 @@ def get_member(data: Dict[str, Any]) -> MemberModel:
     return person.combineId(MemberModel, teamId)
 
 
+@typechecked
 def set_person_team(teamId: int, person: PersonModel) -> Dict[str, Any]:
     """
     Combine person with teamId

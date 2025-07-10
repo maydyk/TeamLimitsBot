@@ -6,9 +6,9 @@ Module models contains a set of base Models
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
-from typing import Any, Optional, Type, TypeVar
+from typeguard import typechecked
+from typing import Any, Optional, Self, Type, TypeVar
 
-from teamlimits.details import even_hex
 from teamlimits.models import CrewSpecial, fields
 
 class TeamHeader(BaseModel):
@@ -20,12 +20,6 @@ class TeamHeader(BaseModel):
     description: str = ""
 
     model_config = ConfigDict(from_attributes=True)
-
-    def teamIdStr(self) -> str:
-        """
-        Present team is as even hex string.
-        """
-        return even_hex(id)
 
 
 class TeamModel(TeamHeader):
@@ -45,7 +39,8 @@ class TeamModel(TeamHeader):
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
-    def checkMembers(self):
+    @typechecked
+    def checkMembers(self: Self):
         if self.maximalMembers and self.maximalMembers < self.minimalMembers:
             raise ValueError(
                 f"Minimal members {self.minimalMembers} must be "
@@ -55,7 +50,8 @@ class TeamModel(TeamHeader):
             return self
         
     @model_validator(mode="after")
-    def checkCrews(self):
+    @typechecked
+    def checkCrews(self: Self):
         if self.maximalCrews and self.maximalCrews < self.minimalCrews:
             raise ValueError(
                 f"Minimal crews {self.minimalCrews} must be "
@@ -80,16 +76,19 @@ class CrewModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    def isDefaultCrew(self) -> bool:
+    @typechecked
+    def isDefaultCrew(self: Self) -> bool:
         return self.special == CrewSpecial.CREW_SPECIAL_DEFAULT
     
 
-    def isRegularCrew(self) -> bool:
+    @typechecked
+    def isRegularCrew(self: Self) -> bool:
         return self.special == CrewSpecial.CREW_SPECIAL_UNSET
 
 
     @model_validator(mode="after")
-    def checkMates(self):
+    @typechecked
+    def checkMates(self: Self):
         if self.maximalMates and self.maximalMates < self.minimalMates:
             raise ValueError(
                 f"Minimal mates {self.minimalMates} must be "
@@ -111,6 +110,7 @@ class CrewModel(BaseModel):
     
 _TPerson = TypeVar("TPerson")
 
+@typechecked
 def _find_id_field(modelType: Type[_TPerson]) -> str:
     match modelType:
         case t if t is MemberModel:
@@ -142,14 +142,16 @@ class PersonModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    def display_user_name(self) -> str:
+    @typechecked
+    def display_user_name(self: Self) -> str:
         """
         Build user name or id to display. 
         """
         return self.userName or str(self.userId)
     
 
-    def combineId(self, modelType: Type[_TPerson], id: int, field: str = None) -> _TPerson:
+    @typechecked
+    def combineId(self: Self, modelType: Type[_TPerson], id: int, field: Optional[str] = None) -> _TPerson:
         # Smart select field name
         if field is None:
             field = _find_id_field(modelType)

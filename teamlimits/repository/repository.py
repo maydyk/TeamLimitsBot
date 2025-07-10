@@ -452,8 +452,10 @@ class Repository:
             ).where(
                 (Member.userId == person.userId) |
                 (Member.userName == person.userName)
-            ).order_by(Team.id)
+            ).group_by(Member.teamId).order_by(Team.id)
         _logger.query(query)
+
+        await self.__print_select_result(query, session=session)
 
         res = await session.execute(query)
         return [TeamHeader(id=teamId, title=title, description=description)

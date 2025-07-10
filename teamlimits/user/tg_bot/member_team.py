@@ -14,21 +14,23 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input import MessageInput
 from datetime import datetime
 from dependency_injector.wiring import Provide, inject
-from typing import Any, Dict, Final, Optional
+from typing import Any, Dict, Final, List, Optional
 
 from teamlimits.application import Application
-from teamlimits.details import even_hex, even_hex_pattern, even_hex_parse
-from teamlimits.models import CrewModel, MemberModel, TeamView, fields, make_team_view
+from teamlimits.models import CrewModel, MemberModel, TeamHeader, fields
 from teamlimits.repository import Repository, RepositoryError
 
+from teamlimits.user.tg_bot.commands import member_team_command
 from teamlimits.user.tg_bot.details import (
     DStart,
     filter_command,
     parse_command,
 )
+from teamlimits.user.tg_bot.commands import CommandPattern, manage_crew_command, take_a_crew_command
 from teamlimits.user.tg_bot.international import _, localize_router, N_, NConst, NJinja
 from teamlimits.user.tg_bot.make_person import make_person, get_member, set_person_team
 from teamlimits.user.tg_bot.manage_crew import CreateCrew
+from teamlimits.user.tg_bot import TeamView, make_team_view
 
 
 class MemberTeam(StatesGroup):
@@ -78,7 +80,7 @@ async def _on_add_member(
         await repository.insertTeamMember(member=member, crewId=None, date = datetime.now())
     except RepositoryError as e:
         callback.answer(_("member_team_add_member_failed{teamIdStr}{userName}").format(
-            teamIdStr = even_hex(member.teamId),
+            teamIdStr = CommandPattern.format_number(member.teamId),
             userName=member.display_user_name(),
         ))
 
@@ -101,10 +103,6 @@ async def _create_crew_start_data(dialog_manager: DialogManager, **kwargs) -> Di
     }
 
 
-_manage_crew_pattern: Final[re.Pattern] = even_hex_pattern("mc")
-_take_crew_pattern: Final[re.Pattern] = even_hex_pattern("c")      
-
-
 @inject
 async def _handle_commands(
     message: Message,
@@ -115,10 +113,10 @@ async def _handle_commands(
 
     member = _get_member(manager)
 
-    cmd: Final[str] = await parse_command(message, _manage_crew_pattern, _take_crew_pattern)
+    cmd: Final[str] = await parse_command(message, manage_crew_command.pattern, take_a_crew_command.pattern)
     
-    if manage_crew := even_hex_parse(_manage_crew_pattern, cmd):
-        crew = await repository.queryLeaderCrew(manage_crew, make_person(message.from_user))
+    if manageCrewCmd := manage_crew_command.parse(cmd):
+        crew = await repository.queryLeaderCrew(manageCrewCmd.number, make_person(message.from_user))
         if crew:
             await manager.start(
                 CreateCrew.summary,
@@ -126,18 +124,18 @@ async def _handle_commands(
             )
         else:
             message.answer(_("msg_crew_not  _found{crewIdStr}").format(
-                crewIdStr = even_hex(manage_crew),
+                crewIdStr = manageCrewCmd.formatted_number,
             ))
         return
 
-    if take_crew := even_hex_parse(_take_crew_pattern, cmd):
-        await repository.setCrewMate(mate=member, crewId = take_crew)
+    if takeACrewCmd := take_a_crew_command.parse(cmd):
+        await repository.setCrewMate(mate=member, crewId = takeACrewCmd.number)
         return
 
 
 async def _filter_commands(event: ChatEvent, **kwargs) -> bool:
     if isinstance(event, Message):
-        return await filter_command(event, _manage_crew_pattern, _take_crew_pattern)
+        return await filter_command(event, manage_crew_command.pattern, take_a_crew_command.pattern)
     else:
         return False
 
@@ -203,9 +201,8 @@ member_team_dialog = Dialog(
 member_team_router = Router()
 member_team_router.include_router(member_team_dialog)
 
-_member_pattern: Final[re.Pattern] = even_hex_pattern("t")
 
-@member_team_router.message(Command(_member_pattern))
+@member_team_router.message(Command(member_team_command.pattern))
 @inject
 async def handle_member_team(
     message: Message,
@@ -215,12 +212,11 @@ async def handle_member_team(
     """
     Start to participate in specified tem
     """
-    teamId = even_hex_parse(_member_pattern, message.text.lstrip('/'))
-    if teamId is not None:
+    if teamCmd := member_team_command.parse(message.text):
         person = make_person(message.from_user)
         await dialog_manager.start(
             state=MemberTeam.summary,
-            data=set_person_team(teamId, person),
+            data=set_person_team(teamCmd.number, person),
             mode=StartMode.RESET_STACK
         )
 
@@ -238,15 +234,15 @@ async def handle_team_list(
     """
 
     person = make_person(message.from_user)
-    headers = await repository.queryMemberTeamHeaders(person)
+    headers: List[TeamHeader] = await repository.queryMemberTeamHeaders(person)
     
     # Build text
     msg = _("msg_member_list_head")
     for header in headers:
-        msg += _("msg_member_list_item{teamIdStr}{title}{description}").format(
-            teamIdStr=header.teamIdStr(),
+        msg += _("msg_member_list_item{title}{description}{member}").format(
             title=header.title,
             description=header.description,
+            member=member_team_command.make_command(header.id).numbered_command,
         )
     await message.answer(msg)
 

@@ -62,6 +62,7 @@ class CrewData(CrewModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+
 # Raw team data from database
 class TeamData(TeamModel):
     is_admin: bool
