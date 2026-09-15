@@ -10,18 +10,18 @@ _T = TypeVar("T", bound="CommandPattern")
 
 class CommandPattern:
     text: str
-    _pattern: Optional[Pattern]
+    __pattern: Optional[Pattern]
 
     @typechecked
     def __init__(self: Self, _text: str):
         self.text = _text
-        self._pattern = None
+        self.__pattern = None
 
     @property
     def pattern(self) -> Pattern:
-        if self._pattern == None:
-            self._pattern = even_hex_pattern(self.text)
-        return self._pattern
+        if self.__pattern == None:
+            self.__pattern = even_hex_pattern(self.text)
+        return self.__pattern
     
     @typechecked
     def parse(self: Self, text: str) -> Optional["NumberedCommand"]:

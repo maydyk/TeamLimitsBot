@@ -10,7 +10,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 from functools import wraps
-from itertools import filterfalse
+from itertools import chain, filterfalse
 from pprint import pprint
 from sqlalchemy import Select, case, delete, func, literal, not_, select, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,6 @@ from typing import Any, Awaitable, AsyncIterator, Callable, Dict, Iterable, Fina
 
 from teamlimits.database.connection import Connection
 from teamlimits.database.entities import Admin, Crew, Leader, Member, Outcast, Team
-
 from teamlimits.models import (
     CrewSpecial,
     ######
@@ -31,11 +30,16 @@ from teamlimits.models import (
     TeamHeader,
     TeamMember,
     TeamModel,
-    ######
-    MemberData,
-    TeamData,
-    CrewData,
 )
+
+from teamlimits.repository.data_models import (
+    MemberType,
+    CrewType,
+    TeamType,
+    TypeAdapter,
+)
+
+from teamlimits.repository.data_raw import RawMember, RawCrew, RawTeam, TeamOrder, CachedAdapter, makeTeamOrder
 
 
 # The module logger
@@ -192,17 +196,6 @@ class Repository:
         res = (await session.execute(query)).mappings().all()
         pprint(res)
 
-
-    @session
-    @typechecked
-    async def __queryTeam(self: Self, teamId: int, session: AsyncSession) -> Team:
-        """
-        Helper method to get the team by id
-        """
-        query = select(Team).where(Team.id == teamId)
-        _logger.query(query)
-        return (await session.execute(query)).scalar_one()
-    
 
     @session
     @typechecked
@@ -865,7 +858,7 @@ class Repository:
 
     @session
     @typechecked
-    async def canDeleteCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime) -> bool:
+    async def canRemoveCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime) -> bool:
         # NOTE: The same condition as on update
         return await self.canUpdateCrew(leader, date)
     
@@ -874,7 +867,7 @@ class Repository:
     @typechecked
     async def deleteCrew(self, leader: Union[LeaderModel, AdminModel], date: datetime, session: AsyncSession) -> None:
 
-        if not await self.canDeleteCrew(leader, date, session=session): 
+        if not await self.canRemoveCrew(leader, date, session=session): 
             raise RepositoryPermissionError(f"{leader.display_user_name()} is not able to update crew {leader.crewId}")
 
         query = delete(Crew).where(Crew.id == leader.crewId)
@@ -929,63 +922,145 @@ class Repository:
     
     @session
     @typechecked
-    async def queryTeamData(self, member: MemberModel, date: datetime, session: AsyncSession) -> TeamData:
+    async def __queryTeam(self: Self, teamId: int, session: AsyncSession) -> TeamModel:
+        """
+        Helper method to get the team by id
+        """
+        query = select(Team).where(Team.id == teamId)
+        _logger.query(query)
 
+        team = (await session.execute(query)).scalar_one()
+        return TeamModel.model_validate(team)
+    
+    
+    @session
+    @typechecked
+    async def __queryRawMates(self: Self, crewId: int, session: AsyncSession) -> List[RawMember]:
+        query = select(
+            Member
+        ).where(
+            not_(Member.crewId.is_(None)) &
+            (Member.crewId == crewId)
+        ).order_by(Member.position)
+
+        mates = (await session.execute(query)).scalars()
+
+        return [RawMember(member=TeamMember.model_validate(member)) for member in mates]
+
+    
+    @session
+    @typechecked
+    async def __queryRawCrews(
+        self: Self,
+        teamId: int,
+        member: MemberModel,
+        is_admin: bool,
+        session: AsyncSession,                       
+        ) -> List[RawCrew]:
+        
+        query = select(Crew).where(Crew.teamId == teamId).order_by(Crew.position)
+        crews = (await session.execute(query)).scalars()
+
+        @typechecked
+        async def make_raw_crew(crew: Crew) -> RawCrew:
+            # Query crew leader
+            leader = member.combineId(LeaderModel, crew.id)
+            is_leader = await self.__checkLeaderCrew(leader, session=session)
+
+            # Query mates of crew
+            mates: List[RawMember] = await self.__queryRawMates(crew.id, session=session)
+
+            return RawCrew(
+                crew = CrewModel.model_validate(crew),
+                mates=mates,
+                is_admin=is_admin,
+                is_leader=is_leader,
+            )
+
+        # Don't use map() here! 
+        return [await make_raw_crew(crew) for crew in crews]
+    
+
+    @session
+    @typechecked
+    async def __queryRawMembers(self: Self, teamId: int, session: AsyncSession) -> List[RawMember]:
+        query = select(
+            Member
+            ).where(
+                Member.teamId == teamId
+            ).order_by(Member.position)
+        
+        members: Iterable[Member] = (await session.execute(query)).scalars()
+
+        return [RawMember(member=TeamMember.model_validate(member)) for member in members]
+    
+    
+    @session
+    @typechecked
+    async def __queryRawTeam(self: Self, member: MemberModel, session: AsyncSession) -> RawTeam:
+        """
+        Collect "raw" team info without transformation
+        """
         teamId: Final[int] = member.teamId
 
         # Detect member status
-        is_member: Final[bool] = await self.__checkMemberTeam(member, session= session)
-        is_admin: Final[bool] = await self.__checkAdminTeam(member.combineId(AdminModel, teamId), session= session)
+        admin: Final[AdminModel] = member.combineId(AdminModel, teamId)
+        is_admin: Final[bool] = await self.__checkAdminTeam(admin, session=session)
+        is_member: Final[bool] = await self.__checkMemberTeam(member, session=session)
 
         # Query team definition
-        teamEntity: Final[Team] = await self.__queryTeam(teamId, session= session)
+        team: Final[TeamModel] = await self.__queryTeam(teamId, session=session)
 
-        def make_mate_data_list(mates: Iterable[Member]) -> List[MemberData]:
-            return [MemberData.model_validate(mate) for mate in mates]
+        # Query all team members
+        members: Final[List[RawMember]] = await self.__queryRawMembers(teamId, session=session)
 
-        async def make_crew_data(crew: Crew) -> CrewData:
-            # Query crew leader
-            is_leader = await self.__checkLeaderCrew(member.combineId(LeaderModel, crew.id))
-
-            # Query mates of crew
-            query = select(Member).where(Member.crewId == crew.id).order_by(Member.position)
-            mates = make_mate_data_list((await session.execute(query)).scalars())
-
-            return CrewData(
-                is_admin=is_admin,
-                is_leader=is_leader,
-                mates=mates,
-                **CrewModel.model_validate(crew).model_dump(),
-            )
-        
-        
-        async def make_crew_data_list(crews: Iterable[Crew]) -> List[CrewData]:
-            return [await make_crew_data(crew) for crew in crews]
-        
         # Query team crews
-        crews = (await session.execute(select(Crew).where(Crew.teamId == teamId).order_by(Crew.position))).scalars()
+        crews: Final[List[RawCrew]] = await self.__queryRawCrews(teamId, member, is_admin, session=session)
 
-        # Query members without crew.
-        outboards = (await session.execute(
-            select(Member)
-            .where((Member.teamId == teamId) 
-                   and (Member.crewId == None)
-                   )
-            .order_by(Member.position))
-        ).scalars()
+        # Query members without any crew.
+        outboards: List[RawMember] = list(filter(
+            RawMember.isOutboard,
+            members
+        ))
 
-        # Compute deadline days
-        deadline_days_left=(teamEntity.deadline - date).days if teamEntity.deadline is not None else None
-
-        # build team summary
-        return TeamData(
+        # Build team raw data
+        return RawTeam(
+            team = team,
             is_admin=is_admin,
             is_member=is_member,
-            can_insert_member=await self.canInsertTeamMember(member=member, date=date, session=session),
-            can_remove_member=await self.canRemoveTeamMember(member=member, date=date, session=session),
-            can_insert_crew=await self.canInsertCrew(person=member, date=date, session=session),
-            deadline_days_left=deadline_days_left,
-            crews=await make_crew_data_list(crews),
-            outboards=make_mate_data_list(outboards),
-            **TeamModel.model_validate(teamEntity).model_dump()
-           )
+            members=members,
+            crews=crews,
+            outboards=outboards,
+        )
+
+
+    @session
+    @typechecked
+    async def queryTeamData(self: Self, member: MemberModel, date: datetime, adapter: TypeAdapter, session: AsyncSession) -> TeamType:
+
+        rawTeam: RawTeam = await self.__queryRawTeam(member, session=session)
+
+        cachedAdapter = CachedAdapter(adapter)
+
+        teamOrder: TeamOrder = makeTeamOrder(rawTeam, cachedAdapter)
+
+        # Compute deadline days
+        deadline_days_left=(rawTeam.team.deadline - date).days if rawTeam.team.deadline is not None else None
+
+        # build team summary
+        return adapter.make_team(
+            rawTeam.team.model_dump() |
+            {
+                "is_admin" : rawTeam.is_admin,
+                "is_member": rawTeam.is_member,
+                "can_insert_member" : await self.canInsertTeamMember(member=member, date=date, session=session),
+                "can_remove_member" : await self.canRemoveTeamMember(member=member, date=date, session=session),
+                "can_insert_crew" : await self.canInsertCrew(person=member, date=date, session=session),
+                "can_remove_crew" : await self.canRemoveCrew(person=member, date=date, session=session),
+                "deadline_days_left" : deadline_days_left,
+                "members" : list(map(cachedAdapter.make_member, rawTeam.members)),
+                "crews" : list(map(cachedAdapter.make_crew, rawTeam.crews)),
+            } |
+            teamOrder.model_dump()
+        )
+        

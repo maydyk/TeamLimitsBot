@@ -3,8 +3,6 @@ Module to show team client.
 
 @Author: Denis Maydykovsky
 """
-import re
-
 from aiogram import Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, ContentType, Message
@@ -14,11 +12,12 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input import MessageInput
 from datetime import datetime
 from dependency_injector.wiring import Provide, inject
-from typing import Any, Dict, Final, List, Optional
+from typeguard import typechecked
+from typing import Any, Dict, Final, List, Optional, Self
 
 from teamlimits.application import Application
 from teamlimits.models import CrewModel, MemberModel, TeamHeader, fields
-from teamlimits.repository import Repository, RepositoryError
+from teamlimits.repository import Repository, RepositoryError, CrewData, MemberData, TeamData, TypeAdapter
 
 from teamlimits.user.tg_bot.commands import member_team_command
 from teamlimits.user.tg_bot.details import (
@@ -30,7 +29,7 @@ from teamlimits.user.tg_bot.commands import CommandPattern, manage_crew_command,
 from teamlimits.user.tg_bot.international import _, localize_router, N_, NConst, NJinja
 from teamlimits.user.tg_bot.make_person import make_person, get_member, set_person_team
 from teamlimits.user.tg_bot.manage_crew import CreateCrew
-from teamlimits.user.tg_bot import TeamView, make_team_view
+from teamlimits.user.tg_bot import CrewView, MemberView, TeamView
 
 
 class MemberTeam(StatesGroup):
@@ -46,11 +45,25 @@ _HAS_ACTIVE_CREWS: Final[str] = fields(TeamView).hasActiveCrews
 _HAS_QUEUED_CREWS: Final[str] = fields(TeamView).hasQueuedCrews
 _HAS_ACTIVE_MEMBERS: Final[str] = fields(TeamView).hasActiveMembers
 _HAS_QUEUED_MEMBERS: Final[str] = fields(TeamView).hasQueuedMembers
-_HAS_DEFAULT_CREW: Final[str] = fields(TeamView).hasDefaultCrew
+_HAS_DEFAULT_CREW: Final[str] = fields(TeamView).hasDefaultMates
 
 
 def _get_member(dialog_manager: DialogManager) -> MemberModel:
     return get_member(dialog_manager.start_data)
+
+
+class ViewAdapter(TypeAdapter):
+    @typechecked
+    def make_member(self: Self, data: MemberData) -> MemberView:
+        return MemberView(data.model_dump())
+
+    @typechecked
+    def make_crew(self: Self, data: CrewData) -> CrewView:
+        return CrewView(data.model_dump())
+
+    @typechecked
+    def make_team(self: Self, data: TeamData) -> TeamView:
+        return TeamView(data.model_dump())
 
 
 @inject
@@ -60,8 +73,8 @@ async def _member_team_getter(
         **kwargs) -> Dict[str, Any]:
     member = _get_member(dialog_manager)
 
-    teamData = await repository.queryTeamData(member, datetime.now())
-    teamSummary = make_team_view(teamData)
+    adapter = ViewAdapter()
+    teamSummary = await repository.queryTeamData(member, datetime.now(), adapter)
 
     data = teamSummary.model_dump()
     return data

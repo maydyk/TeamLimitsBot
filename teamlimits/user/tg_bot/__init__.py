@@ -3,5 +3,4 @@ from .view_models import (
     CrewView,
     TeamHeaderView,
     TeamView,
-    make_team_view,
 )

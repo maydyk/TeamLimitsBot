@@ -1,20 +1,18 @@
 
-from datetime import datetime
-from itertools import chain
-from functools import reduce
 from pydantic import ConfigDict, computed_field
 from typeguard import typechecked
-from typing import List, Optional
+from typing import Self
 
-from teamlimits.details import coerce_first, list_difference, list_intersection
-from teamlimits.models import CrewModel, CrewSpecial, TeamHeader, TeamModel, TeamData, MemberData, TeamMember
+from teamlimits.models import TeamHeader
+from teamlimits.repository import CrewData, MemberData, TeamData
 from teamlimits.user.tg_bot.commands import CommandPattern, manage_crew_command, manage_team_command, take_a_crew_command
 
-class MemberView(TeamMember):
+class MemberView(MemberData):
 
     @computed_field
     @property
-    def userDisplay(self) -> str:
+    @typechecked
+    def userDisplay(self: Self) -> str:
         humanName = f"{self.firstName} {self.lastName}"
         numberStr = f" (+{self.number})" if self.number else ""
         if humanName.strip():
@@ -27,24 +25,23 @@ class MemberView(TeamMember):
     model_config = ConfigDict(from_attributes=True)
 
 
-class CrewView(CrewModel):
+class CrewView(CrewData):
     
     @computed_field
     @property
-    def mateIdStr(self) -> str:
+    @typechecked
+    def mateIdStr(self: Self) -> str:
         if self.is_leader:
             return manage_crew_command.make_command(self.id).numbered_command
         else:
             return CommandPattern.format_number(self.id)
         
+
     @computed_field
     @property
-    def takeACrew(self) -> str:
+    @typechecked
+    def takeACrew(self: Self) -> str:
         return take_a_crew_command.make_command(self.id).numbered_command
-
-    is_leader: bool
-    activeMates: List[MemberView]
-    queuedMates: List[MemberView]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -55,13 +52,14 @@ class TeamHeaderView(TeamHeader):
     We cannot use TeamHeader directly in some cases because the computed field is rejected.
     """
 
-    def __init__(self, header: TeamHeader):
+    def __init__(self: Self, header: TeamHeader):
         TeamHeader.__init__(self, **header.model_dump())
 
     
     @computed_field
     @property
-    def manage(self) -> str:
+    @typechecked
+    def manage(self: Self) -> str:
         """
         A computed field represents id as string
         """
@@ -70,22 +68,11 @@ class TeamHeaderView(TeamHeader):
     model_config = ConfigDict(from_attributes=True)
 
 
-class TeamView(TeamModel):
-    is_member: bool
-    is_admin: bool
-    can_insert_member: bool
-    can_remove_member: bool
-    can_insert_crew: bool
-    deadline_days_left: Optional[int]
-    activeCrews: List[CrewView]
-    queuedCrews: List[CrewView]
-    defaultCrew: CrewView
-    activeOutboards: List[MemberView]
-    queuedOutboards: List[MemberView]
+class TeamView(TeamData):
     
     @computed_field
     @property
-    def memberIdStr(self) -> str:
+    def memberIdStr(self: Self) -> str:
         """
         Format id as admin
         """
@@ -95,148 +82,4 @@ class TeamView(TeamModel):
             return CommandPattern.format_number(self.id)
     
 
-    @staticmethod
-    def compute_total_mates(crews: List[CrewView]) -> int:
-        return reduce(
-            lambda sum, crew: sum + len(crew.activeMates) + len(crew.queuedMates),
-            crews,
-            0,
-        )
-    
-
-    _totalMembers: Optional[int] = None
-
-    @computed_field
-    @property
-    def totalMembers(self) -> int:
-        if self._totalMembers is None:
-            self._totalMembers = \
-                len(self.activeOutboards) + \
-                len(self.queuedOutboards) + \
-                TeamView.compute_total_mates(self.activeCrews) + \
-                TeamView.compute_total_mates(self.queuedCrews)
-        return self._totalMembers
-                
-            
-    @computed_field
-    @property
-    def membersLeft(self) -> int:
-        max(0, self.minimalMembers - self.totalMembers)
-
-
-    @computed_field
-    @property
-    def teamIsFull(self) -> bool:
-        return self.maximalMembers == None or self.totalMembers <= self.maximalMembers
-                    
-    
-    @computed_field
-    @property
-    def hasActiveCrews(self) -> bool:
-        return bool(self.activeCrews)
-    
-
-    @computed_field
-    @property
-    def hasQueuedCrews(self) -> bool:
-        return bool(self.queuedCrews) 
-    
-    
-    @computed_field
-    @property
-    def hasActiveMembers(self) -> bool:
-        return bool(self.activeOutboards)
-    
-
-    @computed_field
-    @property
-    def hasQueuedMembers(self) -> bool:
-        return bool(self.queuedOutboards)
-    
-
-    @computed_field
-    @property
-    def hasDefaultCrew(self) -> bool:
-        return bool(self.defaultCrew.activeMates)
-
-
     model_config = ConfigDict(from_attributes=True)
-
-
-# TODO: Move to separated file
-@typechecked
-def make_team_view(teamData: TeamData) -> TeamView:
-    """
-    Build a view for the given team data.
-    """
-    defaultCrew = teamData.defaultCrew
-
-    # Build member list: sorted by position of outboards and crew mates
-    # and attached default crew members
-    totalMembers = sorted(
-        chain(
-            teamData.outboards, 
-            chain.from_iterable([crew.activeMates for crew in teamData.activeCrews]),
-        ),
-        key = lambda member: member.position
-    ) + defaultCrew.mates
-
-    # Get first maximal members
-    validMembers = coerce_first(totalMembers, teamData.maximalMembers)
-
-    # Extract default crew members from valid list.
-    validDefaultCrewMembers = list(
-        filter(
-            lambda member: member.crewId == CrewSpecial.CREW_SPECIAL_DEFAULT,
-            validMembers
-        )
-    )
-
-    # Distribute default mates per free places in the crews
-    for crew in teamData.activeCrews:
-        validDefaultCrewMembers = crew.acceptMates(validDefaultCrewMembers)
-
-    # Update default crew members
-    teamData.defaultCrew.mates = list_difference(teamData.defaultCrew.mates, validDefaultCrewMembers)
-
-    # Update outboards
-    activeOutboards = list_intersection(teamData.outboards, validMembers)
-    queuedOutboards = list_difference(teamData.outboards, validMembers)
-
-    # Transform CrewData to CrewView
-    activeCrews = list(
-        map(
-            lambda crewData: CrewView.model_validate(crewData.model_dump()),
-            teamData.activeCrews
-        )
-    )
-
-    queuedCrews = list(
-        map(
-            lambda crewData: CrewView.model_validate(crewData.model_dump()),
-            teamData.queuedCrews
-        )
-    )
-
-    def make_member_view_list(memberDataList: List[MemberData]) -> List[MemberView]:
-        return list(map(
-            lambda memberData: MemberView.model_validate(memberData.model_dump()),
-            memberDataList
-            )
-        )
-    
-    # Build TeamSummary
-    return TeamView(
-        is_admin=teamData.is_admin,
-        is_member=teamData.is_member,
-        can_insert_member=teamData.can_insert_member,
-        can_remove_member=teamData.can_remove_member,
-        can_insert_crew=teamData.can_insert_crew,
-        deadline_days_left=teamData.deadline_days_left,
-        activeCrews=activeCrews,
-        queuedCrews=queuedCrews,
-        defaultCrew=CrewView.model_validate(defaultCrew.model_dump()),
-        activeOutboards=make_member_view_list(activeOutboards),
-        queuedOutboards=make_member_view_list(queuedOutboards),
-        **TeamModel.model_validate(teamData.model_dump()).model_dump()
-    )

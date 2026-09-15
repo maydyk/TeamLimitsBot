@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
 from typeguard import typechecked
 from typing import Any, Optional, Self, Type, TypeVar
 
-from teamlimits.models import CrewSpecial, fields
+from teamlimits.models import fields, CrewSpecial
 
 class TeamHeader(BaseModel):
     """
@@ -39,7 +39,7 @@ class TeamModel(TeamHeader):
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
-    @typechecked
+    # @typechecked
     def checkMembers(self: Self):
         if self.maximalMembers and self.maximalMembers < self.minimalMembers:
             raise ValueError(
@@ -50,7 +50,7 @@ class TeamModel(TeamHeader):
             return self
         
     @model_validator(mode="after")
-    @typechecked
+    # @typechecked
     def checkCrews(self: Self):
         if self.maximalCrews and self.maximalCrews < self.minimalCrews:
             raise ValueError(
@@ -84,7 +84,7 @@ class CrewModel(BaseModel):
     @typechecked
     def isRegularCrew(self: Self) -> bool:
         return self.special == CrewSpecial.CREW_SPECIAL_UNSET
-
+    
 
     @model_validator(mode="after")
     @typechecked
@@ -99,7 +99,7 @@ class CrewModel(BaseModel):
         
 
     @model_validator(mode="after")
-    def checkPosition(self):
+    def checkPosition(self: Self):
         if self.isRegularCrew() and self.position < 0:
             raise ValueError(
                 f"Non-special crew {self.special} has negative position {self.position}"
@@ -198,7 +198,7 @@ class AdminModel(PersonModel):
     
 
 
-class TeamMember(MemberModel):
+class TeamMember(MemberModel, frozen=True):
     """
     A team member.
     """
